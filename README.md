@@ -8,6 +8,11 @@ the primary motivation for rewriting ikiwiki was:
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
 
+# where
+
+a pankat generated blog can be found here:
+
+* <https://lastlog.de/blog>
 
 # license
 pankat is licensed AGPL v3, see LICENSE for details.
