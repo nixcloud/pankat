@@ -6,6 +6,9 @@ the primary motivation for rewriting ikiwiki was:
  - use bootstrap (mobile first) in the frontend
  - more usability in navigation / posts overview
 
+![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
+
+
 # license
 pankat is licensed AGPL v3, see LICENSE for details.
 
