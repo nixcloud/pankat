@@ -133,7 +133,7 @@ buildGoPackage rec {
     gocode set propose-builtins true
     gocode set lib-path $GOPATH:`pwd`
     kate pankat.go 2>/dev/null 1>/dev/null &
-    #CompileDaemon -build 'go build -o pankat' -color &
+    CompileDaemon -build 'go build -o pankat' -color &
   '';
 
   buildInputs = [ go net pandoc CompileDaemon.bin rsync git ];

@@ -153,6 +153,8 @@ func main() {
 		_ = out
 	}
 
+	//BUG  md5 optimization forgets to update former last article to have a 'next article' link if new article is added
+	
 	// generate rss/atom feed
 	// FIXME create feed per tag
 	renderFeed(articlesPosts)
