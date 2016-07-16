@@ -5,7 +5,7 @@ import (
     "fmt"
     "net/http"
     "strings"
-//     "golang.org/x/net/websocket"
+    "golang.org/x/net/websocket"
 //     "io"
     "log"
     "./ws"
@@ -50,21 +50,21 @@ func inotifyWatchDir(d string) {
 }
   
 func main() {
-  
-  server := ws.NewServer("/websocket")
+  server := ws.NewServer()
   go server.Listen()
-  go http.ListenAndServe("localhost:12345", nil)   // Start the WS server!
   
   go inotifyWatchDir("output"); // FIXME hardcoded path
   
-  router := web.New(Context{}).                   // Create your router
+  router := web.New(Context{}).                     // Create your router
         Middleware(web.LoggerMiddleware).           // Use some included middleware
         Middleware(web.ShowErrorsMiddleware).       // ...
         //Middleware(web.StaticMiddleware("../output")).
         Middleware(web.StaticMiddleware("output")). // FIXME hardcoded path
         Middleware((*Context).SetHelloCount).       // Your own middleware!
+        Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
+          websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
+        }).
         Get("/", (*Context).SayHello)               // Add a route
-    http.ListenAndServe("localhost:8080", router)   // Start the server!
-    
+  http.ListenAndServe("localhost:8080", router)     // Start the server!
 }
 
