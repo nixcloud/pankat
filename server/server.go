@@ -28,7 +28,7 @@ func (c *Context) SayHello(rw web.ResponseWriter, req *web.Request) {
 }
 
 // inotify events
-func inotifyWatchDir(d string) {
+func inotifyWatchDir(server *ws.Server, d string) {
     watcher, err := NewWatcher()
     if err != nil {
         log.Fatal(err)
@@ -41,7 +41,7 @@ func inotifyWatchDir(d string) {
         select {
         case ev := <-watcher.Event:
             // send updats to client if changes happen
-            // FIXME do it
+            server.SendAll("reload bitches")
             log.Println("event:", ev)
         case err := <-watcher.Error:
             log.Println("error:", err)
@@ -50,10 +50,12 @@ func inotifyWatchDir(d string) {
 }
   
 func main() {
+//   updateCh := make(chan string)
   server := ws.NewServer()
+
   go server.Listen()
   
-  go inotifyWatchDir("output"); // FIXME hardcoded path
+  go inotifyWatchDir(server, "output"); // FIXME hardcoded path
   
   router := web.New(Context{}).                     // Create your router
         Middleware(web.LoggerMiddleware).           // Use some included middleware

@@ -4,31 +4,32 @@ package ws
 
 import (
   "log"
-
   "golang.org/x/net/websocket"
 )
 
 // Chat server.
 type Server struct {
 //   pattern   string
-//   messages  []*Message
+//   messages  []string
   clients   map[int]*Client
   addCh     chan *Client
   delCh     chan *Client
-  sendAllCh chan *Message
+  sendAllCh chan string
   doneCh    chan bool
   errCh     chan error
+//   updateCh  chan string
 }
 
 // Create new chat server.
 func NewServer() *Server {
-//   messages := []*Message{}
+//   messages := []string{}
   clients := make(map[int]*Client)
   addCh := make(chan *Client)
   delCh := make(chan *Client)
-  sendAllCh := make(chan *Message)
+  sendAllCh := make(chan string)
   doneCh := make(chan bool)
   errCh := make(chan error)
+//   updateCh = updateCh
 
   return &Server{
 //     pattern,
@@ -39,6 +40,7 @@ func NewServer() *Server {
     sendAllCh,
     doneCh,
     errCh,
+//     updateCh,
   }
 }
 
@@ -50,7 +52,7 @@ func (s *Server) Del(c *Client) {
   s.delCh <- c
 }
 
-func (s *Server) SendAll(msg *Message) {
+func (s *Server) SendAll(msg string) {
   s.sendAllCh <- msg
 }
 
@@ -68,9 +70,9 @@ func (s *Server) Err(err error) {
 //   }
 // }
 
-func (s *Server) sendAll(msg *Message) {
+func (s *Server) sendAll(msg string) {
   for _, c := range s.clients {
-    c.Write(msg)
+    c.Write(&msg)
   }
 }
 
