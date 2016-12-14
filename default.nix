@@ -1,5 +1,5 @@
 with import <nixpkgs> { };
-with goPackages;
+#with goPackages;
 
 let
 
@@ -136,6 +136,6 @@ buildGoPackage rec {
     CompileDaemon -build 'go build -o pankat' -color &
   '';
 
-  buildInputs = [ go net pandoc CompileDaemon.bin rsync git ];
+  buildInputs = [ go pandoc CompileDaemon.bin rsync git ];
 }
 
