@@ -1,5 +1,4 @@
 with import ../nixpkgs { };
-with goPackages;
 
 let 
   myDeps =  (import ./myDeps.nix);
