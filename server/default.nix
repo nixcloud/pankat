@@ -1,4 +1,5 @@
-with import ../nixpkgs { };
+with import <nixpkgs> { };
+#  nix-shell -I nixpkgs=/home/joachim/Desktop/projects/nixcloud/nixcloud-backend/nixpkgs
 
 let 
   myDeps =  (import ./myDeps.nix);
@@ -10,6 +11,7 @@ buildGoPackage rec {
   version = "0.0.1";
 
   goPackagePath = "github.com/nixcloud/${n}";
+  goDeps = ./deps.json;
 
   shellHook = ''
     export HISTFILE=".zsh_history"
@@ -21,7 +23,6 @@ buildGoPackage rec {
     #CompileDaemon -build 'go build -o pankat-server' -color &
   '';
 
-  buildInputs = with myDeps; [ go net crypto captcha gomailv2 gocraft-web CompileDaemon.bin 
-    inflection pq  ];
+  buildInputs = with myDeps; [ go crypto captcha gomailv2 gocraft-web CompileDaemon.bin inflection pq  ];
 }
 

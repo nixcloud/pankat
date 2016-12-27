@@ -1,5 +1,5 @@
 with import <nixpkgs> { };
-with goPackages;
+#with goPackages;
 with pkgs;
 
 rec {
