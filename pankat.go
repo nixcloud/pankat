@@ -569,7 +569,7 @@ func renderFeed(articles pankat.Articles) {
   for _, t := range e.Tags {
     z+=`<category scheme="`+SiteURL+`" term="`+t+`"/>`
   }
-
+  //BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
     z += `<author>
       <name>qknight</name>
       <uri>https://github.com/qknight</uri>
