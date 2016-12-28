@@ -764,7 +764,7 @@ func generateStandalonePage(articles pankat.Articles, article pankat.Article, bo
    var timeT time.Time
 
    if article.ModificationDate != timeT {
-     meta += `<div id="date"><p><span id="lastupdated">` + article.ModificationDate.Format("2 Jan 2006") + `</span></div>`
+     meta += `<div id="date"><p><span id="lastupdated">` + article.ModificationDate.Format("2 Jan 2006") + `</span></p></div>`
    }
 
    if len(article.Tags) > 0 {
