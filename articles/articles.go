@@ -133,7 +133,7 @@ func (s Articles) FilterByTag(t string) Articles {
 	return _filtered
 }
 
-func (s Articles) FilterByDraft() Articles {
+func (s Articles) FilterOutDrafts() Articles {
 	var _filtered Articles
 	for _, e := range s {
 		if e.Draft == false {

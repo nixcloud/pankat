@@ -38,6 +38,7 @@ var SiteBrandTitle = "lastlog.de/blog"
 func tagToLinkList(a *pankat.Article) string {
 	var tags []string
 	tags = a.Tags
+
 	var output string
 	for _, e := range tags {
 		//     fmt.Println("----------------")
@@ -97,8 +98,8 @@ func main() {
 	f = append(f, "")
 	articlesAll := getTargets(".", f)
 
-	articlesTopLevel := articlesAll.TopLevel().FilterByDraft()
-	articlesPosts := articlesAll.Posts().FilterByDraft()
+	articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
+	articlesPosts := articlesAll.Posts().FilterOutDrafts()
 
 	// sort them by date
 	sort.Sort(pankat.Articles(articlesPosts))
@@ -158,32 +159,32 @@ func main() {
 	// generate rss/atom feed
 	// FIXME create feed per tag
 	renderFeed(articlesPosts)
-  
-	// BUG fix history writing
+
+	//  fix history writing
 	//   example: 1. go to article https://lastlog.de/blog/posts/tour_of_nix.html
 	//            2. click on an article tag https://lastlog.de/blog/posts.html?tag=emscripten
 	//            3. then try 'back' button, which fails!
   //      maybe use backbone.js for that?
 
-	// FIXME donation button
+  // FIXME donation button
   // FIXME next/last hover shadow
   
   // FIXME use h1 only for title, see http://pandoc.org/scripting.html filter
-  
+  // TODO fo
   //////////////////////////////////////// main features ///////////////////////////////////////////////////
 	
   // SECURITY secure pandoc from passing <script> and other evil <html tags>
   //          find a filter system for evil html tags like <script>  
   
   // https://www.overleaf.com/4344023pmjpgq#/12921720/
-	// FIXME - gocraft/web ansprechen
+  // FIXME - gocraft/web ansprechen
   //       - git backend ansprechen
   //       - leaps backend ansprechen
   //       - websockets preview mit long-polling
   //       - lokales speichern von artikeln, wenn ./pankat -daemon -i documents -o output/ verwendet wird
   
-	// FIXME - integrate a wiki switch
-  // FIXME - pankat release 
+  // FIXME - integrate a wiki switch
+
 
 
 	//////////////////////////////////////// /main features ///////////////////////////////////////////////////
@@ -218,7 +219,6 @@ func main() {
 <meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
 </html>
 `
-
 	outIndexName := path.Clean(outputPath + "/" + "index.html")
 	errn := ioutil.WriteFile(outIndexName, []byte(indexContent), 0644)
 	if errn != nil {
@@ -643,7 +643,7 @@ func renderPosts(articles pankat.Articles) {
 		stdin.Close()
 		pandocProcess.Wait()
 
-    e.RenderedArticle = string(buff.Bytes())
+		e.RenderedArticle = string(buff.Bytes())
     
 		standalonePageContent := generateStandalonePage(articles, *e, string(buff.Bytes()))
 
@@ -670,7 +670,7 @@ func renderPosts(articles pankat.Articles) {
 // 	}
 	
 	jsonBuff := bytes.NewBufferString("")
-  enc := json.NewEncoder(jsonBuff)
+    enc := json.NewEncoder(jsonBuff)
 
 	if errEnc := enc.Encode(&myMd5HashMap); errEnc != nil {
     fmt.Println(errEnc)

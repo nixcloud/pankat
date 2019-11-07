@@ -96,7 +96,7 @@ for i, e := range articles {
     fmt.Println("     ",e.Tags)
   }
 
-fmt.Println("~~~~~~~~~~~~~~~~~~~ FilterByDraft() ~~~~~~~~~~~~~~~~")
+fmt.Println("~~~~~~~~~~~~~~~~~~~ FilterOutDrafts() ~~~~~~~~~~~~~~~~")
 for i, e := range articles.FilterByDraft() {
 //     _ = e
     fmt.Println(i, ": ", e.Title)
