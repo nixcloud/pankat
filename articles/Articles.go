@@ -1,29 +1,78 @@
 package pankat
 
 import (
-	"crypto/md5"
+	"bytes"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 )
 
+var articlesCache ArticlesCache
+
 type Article struct {
 	Title            string
+	Article          []byte
+	ModificationDate time.Time
+	Summary          string
+	Tags             []string
+	Series           string
+	Draft            bool
 	SrcFileName      string
 	DstFileName      string
 	BaseFileName     string
 	SrcDirectoryName string
-
-	Tags             []string
-	Series           string
-	ModificationDate time.Time
-	Hash             [md5.Size]byte
-	Article          []byte
-	RenderedArticle  string
-	Draft            bool
-	Summary          string
 	Anchorjs         bool
 	Tocify           bool
 	Timeline         bool
+}
+
+func (a Article) Render() string {
+	// FIXME get rid of this initialization here and implement this 'constructor' like instead
+	if (articlesCache.Store == nil) {
+		fmt.Println("Initializing hash map")
+		articlesCache.Store = make(map[md5hash]string)
+		articlesCache.load()
+	}
+	var text string = ""
+	if (articlesCache.Get(a) == "") {
+		pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
+		stdin, err := pandocProcess.StdinPipe()
+		if err != nil {
+			fmt.Println(err)
+			return "error rendering article"
+		}
+		buff := bytes.NewBufferString("")
+		pandocProcess.Stdout = buff
+		pandocProcess.Stderr = os.Stderr
+		err1 := pandocProcess.Start()
+		if err1 != nil {
+			fmt.Println("An error occured: ", err1)
+			return "error rendering article"
+		}
+		_, err2 := io.WriteString(stdin, string(a.Article))
+		if err2 != nil {
+			fmt.Println("An error occured: ", err2)
+			return "error rendering article"
+		}
+		err3 := stdin.Close()
+		if err3 != nil {
+			fmt.Println("An error occured: ", err3)
+			return "error rendering article"
+		}
+		err4 := pandocProcess.Wait()
+		if err4 != nil {
+			fmt.Println("An error occured during pandocProess wait: ", err4)
+			return "error rendering article"
+		}
+		text = string(buff.Bytes())
+		articlesCache.Set(a, text)
+	} else {
+		text = articlesCache.Get(a)
+	}
+	return text
 }
 
 func contains(slice []string, item string) bool {

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"./articles" // pankat
+	"./articles"
 	"bufio"
 	"bytes"
-	"crypto/md5"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -19,7 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-  htemplate "html/template"
+	htemplate "html/template"
 	"time"
 )
 
@@ -29,9 +27,7 @@ var iArg = flag.String("i", "", "input directory")
 var outputPath string
 var oArg = flag.String("o", "", "output directory")
 
-// var mode string
-// var modeArg = flag.String("mode", "blog", "operation mode: 'blog' or 'wiki'")
-
+// TODO move this into external configuration file
 var SiteURL = "https://lastlog.de/blog"
 var SiteBrandTitle = "lastlog.de/blog"
 
@@ -45,7 +41,7 @@ func tagToLinkList(a *pankat.Article) string {
 		//     fmt.Println(outputPath)
 		//     fmt.Println(a.SrcDirectoryName)
 
-		//HACK should be moved to pankat.Articles
+		// HACK should be moved to pankat.Articles
 		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
 		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 
@@ -53,6 +49,7 @@ func tagToLinkList(a *pankat.Article) string {
 	}
 	return output
 }
+
 
 func main() {
 	flag.Usage = func() {
@@ -76,7 +73,7 @@ func main() {
 	inputPath = path.Clean(*iArg + "/")
 	fmt.Println("srcDirectory: ", inputPath)
 	outputPath = *oArg + "/"
-  
+
 	tt, err := filepath.Abs(outputPath)
 	outputPath = tt
 
@@ -92,7 +89,7 @@ func main() {
 		fmt.Println(err1)
 		os.Exit(1)
 	}
-	
+
 	// find all .mdwn files
 	f := make([]string, 0)
 	f = append(f, "")
@@ -112,7 +109,7 @@ func main() {
 
 	for _, e := range articlesPosts {
 		_ = e
-// 		    fmt.Println(e.Title)
+		// 		    fmt.Println(e.Title)
 		//     z:=e.SrcDirectoryName + "/" + e.SrcFileName
 		//     fmt.Println("   ", z)
 		//     fmt.Println("   ",e.SrcDirectoryName)
@@ -120,7 +117,7 @@ func main() {
 		//     fmt.Println("   ",e.ModificationDate)
 		//     fmt.Println("   ",e.Tags)
 		//     fmt.Println("   ",e.Draft)
-// 		    fmt.Println("   ",e.Series)
+		// 		    fmt.Println("   ",e.Series)
 	}
 
 	// generate about.html and additional pages
@@ -140,7 +137,6 @@ func main() {
 		"rsync -av --delete --relative images " + outputPath,
 		"rsync -av --delete --relative posts/media " + outputPath,
 	}
-
 	for _, el := range commands {
 		parts := strings.Fields(el)
 		head := parts[0]
@@ -153,60 +149,7 @@ func main() {
 		//       fmt.Println(string(out))
 		_ = out
 	}
-
-	//BUG  md5 optimization forgets to update former last article to have a 'next article' link if new article is added
-	
-	// generate rss/atom feed
-	// FIXME create feed per tag
 	renderFeed(articlesPosts)
-
-	//  fix history writing
-	//   example: 1. go to article https://lastlog.de/blog/posts/tour_of_nix.html
-	//            2. click on an article tag https://lastlog.de/blog/posts.html?tag=emscripten
-	//            3. then try 'back' button, which fails!
-  //      maybe use backbone.js for that?
-
-  // FIXME donation button
-  // FIXME next/last hover shadow
-  
-  // FIXME use h1 only for title, see http://pandoc.org/scripting.html filter
-  // TODO fo
-  //////////////////////////////////////// main features ///////////////////////////////////////////////////
-	
-  // SECURITY secure pandoc from passing <script> and other evil <html tags>
-  //          find a filter system for evil html tags like <script>  
-  
-  // https://www.overleaf.com/4344023pmjpgq#/12921720/
-  // FIXME - gocraft/web ansprechen
-  //       - git backend ansprechen
-  //       - leaps backend ansprechen
-  //       - websockets preview mit long-polling
-  //       - lokales speichern von artikeln, wenn ./pankat -daemon -i documents -o output/ verwendet wird
-  
-  // FIXME - integrate a wiki switch
-
-
-
-	//////////////////////////////////////// /main features ///////////////////////////////////////////////////
-
-	// FIXME for each article:
-	//  - rework warning/info/danger/error ...
-	//  - Summary for each article
-	//  - rewrite title names
-	//  - fix images, add class="noFancy"
-	//  - check h1,h2,...
-	//  - use <div class="warn">...</div>
-	//  - check [[!series ogre]] for other series like qt
-	//  - libnoise_viewer.html fix video width
-
-	// - commit history using git and add revert link like ikiwiki does FIXME
-	// - implement comment system FIXME
-	//   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
-
-	// BUG pandoc integration with parser '-s' of html head/body and migration to the go template
-
-	// FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
-  
 	mostRecentArticle := ""
 	if len(articlesPosts) > 0 {
 		mostRecentArticle = path.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
@@ -228,7 +171,7 @@ func main() {
 
 // scan the direcotry for .mdwn files recurively
 func getTargets(path string, ret []string) pankat.Articles {
-	var A pankat.Articles
+	var articles pankat.Articles
 	entries, _ := ioutil.ReadDir(path)
 	for _, entry := range entries {
 		buf := path + "/" + entry.Name()
@@ -240,7 +183,7 @@ func getTargets(path string, ret []string) pankat.Articles {
 			ret = append(ret, buf)
 			//       fmt.Println(buf)
 			n := getTargets(buf, ret)
-			A = append(A, n...)
+			articles = append(articles, n...)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
 				var a pankat.Article
@@ -248,7 +191,7 @@ func getTargets(path string, ret []string) pankat.Articles {
 
 				a.Title = strings.Replace(v, "_", " ", -1) // add whitespaces
 				a.DstFileName = v + ".html"
-        a.BaseFileName = v
+				a.BaseFileName = v
 				a.SrcFileName = entry.Name()
 				a.SrcDirectoryName = path
 				fh, err := os.Open(path + "/" + entry.Name())
@@ -257,7 +200,6 @@ func getTargets(path string, ret []string) pankat.Articles {
 				if err != nil {
 					fmt.Println(err)
 					panic(err)
-					os.Exit(1)
 				}
 				defer fh.Close()
 
@@ -265,18 +207,16 @@ func getTargets(path string, ret []string) pankat.Articles {
 				if err != nil {
 					fmt.Println(err)
 					panic(err)
-					os.Exit(1)
 				}
 
 				_article = filterDocument(_article, &a)
 
-				a.Hash = md5.Sum(_article)
 				a.Article = _article
-				A = append(A, &a)
+				articles = append(articles, &a)
 			}
 		}
 	}
-	return A
+	return articles
 }
 
 func filterDocument(_article []byte, article *pankat.Article) []byte {
@@ -335,11 +275,11 @@ func callPlugin(in []byte, article *pankat.Article) []byte {
 			article.ModificationDate = t
 			//           fmt.Println(t)
 		}
-// 	case "warning":
-//     if len(f) > 1 {
-//       o := `<div id="bar">` + strings.Join(f[1:len(f)], " ") + `</div>`
-//       output = []byte(o)
-//     }
+		// 	case "warning":
+		//     if len(f) > 1 {
+		//       o := `<div id="bar">` + strings.Join(f[1:len(f)], " ") + `</div>`
+		//       output = []byte(o)
+		//     }
 	case "series":
 		if len(f) > 1 {
 			article.Series = strings.Join(f[1:len(f)], " ")
@@ -440,13 +380,13 @@ func renderPostsTimeline(articles pankat.Articles) {
       <dl class="timeline-series">`
 
 	var year string
-	
+
 	for i, e := range articles {
 		if i == 0 {
-      v := e.ModificationDate.Add(1000*1000*1000*60*60*24*365) // add one year
+			v := e.ModificationDate.Add(1000*1000*1000*60*60*24*365) // add one year
 			year = v.Format("2006")
 			history += `<h2 class="timeline-time"><span>` + year + `</span></h2>`
-      year = e.ModificationDate.Format("2006")
+			year = e.ModificationDate.Format("2006")
 		}
 
 		//     fmt.Println("----")
@@ -546,18 +486,18 @@ func renderPostsTimeline(articles pankat.Articles) {
 }
 
 func renderFeed(articles pankat.Articles) {
-  feedUrl := SiteURL + "/" + "feed.xml"
-    z := `<?xml version="1.0" encoding="UTF-8"?>
+	feedUrl := SiteURL + "/" + "feed.xml"
+	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
   <id>`+SiteURL + "/" + "index.html"+`</id>
   <link type="text/html" rel="alternate" href="`+feedUrl+`"/>
   <link type="application/atom+xml" rel="self" href="`+feedUrl+`"/>
   <title>`+ SiteBrandTitle +`</title>
   <updated>`+ time.Now().Format("2006-01-02T15:04:05-07:00") +`</updated>`
-  
-    for _, e := range articles {
-      url := SiteURL + path.Clean("/" + e.SrcDirectoryName + "/" + e.DstFileName)
-      z += `
+
+	for _, e := range articles {
+		url := SiteURL + path.Clean("/" + e.SrcDirectoryName + "/" + e.DstFileName)
+		z += `
   <entry>
     <id>`+ url +`</id>
     <link type="text/html" rel="alternate" href="`+ url +`"/>
@@ -565,122 +505,52 @@ func renderFeed(articles pankat.Articles) {
         ` + e.Title + `
     </title>
     <updated>` + e.ModificationDate.Format("2006-01-02T15:04:05-07:00") + `</updated>`
-  
-  for _, t := range e.Tags {
-    z+=`<category scheme="`+SiteURL+`" term="`+t+`"/>`
-  }
-  //BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
-    z += `<author>
+
+		for _, t := range e.Tags {
+			z+=`<category scheme="`+SiteURL+`" term="`+t+`"/>`
+		}
+		//BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
+		z += `<author>
       <name>qknight</name>
       <uri>https://github.com/qknight</uri>
     </author>
-    <content type="html">` + htemplate.HTMLEscaper(string(e.RenderedArticle)) + `</content>
+    <content type="html">` + htemplate.HTMLEscaper(string(e.Render())) + `</content>
   </entry>`
-    }
-    z += `</feed>`
-    
-    outName := path.Clean(outputPath + "/" + "feed.xml")
-    err2 := ioutil.WriteFile(outName, []byte(z), 0644)
-    if err2 != nil {
-      fmt.Println(err2)
-      panic(err2)
-    }
-}
+	}
+	z += `</feed>`
 
-type CachedArticleData struct {
-  Article string
-  Hash [md5.Size]byte
+	outName := path.Clean(outputPath + "/" + "feed.xml")
+	err2 := ioutil.WriteFile(outName, []byte(z), 0644)
+	if err2 != nil {
+		fmt.Println(err2)
+		panic(err2)
+	}
 }
 
 func renderPosts(articles pankat.Articles) {
-// BUG if hash found, article won't be rendered (that was the idea), but then the feed lacks <content>...</content>
-//     so article has to be cached among the md5 sum
-  myMd5HashMap := make(map[string]CachedArticleData)
-  myMd5HashMapJson := path.Clean(outputPath + "/" + ".MyMd5HashMap.json")
-  
-  b, errReadFile := ioutil.ReadFile(myMd5HashMapJson)
-  if errReadFile != nil {
-    fmt.Println(errReadFile)
-  } else {
-    jBuff := bytes.NewBufferString(string(b))
-    
-    dec := json.NewDecoder(jBuff)
-    
-    if err := dec.Decode(&myMd5HashMap); err != nil {
-      fmt.Println(err)
-    }
-  }
-  
 	for _, e := range articles {
-    key := path.Clean(e.SrcDirectoryName + "/" + e.SrcFileName)
-    if (myMd5HashMap[key].Hash == e.Hash) {
-//       fmt.Println(e.Hash, " already generated, not generating again")
-      e.RenderedArticle = myMd5HashMap[key].Article
-      continue
-    } else {
-      //myMd5HashMap[key] = CachedArticleData{"",""}
-    }
 		fmt.Println(e.Title)
 
-		pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
-		stdin, err := pandocProcess.StdinPipe()
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
-		buff := bytes.NewBufferString("")
-		pandocProcess.Stdout = buff
-		pandocProcess.Stderr = os.Stderr
-
-		err1 := pandocProcess.Start()
-		if err1 != nil {
-			fmt.Println("An error occured: ", err1)
-			continue
-		}
-
-		io.WriteString(stdin, string(e.Article))
-		stdin.Close()
-		pandocProcess.Wait()
-
-		e.RenderedArticle = string(buff.Bytes())
-    
-		standalonePageContent := generateStandalonePage(articles, *e, string(buff.Bytes()))
+		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
 
 		outD := path.Clean(outputPath + "/" + e.SrcDirectoryName + "/")
 		//     fmt.Println(outD + e.DstFileName)
 		//     fmt.Println(string(standalonePageContent))
 
-		os.MkdirAll(outD, 0755)
+		errMkdir := os.MkdirAll(outD, 0755)
+		if errMkdir != nil {
+			fmt.Println(errMkdir)
+			panic(errMkdir)
+		}
 
 		// write to disk
 		outName := path.Clean(outD + "/" + e.DstFileName)
-		err2 := ioutil.WriteFile(outName, standalonePageContent, 0644)
-		if err2 != nil {
-			fmt.Println(err2)
+		err5 := ioutil.WriteFile(outName, standalonePageContent, 0644)
+		if err5 != nil {
+			fmt.Println(err5)
 			panic(e)
 		}
-		// FIXME add new article to cache
-		myMd5HashMap[key] = CachedArticleData{e.RenderedArticle, md5.Sum([]byte(e.Article))}
 	}
-	
-// 	fmt.Println("All article hashes:")
-// 	for k,v := range myMd5HashMap {
-//     fmt.Println(k, " ", v)
-// 	}
-	
-	jsonBuff := bytes.NewBufferString("")
-    enc := json.NewEncoder(jsonBuff)
-
-	if errEnc := enc.Encode(&myMd5HashMap); errEnc != nil {
-    fmt.Println(errEnc)
-  }
-//   fmt.Println(string(jsonBuff.Bytes()))
-  
-  errn := ioutil.WriteFile(myMd5HashMapJson, jsonBuff.Bytes(), 0644)
-  if errn != nil {
-    panic(errn)
-  }
 }
 
 func generateStandalonePage(articles pankat.Articles, article pankat.Article, body string) []byte {
@@ -690,7 +560,6 @@ func generateStandalonePage(articles pankat.Articles, article pankat.Article, bo
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
-		os.Exit(1)
 	}
 
 	//HACK should be moved to pankat.Articles
@@ -708,10 +577,10 @@ func generateStandalonePage(articles pankat.Articles, article pankat.Article, bo
 		prev = path.Clean(relativeSrcRootPath + "/" + p.SrcDirectoryName + "/" + p.DstFileName)
 		// link is active
 		titleNAV +=
-		  `<span id="articleNavLeft"> <a href="` + prev + `"> 
+			`<span id="articleNavLeft"> <a href="` + prev + `"> 
       <span class="glyphiconLink glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article"> </span> prev. article
     </a> </span>`
-	} 
+	}
 	n := articles.NextArticle(&article)
 	if n != nil {
 		// link is active
@@ -742,34 +611,33 @@ func generateStandalonePage(articles pankat.Articles, article pankat.Article, bo
 				article.Series + `</a>
         <header class="seriesHeader">
           <div id="seriesLeft">`
-     if sp != nil {
-       seriesNAV += `<a href="` + sPrev + `">` +
-      `<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
+		if sp != nil {
+			seriesNAV += `<a href="` + sPrev + `">` +
+				`<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
             </a> `
-     }
-     seriesNAV +=   `  </div>
+		}
+		seriesNAV +=   `  </div>
           <div id="seriesRight">`
-     if sn != nil {     
-       seriesNAV +=  `   <a href="` + sNext + `">
+		if sn != nil {
+			seriesNAV +=  `   <a href="` + sNext + `">
               <span class="glyphiconLinkSeries glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article in series"></span>
             </a>`
-     }
-     seriesNAV += `</div>
+		}
+		seriesNAV += `</div>
         </header>
       </div>`
 	}
-	
-	
-	 var meta string
-   var timeT time.Time
 
-   if article.ModificationDate != timeT {
-     meta += `<div id="date"><p><span id="lastupdated">` + article.ModificationDate.Format("2 Jan 2006") + `</span></p></div>`
-   }
+	var meta string
+	var timeT time.Time
 
-   if len(article.Tags) > 0 {
-     meta += `<div id="tags"><p>` + tagToLinkList(&article) + `</p></div>`
-   }
+	if article.ModificationDate != timeT {
+		meta += `<div id="date"><p><span id="lastupdated">` + article.ModificationDate.Format("2 Jan 2006") + `</span></p></div>`
+	}
+
+	if len(article.Tags) > 0 {
+		meta += `<div id="tags"><p>` + tagToLinkList(&article) + `</p></div>`
+	}
 
 	noItems := struct {
 		Title               string
@@ -790,7 +658,7 @@ func generateStandalonePage(articles pankat.Articles, article pankat.Article, bo
 		SiteBrandTitle:      SiteBrandTitle,
 		TitleNAV:            titleNAV,
 		SeriesNAV:           seriesNAV,
-    Meta:                meta,
+		Meta:                meta,
 		Anchorjs:            article.Anchorjs,
 		Tocify:              article.Tocify,
 		Timeline:            article.Timeline,
