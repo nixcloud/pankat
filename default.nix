@@ -126,14 +126,15 @@ buildGoPackage rec {
 
   shellHook = ''
     export HISTFILE=".zsh_history"
-    kill $(pidof 'gocode')
-    gocode
-    gocode set propose-builtins true
-    gocode set lib-path $GOPATH:`pwd`
-    kate pankat.go 2>/dev/null 1>/dev/null &
+    #kill $(pidof 'gocode')
+    #gocode
+    #gocode set propose-builtins true
+    #gocode set lib-path $GOPATH:`pwd`
+    #kate pankat.go 2>/dev/null 1>/dev/null &
+    cd src/github.com/nixcloud/pankat/
     CompileDaemon -build 'go build -o pankat' -color &
   '';
 
-  buildInputs = [ go pandoc pkgs.compile-daemon rsync git ];
+  buildInputs = [ go pandoc pkgs.compile-daemon rsync git dep ];
 }
 

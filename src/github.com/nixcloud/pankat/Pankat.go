@@ -1,12 +1,12 @@
 package main
 
 import (
-	"./articles"
 	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	htemplate "html/template"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -17,21 +17,22 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	htemplate "html/template"
 	"time"
 )
 
-// maybe migrate to gopkg.in/alecthomas/kingpin.v2 as flag replacement
+//var t viper.SetDefault("C", "co")
+
 var inputPath string
 var iArg = flag.String("i", "", "input directory")
 var outputPath string
 var oArg = flag.String("o", "", "output directory")
 
+
 // TODO move this into external configuration file
 var SiteURL = "https://lastlog.de/blog"
 var SiteBrandTitle = "lastlog.de/blog"
 
-func tagToLinkList(a *pankat.Article) string {
+func tagToLinkList(a *Article) string {
 	var tags []string
 	tags = a.Tags
 
@@ -41,7 +42,7 @@ func tagToLinkList(a *pankat.Article) string {
 		//     fmt.Println(outputPath)
 		//     fmt.Println(a.SrcDirectoryName)
 
-		// HACK should be moved to pankat.Articles
+		// HACK should be moved to Articles
 		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
 		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 
@@ -99,7 +100,7 @@ func main() {
 	articlesPosts := articlesAll.Posts().FilterOutDrafts()
 
 	// sort them by date
-	sort.Sort(pankat.Articles(articlesPosts))
+	sort.Sort(Articles(articlesPosts))
 
 	// override default values for posts
 	for _, e := range articlesPosts {
@@ -170,8 +171,8 @@ func main() {
 }
 
 // scan the direcotry for .mdwn files recurively
-func getTargets(path string, ret []string) pankat.Articles {
-	var articles pankat.Articles
+func getTargets(path string, ret []string) Articles {
+	var articles Articles
 	entries, _ := ioutil.ReadDir(path)
 	for _, entry := range entries {
 		buf := path + "/" + entry.Name()
@@ -186,7 +187,7 @@ func getTargets(path string, ret []string) pankat.Articles {
 			articles = append(articles, n...)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
-				var a pankat.Article
+				var a Article
 				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
 
 				a.Title = strings.Replace(v, "_", " ", -1) // add whitespaces
@@ -219,7 +220,7 @@ func getTargets(path string, ret []string) pankat.Articles {
 	return articles
 }
 
-func filterDocument(_article []byte, article *pankat.Article) []byte {
+func filterDocument(_article []byte, article *Article) []byte {
 	var _articlePostprocessed []byte
 
 	re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
@@ -245,7 +246,7 @@ func filterDocument(_article []byte, article *pankat.Article) []byte {
 	return _articlePostprocessed
 }
 
-func callPlugin(in []byte, article *pankat.Article) []byte {
+func callPlugin(in []byte, article *Article) []byte {
 	a := len(in) - 2
 	p := string(in[3:a])
 	//   fmt.Println(p)
@@ -296,7 +297,7 @@ func callPlugin(in []byte, article *pankat.Article) []byte {
 		//      fmt.Println("\n------------\n", article.SrcDirectoryName)
 		//      fmt.Println(f[1])
 
-		//HACK should be moved to pankat.Articles
+		//HACK should be moved to Articles
 		relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "./posts")
 		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 		//      fmt.Println(relativeSrcRootPath)
@@ -335,10 +336,10 @@ func (p TagsSlice) Len() int           { return len(p) }
 func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func renderPostsTimeline(articles pankat.Articles) {
+func renderPostsTimeline(articles Articles) {
 	// http://codepen.io/jplhomer/pen/lgfus
 	var history string
-	var article pankat.Article
+	var article Article
 	article.SrcDirectoryName = ""
 
 	b, err := json.Marshal(articles.TagUsage())
@@ -407,7 +408,7 @@ func renderPostsTimeline(articles pankat.Articles) {
 
 		// a hacky but straight-forward way to make tagToLinkList(...) work by
 		// fooling a different base article
-		var v pankat.Article
+		var v Article
 		v = *e
 		v.SrcDirectoryName = ""
 
@@ -485,7 +486,7 @@ func renderPostsTimeline(articles pankat.Articles) {
 	}
 }
 
-func renderFeed(articles pankat.Articles) {
+func renderFeed(articles Articles) {
 	feedUrl := SiteURL + "/" + "feed.xml"
 	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
@@ -527,7 +528,7 @@ func renderFeed(articles pankat.Articles) {
 	}
 }
 
-func renderPosts(articles pankat.Articles) {
+func renderPosts(articles Articles) {
 	for _, e := range articles {
 		fmt.Println(e.Title)
 
@@ -553,7 +554,7 @@ func renderPosts(articles pankat.Articles) {
 	}
 }
 
-func generateStandalonePage(articles pankat.Articles, article pankat.Article, body string) []byte {
+func generateStandalonePage(articles Articles, article Article, body string) []byte {
 	buff := bytes.NewBufferString("")
 	t, err := template.New("standalonePage.tmpl").
 		ParseFiles("templates/standalonePage.tmpl")
@@ -562,7 +563,7 @@ func generateStandalonePage(articles pankat.Articles, article pankat.Article, bo
 		panic(err)
 	}
 
-	//HACK should be moved to pankat.Articles
+	//HACK should be moved to Articles
 	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
 	relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 	//   fmt.Println(relativeSrcRootPath)

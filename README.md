@@ -18,25 +18,33 @@ a pankat generated blog can be found here:
 pankat is licensed AGPL v3, see LICENSE for details.
 
 # todo
-* rework hashing: current hasing forgets to update former last article to have a 'next article' link if new article is added
-* generate rss/atom feed
-* create feed per tag
-*  fix history writing
-   example: 1. go to article https://lastlog.de/blog/posts/tour_of_nix.html
-            2. click on an article tag https://lastlog.de/blog/posts.html?tag=emscripten
-            3. then try 'back' button, which fails!
-      maybe use backbone.js for that?
+* refactor hashing:
+  * refactor object initialization (hashing)  
+* add global setting object
+* create configuration file: var SiteURL / var SiteBrandTitle
+* remove websocket code (or at least UI)
+* timeline: add series to posts timeline in orange
+* timeline: fix UI bug with 'expanse all/collapse all' and 'tag' filters which conflict in displaying either all with filters on  
+* timeline: generate rss/atom feed per tag and show it there
+* BUG: fix history writing
+   example: 
+   
+   1. go to article https://lastlog.de/blog/posts/tour_of_nix.html
+   2. click on an article tag https://lastlog.de/blog/posts.html?tag=emscripten
+   3. then try 'back' button, which fails!
+   
+   maybe use backbone.js for that?
 
-* FIXME donation button
 * FIXME next/last hover shadow
-
 * FIXME use h1 only for title, see http://pandoc.org/scripting.html filter
+
+* FIXME add donation button
 
 
 
 * SECURITY secure pandoc from passing < script>alert('hi')</script> and other evil <html tags>         find a filter system for evil html tags like script
 
-*/ https://www.overleaf.com/4344023pmjpgq#/12921720/
+* https://www.overleaf.com/4344023pmjpgq#/12921720/
 
 * gocraft/web ansprechen
 * git backend ansprechen
@@ -50,6 +58,8 @@ pankat is licensed AGPL v3, see LICENSE for details.
 
 Also the content of blog.lastlog.de needs some rework. Of course not related to the software but still listed here: 
 
+* update gpg key
+* write a new article from time to time!? ;-)
 * rework warning/info/danger/error ...
 * write summary for each article
 * rewrite title names

@@ -1,4 +1,4 @@
-package pankat
+package main
 
 import (
 	"bytes"
