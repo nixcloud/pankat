@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"path"
 )
 
 type md5hash [md5.Size]byte
@@ -19,13 +18,6 @@ type ArticlesCacheList struct {
 type ArticlesCache struct {
 	Store map[md5hash]string
 }
-
-// FIXME use global settings value instead of hardcoded path
-//var outputPath = "output"
-//var myMd5HashMapJson = path.Clean(outputPath + "/" + ".ArticlesCache.json")
-
-// FIXME use correct location
-var myMd5HashMapJson = path.Clean(".ArticlesCache.json")
 
 func (s ArticlesCache) computeHash(a Article) md5hash {
 	bytes, err := json.Marshal(a)

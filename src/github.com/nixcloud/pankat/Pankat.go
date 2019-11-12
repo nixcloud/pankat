@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	htemplate "html/template"
 	"io/ioutil"
 	"os"
@@ -20,70 +21,45 @@ import (
 	"time"
 )
 
-//var t viper.SetDefault("C", "co")
-
 var inputPath string
-var iArg = flag.String("i", "", "input directory")
 var outputPath string
-var oArg = flag.String("o", "", "output directory")
-
-
-// TODO move this into external configuration file
-var SiteURL = "https://lastlog.de/blog"
-var SiteBrandTitle = "lastlog.de/blog"
-
-func tagToLinkList(a *Article) string {
-	var tags []string
-	tags = a.Tags
-
-	var output string
-	for _, e := range tags {
-		//     fmt.Println("----------------")
-		//     fmt.Println(outputPath)
-		//     fmt.Println(a.SrcDirectoryName)
-
-		// HACK should be moved to Articles
-		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
-		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
-
-		output += `<a href="` + relativeSrcRootPath + `/posts.html?tag=` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
-	}
-	return output
-}
-
+var SiteURL string
+var SiteTitle string
+var myMd5HashMapJson string
 
 func main() {
-	flag.Usage = func() {
-		a :=
-			`Usage of '` + filepath.Base(os.Args[0]) + `', the ultimate pandoc wiki/blog generator, is: 
-  -i input directory  (must be given)
-     in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files
-  -o output directory (must be given)
-     all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there
+	pflag.String("input", "documents", "input directory  (must be given) in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
+	pflag.String("output", "output", "output directory (must be given) all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
+	pflag.String("siteURL", "https://example.com/blog", "The URL of the blog, for example: 'https://example.com/blog'")
+	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
+	pflag.Parse()
+	viper.BindPFlags(pflag.CommandLine)
 
-  example: ./` + filepath.Base(os.Args[0]) + ` -i documents -o output
-`
-		fmt.Fprintf(os.Stderr, a)
-		os.Exit(1)
-	}
-	flag.Parse()
+	input := viper.GetString("input")
+	output := viper.GetString("output")
+	SiteURL = viper.GetString("siteURL")
+	SiteTitle = viper.GetString("siteTitle")
 
-	if *iArg == "" || *oArg == "" {
-		flag.Usage()
-	}
-	inputPath = path.Clean(*iArg + "/")
-	fmt.Println("srcDirectory: ", inputPath)
-	outputPath = *oArg + "/"
+	i1, err := filepath.Abs(input)
+	inputPath = i1
 
-	tt, err := filepath.Abs(outputPath)
-	outputPath = tt
+	myMd5HashMapJson = path.Clean(inputPath + "/.ArticlesCache.json")
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	fmt.Println("outDirectory: ", outputPath)
+	o1, err := filepath.Abs(output)
+	outputPath = o1
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("input Directory: ", inputPath)
+	fmt.Println("output Directory: ", outputPath)
 
 	err1 := os.Chdir(inputPath)
 	if err1 != nil {
@@ -168,6 +144,25 @@ func main() {
 	if errn != nil {
 		panic(errn)
 	}
+}
+
+func tagToLinkList(a *Article) string {
+	var tags []string
+	tags = a.Tags
+
+	var output string
+	for _, e := range tags {
+		//     fmt.Println("----------------")
+		//     fmt.Println(outputPath)
+		//     fmt.Println(a.SrcDirectoryName)
+
+		// HACK should be moved to Articles
+		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
+		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
+
+		output += `<a href="` + relativeSrcRootPath + `/posts.html?tag=` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
+	}
+	return output
 }
 
 // scan the direcotry for .mdwn files recurively
@@ -331,7 +326,6 @@ type Pair struct {
 }
 
 type TagsSlice []Pair
-
 func (p TagsSlice) Len() int           { return len(p) }
 func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
@@ -493,7 +487,7 @@ func renderFeed(articles Articles) {
   <id>`+SiteURL + "/" + "index.html"+`</id>
   <link type="text/html" rel="alternate" href="`+feedUrl+`"/>
   <link type="application/atom+xml" rel="self" href="`+feedUrl+`"/>
-  <title>`+ SiteBrandTitle +`</title>
+  <title>`+ SiteTitle +`</title>
   <updated>`+ time.Now().Format("2006-01-02T15:04:05-07:00") +`</updated>`
 
 	for _, e := range articles {
@@ -530,7 +524,7 @@ func renderFeed(articles Articles) {
 
 func renderPosts(articles Articles) {
 	for _, e := range articles {
-		fmt.Println(e.Title)
+		fmt.Println("Rendering " + e.Title)
 
 		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
 
@@ -656,7 +650,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		Title:               article.Title,
 		RelativeSrcRootPath: relativeSrcRootPath,
 		SiteURL:             SiteURL,
-		SiteBrandTitle:      SiteBrandTitle,
+		SiteBrandTitle:      SiteTitle,
 		TitleNAV:            titleNAV,
 		SeriesNAV:           seriesNAV,
 		Meta:                meta,

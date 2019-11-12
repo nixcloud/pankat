@@ -18,10 +18,6 @@ a pankat generated blog can be found here:
 pankat is licensed AGPL v3, see LICENSE for details.
 
 # todo
-* refactor hashing:
-  * refactor object initialization (hashing)  
-* add global setting object
-* create configuration file: var SiteURL / var SiteBrandTitle
 * remove websocket code (or at least UI)
 * timeline: add series to posts timeline in orange
 * timeline: fix UI bug with 'expanse all/collapse all' and 'tag' filters which conflict in displaying either all with filters on  

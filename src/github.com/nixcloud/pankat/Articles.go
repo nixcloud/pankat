@@ -30,9 +30,9 @@ type Article struct {
 }
 
 func (a Article) Render() string {
-	// FIXME get rid of this initialization here and implement this 'constructor' like instead
+	// i would love to get rid of this initialization here and implement this 'constructor' like instead
 	if (articlesCache.Store == nil) {
-		fmt.Println("Initializing hash map")
+		//fmt.Println("Initializing hash map")
 		articlesCache.Store = make(map[md5hash]string)
 		articlesCache.load()
 	}
