@@ -18,42 +18,33 @@ a pankat generated blog can be found here:
 pankat is licensed AGPL v3, see LICENSE for details.
 
 # todo
-* timeline: add series to posts timeline in orange
-* timeline: fix UI bug with 'expanse all/collapse all' and 'tag' filters which conflict in displaying either all with filters on  
 * timeline: generate rss/atom feed per tag and show it there
-* BUG: fix history writing
+* timeline: implement filter for series by URL (similar to tag) ?series=n900
+* timeline: fix UI bug with 'expanse all/collapse all' and 'tag' filters which conflict in displaying either all with filters on  
+* timeline: fadeout none-focus elements
+* timeline BUG: fix history writing
    example: 
-   
    1. go to article https://lastlog.de/blog/posts/tour_of_nix.html
    2. click on an article tag https://lastlog.de/blog/posts.html?tag=emscripten
    3. then try 'back' button, which fails!
-   
    maybe use backbone.js for that?
+   
+* ArticlesCache: add error handling
+* http://blog.j7mbo.com/bypassing-golangs-lack-of-constructors/
+* move templates and general stuff into base dir
+* recreate nix build
 
 * FIXME next/last hover shadow
 * FIXME use h1 only for title, see http://pandoc.org/scripting.html filter
 
 * FIXME add donation button
-
-
-
 * SECURITY secure pandoc from passing < script>alert('hi')</script> and other evil <html tags>         find a filter system for evil html tags like script
-
-* https://www.overleaf.com/4344023pmjpgq#/12921720/
-
-* gocraft/web ansprechen
-* git backend ansprechen
-* leaps backend ansprechen
-* websockets preview mit long-polling
-* lokales speichern von artikeln, wenn ./pankat -daemon -i documents -o output/ verwendet wird
-
 
 
 # content
 
 Also the content of blog.lastlog.de needs some rework. Of course not related to the software but still listed here: 
 
-* update gpg key
 * write a new article from time to time!? ;-)
 * rework warning/info/danger/error ...
 * write summary for each article
@@ -71,6 +62,19 @@ Also the content of blog.lastlog.de needs some rework. Of course not related to 
 * BUG pandoc integration with parser '-s' of html head/body and migration to the go template
 
 // FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
+
+
+
+# advanced pankat editor
+
+* gocraft/web ansprechen
+* git backend ansprechen
+* leaps backend ansprechen
+* websockets preview mit long-polling
+* lokales speichern von artikeln, wenn ./pankat -daemon -i documents -o output/ verwendet wird
+
+* https://www.overleaf.com/4344023pmjpgq#/12921720/
+
 
 
 

@@ -127,7 +127,7 @@ img {
 
 #seriesContainer {
   position: relative;
-  background-color: #D7E4ED;
+  background-color: #03a6ca36;
   color: #25404E;
   text-decoration: none;
   font-size: large;
@@ -196,8 +196,30 @@ header.seriesHeader {
   border-color: rgba(0, 128, 0, 0);
 }
 
+.seriesbtn {
+    padding-right: 2px;
+    padding-left: 2px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+    margin-left: 1px;
+    margin-right: 1px;
+    border-color: rgba(0, 128, 0, 0);
+    background-color: #03a6ca;
+}
+
+.seriesbtn:hover {
+    background-color: #0289a7;
+}
+
 p#tagCloud {
-  text-align: center;
+    text-align: center;
+    margin-top: 10px;
+}
+
+p#seriesCloud {
+    text-align: center;
 }
 
 #scrollUp {

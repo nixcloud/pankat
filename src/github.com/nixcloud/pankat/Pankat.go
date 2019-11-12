@@ -191,13 +191,13 @@ func getTargets(path string, ret []string) Articles {
 				a.SrcFileName = entry.Name()
 				a.SrcDirectoryName = path
 				fh, err := os.Open(path + "/" + entry.Name())
+				defer fh.Close()
 				f := bufio.NewReader(fh)
 
 				if err != nil {
 					fmt.Println(err)
 					panic(err)
 				}
-				defer fh.Close()
 
 				_article, err := ioutil.ReadAll(f)
 				if err != nil {
@@ -343,12 +343,17 @@ func renderPostsTimeline(articles Articles) {
 	history += `<script type="application/json" id="tagsMap">` + string(b) + `</script>`
 
 	tagsMap := make(map[string]int)
+	seriesMap := make(map[string]int)
 
 	for _, a := range articles {
+		if (a.Series != "") {
+			seriesMap[a.Series]++
+		}
 		for _, t := range a.Tags {
 			tagsMap[t] = tagsMap[t] + 1
 		}
 	}
+
 	// sort the tags
 	tagsSlice := rankByWordCount(tagsMap)
 
@@ -356,6 +361,15 @@ func renderPostsTimeline(articles Articles) {
 	for _, e := range tagsSlice {
 		zz := "'" + e.Key + "'"
 		history += `<a class="tagbtn btn btn-primary" onClick="showTag(` + zz + `)">` + e.Key + `</a>`
+	}
+	history += `</p>`
+
+	seriesSlice := rankByWordCount(seriesMap)
+	fmt.Println(seriesSlice)
+	history += `<p id="seriesCloud">`
+	for _, e := range seriesSlice {
+		zz := "'" + e.Key + "'"
+		history += `<a class="seriesbtn btn btn-primary" onClick="showSeries(` + zz + `)">` + e.Key + `</a>`
 	}
 	history += `</p>`
 
@@ -472,7 +486,10 @@ func renderPostsTimeline(articles Articles) {
 	page := generateStandalonePage(articles, article, history)
 
 	outD := outputPath + "/"
-	os.MkdirAll(outD, 0755)
+	err = os.MkdirAll(outD, 0755)
+	if err != nil {
+		panic(err)
+	}
 	outName := outD + "posts.html"
 	err1 := ioutil.WriteFile(outName, page, 0644)
 	if err1 != nil {
@@ -602,7 +619,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		seriesNAV =
 			`
       <div id="seriesContainer">
-      <a href="` + relativeSrcRootPath + `/posts.html?series=` + article.Series + `" title="article series `+article.Series+`">` +
+      <a href="` + relativeSrcRootPath + `/posts.html?series=` + article.Series + `" title="article series `+article.Series+`" class="seriesbtn btn btn-primary">` +
 				article.Series + `</a>
         <header class="seriesHeader">
           <div id="seriesLeft">`

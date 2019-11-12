@@ -71,9 +71,6 @@ func (s ArticlesCache) save() {
 
 // query the local cache for the article
 func (s ArticlesCache) Get(a Article) string {
-	// FIXME make used ones so the others can be removed
-
-
 	// FIXME add error handling!
 	hash := s.computeHash(a)
 	return s.Store[hash]
