@@ -18,7 +18,6 @@ a pankat generated blog can be found here:
 pankat is licensed AGPL v3, see LICENSE for details.
 
 # todo
-* remove websocket code (or at least UI)
 * timeline: add series to posts timeline in orange
 * timeline: fix UI bug with 'expanse all/collapse all' and 'tag' filters which conflict in displaying either all with filters on  
 * timeline: generate rss/atom feed per tag and show it there

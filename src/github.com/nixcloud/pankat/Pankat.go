@@ -28,9 +28,9 @@ var SiteTitle string
 var myMd5HashMapJson string
 
 func main() {
-	pflag.String("input", "documents", "input directory  (must be given) in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
-	pflag.String("output", "output", "output directory (must be given) all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
-	pflag.String("siteURL", "https://example.com/blog", "The URL of the blog, for example: 'https://example.com/blog'")
+	pflag.String("input", "documents", "input directory  ('documents'') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
+	pflag.String("output", "output", "output directory ('output') all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
+	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)
@@ -524,7 +524,7 @@ func renderFeed(articles Articles) {
 
 func renderPosts(articles Articles) {
 	for _, e := range articles {
-		fmt.Println("Rendering " + e.Title)
+		fmt.Println("Processing " + e.Title)
 
 		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
 
