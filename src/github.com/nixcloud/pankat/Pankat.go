@@ -33,7 +33,7 @@ func main() {
 	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Parse()
-	viper.BindPFlags(pflag.CommandLine)
+	_ = viper.BindPFlags(pflag.CommandLine)
 
 	input := viper.GetString("input")
 	output := viper.GetString("output")
@@ -76,7 +76,7 @@ func main() {
 	articlesPosts := articlesAll.Posts().FilterOutDrafts()
 
 	// sort them by date
-	sort.Sort(Articles(articlesPosts))
+	sort.Sort(articlesPosts)
 
 	// override default values for posts
 	for _, e := range articlesPosts {
@@ -103,6 +103,9 @@ func main() {
 	// generate posts.html (timeline)
 	renderPostsTimeline(articlesPosts)
 
+	// render feed.html
+	renderFeed(articlesPosts)
+
 	// generate articles
 	renderPosts(articlesPosts)
 
@@ -117,7 +120,7 @@ func main() {
 	for _, el := range commands {
 		parts := strings.Fields(el)
 		head := parts[0]
-		parts = parts[1:len(parts)]
+		parts = parts[1:]
 		out, err := exec.Command(head, parts...).Output()
 		if err != nil {
 			fmt.Println(err)
@@ -126,7 +129,6 @@ func main() {
 		//       fmt.Println(string(out))
 		_ = out
 	}
-	renderFeed(articlesPosts)
 	mostRecentArticle := ""
 	if len(articlesPosts) > 0 {
 		mostRecentArticle = path.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
@@ -191,14 +193,13 @@ func getTargets(path string, ret []string) Articles {
 				a.SrcFileName = entry.Name()
 				a.SrcDirectoryName = path
 				fh, err := os.Open(path + "/" + entry.Name())
-				defer fh.Close()
+
 				f := bufio.NewReader(fh)
 
 				if err != nil {
 					fmt.Println(err)
 					panic(err)
 				}
-
 				_article, err := ioutil.ReadAll(f)
 				if err != nil {
 					fmt.Println(err)
@@ -209,6 +210,11 @@ func getTargets(path string, ret []string) Articles {
 
 				a.Article = _article
 				articles = append(articles, &a)
+				err = fh.Close()
+				if err != nil {
+					fmt.Println(err)
+					panic(err)
+				}
 			}
 		}
 	}
@@ -224,7 +230,7 @@ func filterDocument(_article []byte, article *Article) []byte {
 	prevPos := 0
 	for i := 0; i <= len(z); i++ {
 		if i == len(z) {
-			_articlePostprocessed = append(_articlePostprocessed, _article[prevPos:len(_article)]...)
+			_articlePostprocessed = append(_articlePostprocessed, _article[prevPos:]...)
 			break
 		}
 		n := z[i]
@@ -278,17 +284,17 @@ func callPlugin(in []byte, article *Article) []byte {
 		//     }
 	case "series":
 		if len(f) > 1 {
-			article.Series = strings.Join(f[1:len(f)], " ")
+			article.Series = strings.Join(f[1:], " ")
 		}
 	case "tag":
 		if len(f) > 1 {
-			article.Tags = f[1:len(f)]
+			article.Tags = f[1:]
 		}
 	case "draft":
 		article.Draft = true
 
 	case "img":
-		b := strings.Join(f[1:len(f)], " ")
+		b := strings.Join(f[1:], " ")
 		//      fmt.Println("\n------------\n", article.SrcDirectoryName)
 		//      fmt.Println(f[1])
 
@@ -301,7 +307,7 @@ func callPlugin(in []byte, article *Article) []byte {
 		output = []byte(o)
 
 	case "summary":
-		article.Summary = strings.Join(f[1:len(f)], " ")
+		article.Summary = strings.Join(f[1:], " ")
 	default:
 		fmt.Println(name, " plugin, called from ", article.SrcFileName, " NOT supported")
 	}
@@ -326,31 +332,35 @@ type Pair struct {
 }
 
 type TagsSlice []Pair
+
 func (p TagsSlice) Len() int           { return len(p) }
 func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func renderPostsTimeline(articles Articles) {
-	// http://codepen.io/jplhomer/pen/lgfus
 	var history string
 	var article Article
+
+	article.Title = "all posts"
+	article.Timeline = true
+
 	article.SrcDirectoryName = ""
 
-	b, err := json.Marshal(articles.TagUsage())
+	t, err := json.Marshal(articles.TagUsage())
 	if err != nil {
 		fmt.Println("json.Marshal error:", err)
 	}
-	history += `<script type="application/json" id="tagsMap">` + string(b) + `</script>`
+	history += `<script type="application/json" id="MetaData">` + string(t) + `</script>`
 
 	tagsMap := make(map[string]int)
 	seriesMap := make(map[string]int)
 
-	for _, a := range articles {
-		if (a.Series != "") {
-			seriesMap[a.Series]++
+	for _, article := range articles {
+		if article.Series != "" {
+			seriesMap[article.Series]++
 		}
-		for _, t := range a.Tags {
-			tagsMap[t] = tagsMap[t] + 1
+		for _, t := range article.Tags {
+			tagsMap[t]++
 		}
 	}
 
@@ -360,7 +370,7 @@ func renderPostsTimeline(articles Articles) {
 	history += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
 		zz := "'" + e.Key + "'"
-		history += `<a class="tagbtn btn btn-primary" onClick="showTag(` + zz + `)">` + e.Key + `</a>`
+		history += `<a class="tagbtn btn btn-primary" onClick="showTag(` + zz + `, 1)">` + e.Key + `</a>`
 	}
 	history += `</p>`
 
@@ -369,7 +379,7 @@ func renderPostsTimeline(articles Articles) {
 	history += `<p id="seriesCloud">`
 	for _, e := range seriesSlice {
 		zz := "'" + e.Key + "'"
-		history += `<a class="seriesbtn btn btn-primary" onClick="showSeries(` + zz + `)">` + e.Key + `</a>`
+		history += `<a class="seriesbtn btn btn-primary" onClick="showSeries(` + zz + `, 1)">` + e.Key + `</a>`
 	}
 	history += `</p>`
 
@@ -378,7 +388,7 @@ func renderPostsTimeline(articles Articles) {
 
     <div id="timelineFilter" style="display: none">
       <p>Currently this filter is set:</p>
-      <a id="timelineButton"  class="tagbtn btn btn-primary">bios</a> <span id="timelineFilterCancel" class="glyphicon glyphicon-remove" onclick="showTag('')"></span>
+      <a id="timelineButton"  class="tagbtn btn btn-primary">bios</a> <span id="timelineFilterCancel" class="glyphicon glyphicon-remove" onclick="showTag('', 0)"></span>
     </div>
     
     <div id="timeline" class="timeline-container">
@@ -390,12 +400,12 @@ func renderPostsTimeline(articles Articles) {
 
 	var year string
 
-	for i, e := range articles {
+	for i, article := range articles {
 		if i == 0 {
-			v := e.ModificationDate.Add(1000*1000*1000*60*60*24*365) // add one year
+			v := article.ModificationDate.Add(1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
 			year = v.Format("2006")
 			history += `<h2 class="timeline-time"><span>` + year + `</span></h2>`
-			year = e.ModificationDate.Format("2006")
+			year = article.ModificationDate.Format("2006")
 		}
 
 		//     fmt.Println("----")
@@ -403,7 +413,7 @@ func renderPostsTimeline(articles Articles) {
 		//     fmt.Println("  ", e.SrcDirectoryName)
 		//     fmt.Println("  ", inputPath)
 
-		if year != e.ModificationDate.Format("2006") {
+		if year != article.ModificationDate.Format("2006") {
 			history += `
          </dl><!-- /.timeline-series -->
        </div><!-- /.timeline-wrapper -->
@@ -411,22 +421,22 @@ func renderPostsTimeline(articles Articles) {
 
 			history += `<h2 class="timeline-time"><span>` + year + `</span></h2>`
 			history += `<dl class="timeline-series">`
-			year = e.ModificationDate.Format("2006")
+			year = article.ModificationDate.Format("2006")
 		}
 
 		// a hacky but straight-forward way to make tagToLinkList(...) work by
 		// fooling a different base article
 		var v Article
-		v = *e
+		v = *article
 		v.SrcDirectoryName = ""
 
 		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
 		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
 		history += `
-          <dt id="` + strconv.Itoa(i) + `" class="timeline-event"><a>` + e.Title + `</a></dt>
+          <dt id="` + strconv.Itoa(i) + `" class="timeline-event"><a>` + article.Title + `</a></dt>
           <dd class="timeline-event-content" id="` + strconv.Itoa(i) + "EX" + `">
             <div class="postingsEntry">
-              <p class="summary">` + e.Summary + ` <a href="` + path.Clean(e.SrcDirectoryName+"/"+e.DstFileName) + `">open complete article</a></p>
+              <p class="summary">` + article.Summary + ` <a href="` + path.Clean(article.SrcDirectoryName+"/"+article.DstFileName) + `">open complete article</a></p>
               <p class="tag">` + tagToLinkList(&v) + `</p>
             </div>
             <br class="clear">
@@ -438,32 +448,61 @@ func renderPostsTimeline(articles Articles) {
       </div><!-- /.timeline-wrapper -->
       
       <script>
-      var tagsMap
-      var showTag = function(tagName) {
-        var count = tagsMap.ArticleCount
+      var MetaData
+      var showTag = function(tagName, addHistory) {
+        var count = MetaData.ArticleCount
         if (tagName === "") {
           for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'block'); }
           $('#timelineFilter').fadeOut("slow");
-          window.history.pushState('', '',  window.location.pathname);
+          if (addHistory === 1)
+            window.history.pushState('', '',  window.location.pathname);
         } else {
           for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'none'); }
-          if (typeof(tagsMap.Tags[tagName]) !== "undefined") {
-            for (i=0; i < tagsMap.Tags[tagName].length; i++) { 
-              var n = "#" + (tagsMap.Tags[tagName])[i]; 
+          if (typeof(MetaData.Tags[tagName]) !== "undefined") {
+            for (i=0; i < MetaData.Tags[tagName].length; i++) { 
+              var n = "#" + (MetaData.Tags[tagName])[i]; 
               $(n).css('display', 'block'); 
             }
           }
           $('#timelineFilter').css('display','block')
           $('#timelineButton')[0].innerHTML=tagName
-          window.history.pushState('', '',  window.location.pathname + '?tag=' + tagName);
+          if (addHistory === 1)
+            window.history.pushState('', '',  window.location.pathname + '?tag=' + tagName);
+        }
+      }
+      var showSeries = function(seriesName, addHistory) {
+        var count = MetaData.ArticleCount
+        if (seriesName === "") {
+          for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'block'); }
+          $('#timelineFilter').fadeOut("slow");
+          if (addHistory === 1)
+            window.history.pushState('', '',  window.location.pathname);
+        } else {
+          for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'none'); }
+          if (typeof(MetaData.Series[seriesName]) !== "undefined") {
+            for (i=0; i < MetaData.Series[seriesName].length; i++) {
+    		  var n = "#" + (MetaData.Series[seriesName][i]); 
+			  $(n).css('display', 'block');
+            }
+          }
+          $('#timelineFilter').css('display','block')
+          $('#timelineButton')[0].innerHTML=seriesName
+          if (addHistory === 1)
+            window.history.pushState('', '',  window.location.pathname + '?series=' + seriesName);
         }
       }
       $(document).ready(function() {
-        tagsMap = JSON.parse(document.getElementById('tagsMap').innerHTML)
+        MetaData = JSON.parse(document.getElementById('MetaData', 0).innerHTML)
         var tag = getURLParameter("tag");
+        var series = getURLParameter("series");
+        console.log("document.ready()")
         if (typeof(tag) !== "undefined" && tag !== null) {
           console.log("read() : " + tag)
-          showTag(tag);
+          showTag(tag, 1);
+        }
+        if (typeof(series) !== "undefined" && series !== null) {
+          console.log("read() : " + series)
+          showSeries(series, 1);
         }
       });
       function getURLParameter(name) {
@@ -471,18 +510,23 @@ func renderPostsTimeline(articles Articles) {
       }
       window.addEventListener("popstate", function() {
         var tag = getURLParameter("tag");
+        var series = getURLParameter("series");
+        console.log("addEventListener popstate")
         if (typeof(tag) !== "undefined" && tag !== null) {
           console.log("addEvent() : " + tag)
-          showTag(tag);
+          showTag(tag, 0);
+          return;
         }
+        if (typeof(series) !== "undefined" && series !== null) {
+          console.log("addEvent() : " + series)
+          showSeries(series, 0);
+          return;
+        }
+        showTag('', 0);
       });
       </script>
       </div>
 `
-
-	article.Title = "posts - timeline"
-	article.Timeline = true
-
 	page := generateStandalonePage(articles, article, history)
 
 	outD := outputPath + "/"
@@ -498,40 +542,119 @@ func renderPostsTimeline(articles Articles) {
 }
 
 func renderFeed(articles Articles) {
+	var history string
+	var article Article
+
+	article.Title = "feed"
+
+	article.SrcDirectoryName = ""
+
+	tagsMap := make(map[string]int)
+	seriesMap := make(map[string]int)
+
+	for _, a := range articles {
+		if a.Series != "" {
+			seriesMap[a.Series]++
+		}
+		for _, t := range a.Tags {
+			tagsMap[t]++
+		}
+	}
+
+	history += `
+	<p>
+		<div>want to follow the blog by feed, this one contains all articles:</div>
+		> <a href="feed.xml">feed.xml</a>
+    </p>
+    `
+	for k := range tagsMap {
+		generateFeedXML(articles.FilterByTag(k), "tag_"+k)
+	}
+
+	for k := range seriesMap {
+		generateFeedXML(articles.FilterByTag(k), "series_"+k)
+	}
+
+	history += `
+    <h2>feed by tag/series</h2>
+    `
+	// sort the tags
+	tagsSlice := rankByWordCount(tagsMap)
+
+	history += `<p id="tagCloud">`
+	for _, e := range tagsSlice {
+		zz := "'" + e.Key + "'"
+		history += `<a class="tagbtn btn btn-primary" onClick="showTag(` + zz + `, 1)">` + e.Key + `</a>`
+	}
+
+	seriesSlice := rankByWordCount(seriesMap)
+	//fmt.Println(seriesSlice)
+	history += `<p id="seriesCloud">`
+	for _, e := range seriesSlice {
+		zz := "'" + e.Key + "'"
+		history += `<a class="seriesbtn btn btn-primary" onClick="showSeries(` + zz + `, 1)">` + e.Key + `</a>`
+	}
+	history += `</p>
+	<p>
+     Are you interested in a single tag or series? Then just make a selection above and copy the url from below afterwards:<br>
+     
+     <div class="feedURL" id="feedURL"> > <a href="feed.xml">feed.xml</a></div>
+     </p>
+    `
+	page := generateStandalonePage(articles, article, history)
+
+	outD := outputPath + "/"
+	err := os.MkdirAll(outD, 0755)
+	if err != nil {
+		panic(err)
+	}
+	outName := outD + "feed.html"
+	err1 := ioutil.WriteFile(outName, page, 0644)
+	if err1 != nil {
+		panic(err1)
+	}
+}
+
+func generateFeedXML(articles Articles, fileName string) {
+	fmt.Println("Generating feed: " + fileName)
 	feedUrl := SiteURL + "/" + "feed.xml"
 	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
-  <id>`+SiteURL + "/" + "index.html"+`</id>
-  <link type="text/html" rel="alternate" href="`+feedUrl+`"/>
-  <link type="application/atom+xml" rel="self" href="`+feedUrl+`"/>
-  <title>`+ SiteTitle +`</title>
-  <updated>`+ time.Now().Format("2006-01-02T15:04:05-07:00") +`</updated>`
+  <id>` + SiteURL + "/" + "index.html" + `</id>
+  <link type="text/html" rel="alternate" href="` + feedUrl + `"/>
+  <link type="application/atom+xml" rel="self" href="` + feedUrl + `"/>
+  <title>` + SiteTitle + `</title>
+  <updated>` + time.Now().Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 	for _, e := range articles {
-		url := SiteURL + path.Clean("/" + e.SrcDirectoryName + "/" + e.DstFileName)
+		url := SiteURL + path.Clean("/"+e.SrcDirectoryName+"/"+e.DstFileName)
 		z += `
   <entry>
-    <id>`+ url +`</id>
-    <link type="text/html" rel="alternate" href="`+ url +`"/>
+    <id>` + url + `</id>
+    <link type="text/html" rel="alternate" href="` + url + `"/>
     <title>
         ` + e.Title + `
     </title>
     <updated>` + e.ModificationDate.Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 		for _, t := range e.Tags {
-			z+=`<category scheme="`+SiteURL+`" term="`+t+`"/>`
+			z += `<category scheme="` + SiteURL + `" term="` + t + `"/>`
 		}
 		//BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
 		z += `<author>
       <name>qknight</name>
       <uri>https://github.com/qknight</uri>
     </author>
-    <content type="html">` + htemplate.HTMLEscaper(string(e.Render())) + `</content>
+    <content type="html">` + htemplate.HTMLEscaper(e.Render()) + `</content>
   </entry>`
 	}
 	z += `</feed>`
-
-	outName := path.Clean(outputPath + "/" + "feed.xml")
+	errMkdir := os.MkdirAll(outputPath + "/feed", 0755)
+	if errMkdir != nil {
+		fmt.Println(errMkdir)
+		panic(errMkdir)
+	}
+	outName := path.Clean(outputPath + "/feed/" + fileName + ".xml")
 	err2 := ioutil.WriteFile(outName, []byte(z), 0644)
 	if err2 != nil {
 		fmt.Println(err2)
@@ -619,7 +742,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		seriesNAV =
 			`
       <div id="seriesContainer">
-      <a href="` + relativeSrcRootPath + `/posts.html?series=` + article.Series + `" title="article series `+article.Series+`" class="seriesbtn btn btn-primary">` +
+      <a href="` + relativeSrcRootPath + `/posts.html?series=` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
 				article.Series + `</a>
         <header class="seriesHeader">
           <div id="seriesLeft">`
@@ -628,10 +751,10 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 				`<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
             </a> `
 		}
-		seriesNAV +=   `  </div>
+		seriesNAV += `  </div>
           <div id="seriesRight">`
 		if sn != nil {
-			seriesNAV +=  `   <a href="` + sNext + `">
+			seriesNAV += `   <a href="` + sNext + `">
               <span class="glyphiconLinkSeries glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article in series"></span>
             </a>`
 		}

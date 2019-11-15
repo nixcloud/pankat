@@ -195,12 +195,14 @@ func (s Articles) FilterOutDrafts() Articles {
 type MetaData struct {
 	ArticleCount int
 	Tags         map[string][]int
-	//   Series map[string][]int
+	Series       map[string][]int
 }
 
 func (s Articles) TagUsage() MetaData {
-	tagsMap := make(map[string][]int)
+	tagsMap   := make(map[string][]int)
+	seriesMap := make(map[string][]int)
 	for i, e := range s {
+
 		for _, t := range e.Tags {
 			if tagsMap[t] == nil {
 				tagsMap[t] = []int{i}
@@ -208,6 +210,14 @@ func (s Articles) TagUsage() MetaData {
 				tagsMap[t] = append(tagsMap[t], i)
 			}
 		}
+        z := s[i].Series
+        if (z != "") {
+			if seriesMap[z] == nil {
+				seriesMap[z] = []int{i}
+			} else {
+				seriesMap[z] = append(seriesMap[z], i)
+			}
+		}
 	}
-	return MetaData{len(s), tagsMap}
+	return MetaData{len(s), tagsMap, seriesMap}
 }

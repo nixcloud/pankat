@@ -132,7 +132,7 @@ buildGoPackage rec {
     #gocode set lib-path $GOPATH:`pwd`
     #kate pankat.go 2>/dev/null 1>/dev/null &
     cd src/github.com/nixcloud/pankat/
-    CompileDaemon -build 'go build -o pankat' -color &
+    CompileDaemon -build 'go build -o pankat; ./update' -color &
   '';
 
   buildInputs = [ go pandoc pkgs.compile-daemon rsync git dep ];

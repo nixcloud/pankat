@@ -1,2 +1,2 @@
 #!/bin/sh
-rsync -avz --delete output/ --exclude=".*" root@nixcloud-root:/www/lastlog.de/blog
+rsync -avz --delete output/ --exclude=".*" root@joshi-server-NG:/var/lib/nixcloud/webservices/apache-lastlog/www/blog
