@@ -583,23 +583,27 @@ func renderFeed(articles Articles) {
 
 	history += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
-		zz := "'" + e.Key + "'"
-		history += `<a class="tagbtn btn btn-primary" onClick="showTag(` + zz + `, 1)">` + e.Key + `</a>`
+		history += `<a class="tagbtn btn btn-primary" onClick="showXML('tag_` + e.Key + `')">` + e.Key + `</a>`
 	}
 
 	seriesSlice := rankByWordCount(seriesMap)
 	//fmt.Println(seriesSlice)
 	history += `<p id="seriesCloud">`
 	for _, e := range seriesSlice {
-		zz := "'" + e.Key + "'"
-		history += `<a class="seriesbtn btn btn-primary" onClick="showSeries(` + zz + `, 1)">` + e.Key + `</a>`
+		history += `<a class="seriesbtn btn btn-primary" onClick="showXML('series_` + e.Key + `')">` + e.Key + `</a>`
 	}
 	history += `</p>
 	<p>
      Are you interested in a single tag or series? Then just make a selection above and copy the url from below afterwards:<br>
      
-     <div class="feedURL" id="feedURL"> > <a href="feed.xml">feed.xml</a></div>
+     <div class="feedURL" id="feedURL"> > select tag or series</div>
      </p>
+
+     <script>
+     var showXML = function(name) {
+        $('#feedURL')[0].innerHTML="> <a href=\"feed/" + name +".xml\">" + name +".xml</a>"
+     } 
+     </script>
     `
 	page := generateStandalonePage(articles, article, history)
 
