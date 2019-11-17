@@ -4,7 +4,6 @@
 * @copyright	Tarek Anandan (http://www.technotarek.com)
 */
 ;(function($) {
-
         $.timeliner = function(options) {
             if ($.timeliners == null) {
                 $.timeliners = { options: [] };
@@ -13,11 +12,11 @@
             else {
                 $.timeliners.options.push(options);
             }
-            $(document).ready(function() {
-                for (var i=0; i<$.timeliners.options.length; i++) {
-                    startTimeliner($.timeliners.options[i]);
-                }
-            });
+            for (var i=0; i<$.timeliners.options.length; i++) {
+                console.log("startTimeliner")
+                startTimeliner($.timeliners.options[i]);
+            }
+            console.log("timeliner init done")
         }
 
         function startTimeliner(options) {

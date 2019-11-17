@@ -162,7 +162,7 @@ func tagToLinkList(a *Article) string {
 		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
 		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 
-		output += `<a href="` + relativeSrcRootPath + `/posts.html?tag=` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
+		output += `<a href="` + relativeSrcRootPath + `/posts.html?filter=tag::` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
 	}
 	return output
 }
@@ -369,8 +369,7 @@ func renderPostsTimeline(articles Articles) {
 
 	history += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
-		zz := "'" + e.Key + "'"
-		history += `<a class="tagbtn btn btn-primary" onClick="showTag(` + zz + `, 1)">` + e.Key + `</a>`
+		history += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e.Key + `', 1)">` + e.Key + `</a>`
 	}
 	history += `</p>`
 
@@ -378,22 +377,18 @@ func renderPostsTimeline(articles Articles) {
 	fmt.Println(seriesSlice)
 	history += `<p id="seriesCloud">`
 	for _, e := range seriesSlice {
-		zz := "'" + e.Key + "'"
-		history += `<a class="seriesbtn btn btn-primary" onClick="showSeries(` + zz + `, 1)">` + e.Key + `</a>`
+		history += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + e.Key + `', 1)">` + e.Key + `</a>`
 	}
 	history += `</p>`
 
 	history += `
-    <p class="lead">A timeline showing all blog postings.</p>
 
-    <div id="timelineFilter" style="display: none">
-      <p>Currently this filter is set:</p>
-      <a id="timelineButton"  class="tagbtn btn btn-primary">bios</a> <span id="timelineFilterCancel" class="glyphicon glyphicon-remove" onclick="showTag('', 0)"></span>
-    </div>
+    <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
+
+    <p class="lead">A timeline showing all blog postings.</p>
     
     <div id="timeline" class="timeline-container">
-      <a class="timeline-toggle btn btn-primary">+expand all</a>
-
+    
       <br class="clear">
       <div class="timeline-wrapper">
       <dl class="timeline-series">`
@@ -433,8 +428,8 @@ func renderPostsTimeline(articles Articles) {
 		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
 		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
 		history += `
-          <dt id="` + strconv.Itoa(i) + `" class="timeline-event"><a>` + article.Title + `</a></dt>
-          <dd class="timeline-event-content" id="` + strconv.Itoa(i) + "EX" + `">
+          <dt class="timeline-event posting_`+ strconv.Itoa(i) + `"><a>` + article.Title + `</a></dt>
+          <dd class="timeline-event-content posting_`+ strconv.Itoa(i) + `">
             <div class="postingsEntry">
               <p class="summary">` + article.Summary + ` <a href="` + path.Clean(article.SrcDirectoryName+"/"+article.DstFileName) + `">open complete article</a></p>
               <p class="tag">` + tagToLinkList(&v) + `</p>
@@ -449,80 +444,73 @@ func renderPostsTimeline(articles Articles) {
       
       <script>
       var MetaData
-      var showTag = function(tagName, addHistory) {
-        var count = MetaData.ArticleCount
-        if (tagName === "") {
-          for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'block'); }
-          $('#timelineFilter').fadeOut("slow");
-          if (addHistory === 1)
-            window.history.pushState('', '',  window.location.pathname);
-        } else {
-          for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'none'); }
-          if (typeof(MetaData.Tags[tagName]) !== "undefined") {
-            for (i=0; i < MetaData.Tags[tagName].length; i++) { 
-              var n = "#" + (MetaData.Tags[tagName])[i]; 
-              $(n).css('display', 'block'); 
-            }
-          }
-          $('#timelineFilter').css('display','block')
-          $('#timelineButton')[0].innerHTML=tagName
-          if (addHistory === 1)
-            window.history.pushState('', '',  window.location.pathname + '?tag=' + tagName);
-        }
-      }
-      var showSeries = function(seriesName, addHistory) {
-        var count = MetaData.ArticleCount
-        if (seriesName === "") {
-          for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'block'); }
-          $('#timelineFilter').fadeOut("slow");
-          if (addHistory === 1)
-            window.history.pushState('', '',  window.location.pathname);
-        } else {
-          for (i=0; i < count; i++) { var n = "#" + i; $(n).css('display', 'none'); }
-          if (typeof(MetaData.Series[seriesName]) !== "undefined") {
-            for (i=0; i < MetaData.Series[seriesName].length; i++) {
-    		  var n = "#" + (MetaData.Series[seriesName][i]); 
-			  $(n).css('display', 'block');
-            }
-          }
-          $('#timelineFilter').css('display','block')
-          $('#timelineButton')[0].innerHTML=seriesName
-          if (addHistory === 1)
-            window.history.pushState('', '',  window.location.pathname + '?series=' + seriesName);
-        }
-      }
-      $(document).ready(function() {
-        MetaData = JSON.parse(document.getElementById('MetaData', 0).innerHTML)
-        var tag = getURLParameter("tag");
-        var series = getURLParameter("series");
-        console.log("document.ready()")
-        if (typeof(tag) !== "undefined" && tag !== null) {
-          console.log("read() : " + tag)
-          showTag(tag, 1);
-        }
-        if (typeof(series) !== "undefined" && series !== null) {
-          console.log("read() : " + series)
-          showSeries(series, 1);
-        }
-      });
       function getURLParameter(name) {
         return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
       }
+
+      var setFilter = function(filter, addHistory) {
+        var selection = []
+        try {
+        var type = filter.split("::")[0]
+        var identifier = filter.split("::")[1]
+        } catch(e) {
+          console.log("removing filter selection because of split error handling")
+          for (i=0; i < MetaData.ArticleCount; i++) {
+            var n = ".posting_" + i;
+            $(n).css('display', 'block');
+          }
+          if (addHistory === 1)
+		    window.history.pushState('', '',  window.location.pathname);
+          return
+        }
+
+        if (type == "tag" && typeof(MetaData.Tags[identifier]) !== "undefined")
+          selection = MetaData.Tags[identifier]
+        else if (type == "series" && typeof(MetaData.Series[identifier]) !== "undefined")
+          selection = MetaData.Series[identifier]
+        else {
+          console.log("removing filter selection")
+          for (i=0; i < MetaData.ArticleCount; i++) {
+            var n = ".posting_" + i;
+            $(n).css('display', 'block');
+          }
+    	  if (addHistory === 1)
+		    window.history.pushState('', '',  window.location.pathname);
+          return
+        }
+
+        console.log(selection, type, identifier)
+
+        for (i=0; i < MetaData.ArticleCount; i++) {
+          var n = ".posting_" + i;
+          if (selection.includes(i)) {
+            //console.log("show", n)
+            $(n).css('display', 'block');
+          } else {
+            //console.log("hide", n)
+            $(n).css('display', 'none');
+          }
+        }
+
+        if (addHistory === 1)
+          window.history.pushState('', '',  window.location.pathname + '?filter=' + filter);
+      }
+ 
+      $(document).ready(function() {
+        MetaData = JSON.parse(document.getElementById('MetaData', 0).innerHTML)
+        var filter = getURLParameter("filter");
+        console.log("document.ready(), filter: " + filter)
+		$.timeliner({
+		  oneOpen: false,
+		  startState: 'open'
+		});
+        setFilter(filter, 0)
+      });
+
+      // browser history button was used, so we need to update the page, but not the browser history
       window.addEventListener("popstate", function() {
-        var tag = getURLParameter("tag");
-        var series = getURLParameter("series");
-        console.log("addEventListener popstate")
-        if (typeof(tag) !== "undefined" && tag !== null) {
-          console.log("addEvent() : " + tag)
-          showTag(tag, 0);
-          return;
-        }
-        if (typeof(series) !== "undefined" && series !== null) {
-          console.log("addEvent() : " + series)
-          showSeries(series, 0);
-          return;
-        }
-        showTag('', 0);
+        var filter = getURLParameter("filter");
+        setFilter(filter, 0);
       });
       </script>
       </div>
@@ -746,7 +734,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		seriesNAV =
 			`
       <div id="seriesContainer">
-      <a href="` + relativeSrcRootPath + `/posts.html?series=` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
+      <a href="` + relativeSrcRootPath + `/posts.html?filter=series::` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
 				article.Series + `</a>
         <header class="seriesHeader">
           <div id="seriesLeft">`

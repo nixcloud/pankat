@@ -19,13 +19,11 @@ pankat is licensed AGPL v3, see LICENSE for details.
 
 # todo
 
-* timeline: generate rss/atom feed per tag and show it there
-  fix also <link rel="alternate" type="application/atom+xml" title="lastlog.de/blog Atom feed" href="{{.RelativeSrcRootPath}}/feed.xml" />
-* timeline: fadeout none-focus elements
 * feed: //BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
+* feed: fix BUG <link rel="alternate" type="application/atom+xml" title="lastlog.de/blog Atom feed" href="{{.RelativeSrcRootPath}}/feed.xml" />
 * feed: check feed quality, for instance pictures
 * ArticlesCache: add error handling
-* http://blog.j7mbo.com/bypassing-golangs-lack-of-constructors/
+  * http://blog.j7mbo.com/bypassing-golangs-lack-of-constructors/
 * move templates and general stuff into base dir
 
 * FIXME next/last hover shadow
