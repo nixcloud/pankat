@@ -428,7 +428,7 @@ func renderPostsTimeline(articles Articles) {
 		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
 		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
 		history += `
-          <dt class="timeline-event posting_`+ strconv.Itoa(i) + `"><a>` + article.Title + `</a></dt>
+          <dt class="timeline-event posting_`+ strconv.Itoa(i) + `">` + article.Title + `</dt>
           <dd class="timeline-event-content posting_`+ strconv.Itoa(i) + `">
             <div class="postingsEntry">
               <p class="summary">` + article.Summary + ` <a href="` + path.Clean(article.SrcDirectoryName+"/"+article.DstFileName) + `">open complete article</a></p>
@@ -479,7 +479,7 @@ func renderPostsTimeline(articles Articles) {
           return
         }
 
-        console.log(selection, type, identifier)
+        //console.log(selection, type, identifier)
 
         for (i=0; i < MetaData.ArticleCount; i++) {
           var n = ".posting_" + i;
@@ -499,7 +499,7 @@ func renderPostsTimeline(articles Articles) {
       $(document).ready(function() {
         MetaData = JSON.parse(document.getElementById('MetaData', 0).innerHTML)
         var filter = getURLParameter("filter");
-        console.log("document.ready(), filter: " + filter)
+        //console.log("document.ready(), filter: " + filter)
 		$.timeliner({
 		  oneOpen: false,
 		  startState: 'open'
@@ -560,7 +560,7 @@ func renderFeed(articles Articles) {
 	}
 
 	for k := range seriesMap {
-		generateFeedXML(articles.FilterByTag(k), "series_"+k)
+		generateFeedXML(articles.FilterBySeries(k), "series_"+k)
 	}
 
 	history += `

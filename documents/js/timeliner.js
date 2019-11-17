@@ -13,10 +13,10 @@
                 $.timeliners.options.push(options);
             }
             for (var i=0; i<$.timeliners.options.length; i++) {
-                console.log("startTimeliner")
+                // console.log("startTimeliner")
                 startTimeliner($.timeliners.options[i]);
             }
-            console.log("timeliner init done")
+            // console.log("timeliner init done")
         }
 
         function startTimeliner(options) {
@@ -133,26 +133,26 @@
 
             function openEvent(eventHeading,eventBody) {
 
-                if(settings.startState==='flat'){
-                    // if flat mode, make sure parent series is visible
-                    $(eventHeading).parents(settings.timelineTriggerContainer).show();
-                }
-
-                $(eventHeading).find('a')
-                    .removeClass('closed')
-                    .addClass('open')
-                    .animate({ fontSize: settings.fontOpen }, settings.baseSpeed);
-                $(eventBody).show(settings.speed*settings.baseSpeed);
+                // if(settings.startState==='flat'){
+                //     // if flat mode, make sure parent series is visible
+                //     $(eventHeading).parents(settings.timelineTriggerContainer).show();
+                // }
+                //
+                // $(eventHeading).find('a')
+                //     .removeClass('closed')
+                //     .addClass('open')
+                //     .animate({ fontSize: settings.fontOpen }, settings.baseSpeed);
+                // $(eventBody).show(settings.speed*settings.baseSpeed);
 
             }
 
             function closeEvent(eventHeading,eventBody) {
-
-                $(eventHeading).find('a')
-                    .animate({ fontSize: settings.fontClosed }, 0)
-                    .removeClass('open')
-                    .addClass('closed');
-                $(eventBody).hide(settings.speed*settings.baseSpeed);
+                //
+                // $(eventHeading).find('a')
+                //     .animate({ fontSize: settings.fontClosed }, 0)
+                //     .removeClass('open')
+                //     .addClass('closed');
+                // $(eventBody).hide(settings.speed*settings.baseSpeed);
             }
 
             if ($(settings.timelineContainer).data('started')) {

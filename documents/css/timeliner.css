@@ -25,7 +25,7 @@
 .timeline-wrapper h2 {
   background: url(../images/timeline_century_tick.gif) left center no-repeat;
 /*   font-family: Palatino, "Times New Roman", Times, serif; */
-  cursor: pointer;
+/*  cursor: pointer; */
   font-size: 3em;
   font-weight: 400;
   margin: 0 0 10px;
