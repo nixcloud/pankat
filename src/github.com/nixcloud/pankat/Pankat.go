@@ -385,7 +385,7 @@ func renderPostsTimeline(articles Articles) {
 
     <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
 
-    <p class="lead">A timeline showing all blog postings.</p>
+    <p class="lead">filter the posts (click tag/series) above:</p>
     
     <div id="timeline" class="timeline-container">
     
