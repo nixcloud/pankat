@@ -10,6 +10,11 @@ the server should do this:
 
 an exemplary implementation is in ../../pandoc-online-editor/ at qknights computer
 
+consider vue with server side rendering:
+
+* https://vuejs.org/v2/examples/hackernews.html
+* https://medium.com/@adeshg7/vuejs-golang-a-rare-combination-53538b6fb918
+
 ## websocket-pandoc
 
 websocket-pandoc is a experimental implementation of a websocket / virtual dom based updater which basically supports server side document generating with changes highlighting.
