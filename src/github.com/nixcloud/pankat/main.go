@@ -355,7 +355,7 @@ func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func renderPostsTimeline(articles Articles) {
-	var history string
+	var pageContent string
 	var article Article
 
 	article.Title = "all posts"
@@ -367,7 +367,7 @@ func renderPostsTimeline(articles Articles) {
 	if err != nil {
 		fmt.Println("json.Marshal error:", err)
 	}
-	history += `<script type="application/json" id="MetaData">` + string(t) + `</script>`
+	pageContent += `<script type="application/json" id="MetaData">` + string(t) + `</script>`
 
 	tagsMap := make(map[string]int)
 	seriesMap := make(map[string]int)
@@ -384,21 +384,21 @@ func renderPostsTimeline(articles Articles) {
 	// sort the tags
 	tagsSlice := rankByWordCount(tagsMap)
 
-	history += `<p id="tagCloud">`
+	pageContent += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
-		history += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e.Key + `', 1)">` + e.Key + `</a>`
+		pageContent += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e.Key + `', 1)">` + e.Key + `</a>`
 	}
-	history += `</p>`
+	pageContent += `</p>`
 
 	seriesSlice := rankByWordCount(seriesMap)
 	fmt.Println(seriesSlice)
-	history += `<p id="seriesCloud">`
+	pageContent += `<p id="seriesCloud">`
 	for _, e := range seriesSlice {
-		history += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + e.Key + `', 1)">` + e.Key + `</a>`
+		pageContent += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + e.Key + `', 1)">` + e.Key + `</a>`
 	}
-	history += `</p>`
+	pageContent += `</p>`
 
-	history += `
+	pageContent += `
 
     <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
 
@@ -414,10 +414,10 @@ func renderPostsTimeline(articles Articles) {
 		if i == 0 {
 			v := article.ModificationDate.Add(1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
 			year = v.Format("2006")
-			history += `
+			pageContent += `
 	          <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-	          <dl class="timeline-series">
-              <h2 class="timeline-time"><span>` + year + `</span></h2>`
+	            <dl class="timeline-series">
+                 <h2 class="timeline-time"><span>` + year + `</span></h2>`
 			year = article.ModificationDate.Format("2006")
 		}
 
@@ -427,13 +427,12 @@ func renderPostsTimeline(articles Articles) {
 		//     fmt.Println("  ", inputPath)
 
 		if year != article.ModificationDate.Format("2006") {
-			history += `
+			pageContent += `
          </dl><!-- /.timeline-series -->
        </div><!-- /.timeline-wrapper -->
-       <div class="timeline-wrapper pankat_year pankat_year_` + year + `">`
-
-			history += `<h2 class="timeline-time"><span>` + year + `</span></h2>`
-			history += `<dl class="timeline-series">`
+       <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
+    	<h2 class="timeline-time"><span>` + year + `</span></h2>
+			<dl class="timeline-series">`
 			year = article.ModificationDate.Format("2006")
 		}
 
@@ -445,7 +444,7 @@ func renderPostsTimeline(articles Articles) {
 
 		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
 		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
-		history += `
+		pageContent += `
           <dt class="timeline-event posting_` + strconv.Itoa(i) + `">` + article.Title + `</dt>
           <dd class="timeline-event-content posting_` + strconv.Itoa(i) + `">
             <div class="postingsEntry">
@@ -454,13 +453,29 @@ func renderPostsTimeline(articles Articles) {
             </div>
             <br class="clear">
           </dd><!-- /.timeline-event-content -->`
+		if i == len(articles)-1 {
+
+			v := article.ModificationDate.Add(-1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
+			year = v.Format("2006")
+
+			pageContent += `
+            <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
+			<dl class="timeline-series">
+
+    	    <h2 class="timeline-time"><span>` + year + `</span></h2>
+			</dl><!-- /.timeline-series -->
+			</div><!-- /.timeline-wrapper -->
+			`
+
+			pageContent += `
+		    </dl><!-- /.timeline-series -->
+		  </div><!-- /.timeline-wrapper -->
+			`
+		}
 	}
 
-	history += `
-        </dl><!-- /.timeline-series -->
-      </div><!-- /.timeline-wrapper -->
-      
-      <script>
+	pageContent += `
+	<script>
       var MetaData
       function getURLParameter(name) {
         return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
@@ -478,7 +493,7 @@ func renderPostsTimeline(articles Articles) {
             $(n).css('display', 'block');
           }
           if (addHistory === 1)
-		    window.history.pushState('', '',  window.location.pathname);
+		    window.pageContent.pushState('', '',  window.location.pathname);
           return
         }
         // hide all years
@@ -495,7 +510,7 @@ func renderPostsTimeline(articles Articles) {
           }
           $(".pankat_year").css('display', 'block');
     	  if (addHistory === 1)
-		    window.history.pushState('', '',  window.location.pathname);
+		    window.pageContent.pushState('', '',  window.location.pathname);
           return
         }
 
@@ -529,7 +544,7 @@ func renderPostsTimeline(articles Articles) {
         }
 
         if (addHistory === 1)
-          window.history.pushState('', '',  window.location.pathname + '?filter=' + filter);
+          window.pageContent.pushState('', '',  window.location.pathname + '?filter=' + filter);
       }
  
       $(document).ready(function() {
@@ -543,7 +558,7 @@ func renderPostsTimeline(articles Articles) {
         setFilter(filter, 0)
       });
 
-      // browser history button was used, so we need to update the page, but not the browser history
+      // browser pageContent button was used, so we need to update the page, but not the browser pageContent
       window.addEventListener("popstate", function() {
         var filter = getURLParameter("filter");
         setFilter(filter, 0);
@@ -551,7 +566,7 @@ func renderPostsTimeline(articles Articles) {
       </script>
       </div>
 `
-	page := generateStandalonePage(articles, article, history)
+	page := generateStandalonePage(articles, article, pageContent)
 
 	outD := outputPath + "/"
 	err = os.MkdirAll(outD, 0755)
