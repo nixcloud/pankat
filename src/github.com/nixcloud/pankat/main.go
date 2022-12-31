@@ -218,6 +218,23 @@ func getTargets(path string, ret []string) Articles {
 			}
 		}
 	}
+
+	// FIXME
+	//// if new article is added, this force-triggers a rebuild on the previous one
+	//for index := 0; index < len(articles); index++ {
+	//	a := articles[index]
+	//	if index > 0 {
+	//		t := []byte(articles[index-1].ModificationDate.String())
+	//		oldHash := a.Hash
+	//		a.Hash = md5.Sum(append(oldHash[:], t...))
+	//	}
+	//	if index < len(entries) {
+	//		t := []byte(articles[index+1].ModificationDate.String())
+	//		oldHash := a.Hash
+	//		a.Hash = md5.Sum(append(oldHash[:], t...))
+	//	}
+	//}
+
 	return articles
 }
 
@@ -346,7 +363,7 @@ func renderPostsTimeline(articles Articles) {
 
 	article.SrcDirectoryName = ""
 
-	t, err := json.Marshal(articles.TagUsage())
+	t, err := json.Marshal(articles.CreateJSMetadata())
 	if err != nil {
 		fmt.Println("json.Marshal error:", err)
 	}
@@ -388,10 +405,8 @@ func renderPostsTimeline(articles Articles) {
     <p class="lead">filter the posts (click tag/series) above:</p>
     
     <div id="timeline" class="timeline-container">
-    
-      <br class="clear">
-      <div class="timeline-wrapper">
-      <dl class="timeline-series">`
+    <br class="clear">
+`
 
 	var year string
 
@@ -399,7 +414,10 @@ func renderPostsTimeline(articles Articles) {
 		if i == 0 {
 			v := article.ModificationDate.Add(1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
 			year = v.Format("2006")
-			history += `<h2 class="timeline-time"><span>` + year + `</span></h2>`
+			history += `
+	          <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
+	          <dl class="timeline-series">
+              <h2 class="timeline-time"><span>` + year + `</span></h2>`
 			year = article.ModificationDate.Format("2006")
 		}
 
@@ -412,7 +430,7 @@ func renderPostsTimeline(articles Articles) {
 			history += `
          </dl><!-- /.timeline-series -->
        </div><!-- /.timeline-wrapper -->
-       <div class="timeline-wrapper">`
+       <div class="timeline-wrapper pankat_year pankat_year_` + year + `">`
 
 			history += `<h2 class="timeline-time"><span>` + year + `</span></h2>`
 			history += `<dl class="timeline-series">`
@@ -428,8 +446,8 @@ func renderPostsTimeline(articles Articles) {
 		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
 		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
 		history += `
-          <dt class="timeline-event posting_`+ strconv.Itoa(i) + `">` + article.Title + `</dt>
-          <dd class="timeline-event-content posting_`+ strconv.Itoa(i) + `">
+          <dt class="timeline-event posting_` + strconv.Itoa(i) + `">` + article.Title + `</dt>
+          <dd class="timeline-event-content posting_` + strconv.Itoa(i) + `">
             <div class="postingsEntry">
               <p class="summary">` + article.Summary + ` <a href="` + path.Clean(article.SrcDirectoryName+"/"+article.DstFileName) + `">open complete article</a></p>
               <p class="tag">` + tagToLinkList(&v) + `</p>
@@ -463,17 +481,19 @@ func renderPostsTimeline(articles Articles) {
 		    window.history.pushState('', '',  window.location.pathname);
           return
         }
-
-        if (type == "tag" && typeof(MetaData.Tags[identifier]) !== "undefined")
+        // hide all years
+        $(".pankat_year").css('display', 'none');
+        if (type == "tag" && typeof(MetaData.Tags[identifier]) !== "undefined") {
           selection = MetaData.Tags[identifier]
-        else if (type == "series" && typeof(MetaData.Series[identifier]) !== "undefined")
+        } else if (type == "series" && typeof(MetaData.Series[identifier]) !== "undefined") {
           selection = MetaData.Series[identifier]
-        else {
+        } else {
           console.log("removing filter selection")
           for (i=0; i < MetaData.ArticleCount; i++) {
             var n = ".posting_" + i;
             $(n).css('display', 'block');
           }
+          $(".pankat_year").css('display', 'block');
     	  if (addHistory === 1)
 		    window.history.pushState('', '',  window.location.pathname);
           return
@@ -486,6 +506,22 @@ func renderPostsTimeline(articles Articles) {
           if (selection.includes(i)) {
             //console.log("show", n)
             $(n).css('display', 'block');
+			// show respective year
+			Object.keys(MetaData.Years).forEach(function(key, index) {
+			  MetaData.Years[key].forEach(function(article) {
+                if (article === i) {
+                  year = parseInt(key);
+                  var n = ".pankat_year_" + year;
+			      console.log("Showing year with jquery class: ",  n)
+
+			      $(n).css('display', 'block');
+                  var n = ".pankat_year_" + (year + 1);
+			      $(n).css('display', 'block');
+			      console.log("Showing year with jquery class: ",  n)
+
+                }
+			  })
+			});
           } else {
             //console.log("hide", n)
             $(n).css('display', 'none');
@@ -641,7 +677,7 @@ func generateFeedXML(articles Articles, fileName string) {
   </entry>`
 	}
 	z += `</feed>`
-	errMkdir := os.MkdirAll(outputPath + "/feed", 0755)
+	errMkdir := os.MkdirAll(outputPath+"/feed", 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
 		panic(errMkdir)

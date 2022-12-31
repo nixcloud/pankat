@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -31,13 +32,13 @@ type Article struct {
 
 func (a Article) Render() string {
 	// i would love to get rid of this initialization here and implement this 'constructor' like instead
-	if (articlesCache.Store == nil) {
+	if articlesCache.Store == nil {
 		//fmt.Println("Initializing hash map")
 		articlesCache.Store = make(map[md5hash]string)
 		articlesCache.load()
 	}
 	var text string = ""
-	if (articlesCache.Get(a) == "") {
+	if articlesCache.Get(a) == "" {
 		pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
 		stdin, err := pandocProcess.StdinPipe()
 		if err != nil {
@@ -196,12 +197,23 @@ type MetaData struct {
 	ArticleCount int
 	Tags         map[string][]int
 	Series       map[string][]int
+	Years        map[int][]int
 }
 
-func (s Articles) TagUsage() MetaData {
-	tagsMap   := make(map[string][]int)
+func (s Articles) CreateJSMetadata() MetaData {
+	tagsMap := make(map[string][]int)
 	seriesMap := make(map[string][]int)
+	yearsMap := make(map[int][]int)
 	for i, e := range s {
+		m := e.ModificationDate
+		year, err := strconv.Atoi(m.Format("2006"))
+		if err == nil {
+			if yearsMap[year] == nil {
+				yearsMap[year] = []int{i}
+			} else {
+				yearsMap[year] = append(yearsMap[year], i)
+			}
+		}
 
 		for _, t := range e.Tags {
 			if tagsMap[t] == nil {
@@ -210,8 +222,8 @@ func (s Articles) TagUsage() MetaData {
 				tagsMap[t] = append(tagsMap[t], i)
 			}
 		}
-        z := s[i].Series
-        if (z != "") {
+		z := s[i].Series
+		if z != "" {
 			if seriesMap[z] == nil {
 				seriesMap[z] = []int{i}
 			} else {
@@ -219,5 +231,5 @@ func (s Articles) TagUsage() MetaData {
 			}
 		}
 	}
-	return MetaData{len(s), tagsMap, seriesMap}
+	return MetaData{len(s), tagsMap, seriesMap, yearsMap}
 }
