@@ -1,12 +1,34 @@
 # what
-pankat is a static blog/wiki generator inspired by ikiwiki from joey hess.
+pankat is a static blog/wiki generator inspired by joey hess's ikiwiki.
 
 the primary motivation for rewriting ikiwiki was:
  - use pandoc as backend
  - use bootstrap (mobile first) in the frontend
  - more usability in navigation / posts overview
+ - no motivation to develop perl
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
+
+# how to compile
+
+    git clone https://github.com/nixcloud/pankat
+
+afterwards use go to compile the binary
+
+    pankat\src\github.com\nixcloud\pankat
+    go build pankat
+
+# how to use
+
+once pankat has been compiled, use blog.lastlog.de to see how to use the software:
+
+    pankat --input documents/blog.lastlog.de/ --output output/blog.lastlog.de
+
+run a local webserver in output/blog.lastlog.de to review the static page generator output
+
+    python -m http.server
+
+then visit localhost:8000 in any webbrowser.
 
 # where
 
@@ -64,4 +86,5 @@ Also the content of blog.lastlog.de needs some rework. Of course not related to 
 
 
 # who
+
 pankat is written and maintained by joachim schiele <js@lastlog.de>
