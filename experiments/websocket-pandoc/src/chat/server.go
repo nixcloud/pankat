@@ -1,13 +1,13 @@
 package chat
 
 import (
+	"fmt"
+	"golang.org/x/net/websocket"
+	"io/ioutil"
 	"log"
 	"net/http"
-  "io/ioutil"
-  "os/exec"
-  "fmt"
-  "strings"
-	"golang.org/x/net/websocket"
+	"os/exec"
+	"strings"
 )
 
 // Chat server.
@@ -117,35 +117,35 @@ func (s *Server) Listen() {
 		case msg := <-s.sendAllCh:
 			//fmt.Println("Send all:", msg)
 			s.messages = append(s.messages, msg)
-      // FIXME add pandoc here
-      a := strings.Replace(msg.Body, "\\n","\n" , -1)
-      d1 := []byte(a)
+			// FIXME add pandoc here
+			a := strings.Replace(msg.Body, "\\n", "\n", -1)
+			d1 := []byte(a)
 
-      // FIXME use TempFile here (qknight)
-      err := ioutil.WriteFile("/tmp/input", d1, 0644)
-      if err != nil {
-        panic(err)
-      }
-//       v := strings.Split("-i /tmp/input -o /tmp/output", " ")
-      // markdown
-      out, err := exec.Command("/run/current-system/sw/bin/pandoc", "--toc", "-t", "html5", "--highlight-style",  "kate", "-i", "/tmp/input", "-o", "/tmp/output.html").Output()
-      // mediawiki
-      //out, err := exec.Command("/home/joachim/.nix-profile/bin/pandoc", "--toc", "-f", "mediawiki", "-t", "html5", "-s", "--highlight-style",  "kate", "-i", "/tmp/input", "-o", "/tmp/output.html").Output()
-      if err != nil {
-        log.Fatal(err)
-      }
-      fmt.Printf("The date is %s\n", out)
+			// FIXME use TempFile here (qknight)
+			err := ioutil.WriteFile("/tmp/input", d1, 0644)
+			if err != nil {
+				panic(err)
+			}
+			//       v := strings.Split("-i /tmp/input -o /tmp/output", " ")
+			// markdown
+			out, err := exec.Command("/run/current-system/sw/bin/pandoc", "--toc", "-t", "html5", "--highlight-style", "kate", "-i", "/tmp/input", "-o", "/tmp/output.html").Output()
+			// mediawiki
+			//out, err := exec.Command("/home/joachim/.nix-profile/bin/pandoc", "--toc", "-f", "mediawiki", "-t", "html5", "-s", "--highlight-style",  "kate", "-i", "/tmp/input", "-o", "/tmp/output.html").Output()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("The date is %s\n", out)
 
-      f, err1 := ioutil.ReadFile("/tmp/output.html")
-      if err1 != nil {
-        log.Fatal(err1)
-      }
-      //t := strings.Replace(string(f), "{&quot;body&quot;:&quot;","" , -1)
-      //t1 := strings.Replace(string(t), "&quot;}","" , -1)
-      //msg.Body = string(t1)
+			f, err1 := ioutil.ReadFile("/tmp/output.html")
+			if err1 != nil {
+				log.Fatal(err1)
+			}
+			//t := strings.Replace(string(f), "{&quot;body&quot;:&quot;","" , -1)
+			//t1 := strings.Replace(string(t), "&quot;}","" , -1)
+			//msg.Body = string(t1)
 
-      //log.Println(f)
-      msg.Body = string(f)
+			//log.Println(f)
+			msg.Body = string(f)
 			s.sendAll(msg)
 
 		case err := <-s.errCh:

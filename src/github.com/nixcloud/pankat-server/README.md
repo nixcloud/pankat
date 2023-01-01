@@ -1,4 +1,4 @@
-# qknight's prototype code for using websockets with pandoc
+# prototype code for using websockets with pandoc
 
 the server should do this:
 

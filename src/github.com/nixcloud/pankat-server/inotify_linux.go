@@ -6,25 +6,25 @@
 Package inotify implements a wrapper for the Linux inotify system.
 
 Example:
-    watcher, err := inotify.NewWatcher()
-    if err != nil {
-        log.Fatal(err)
-    }
-    err = watcher.Watch("/tmp")
-    if err != nil {
-        log.Fatal(err)
-    }
-    for {
-        select {
-        case ev := <-watcher.Event:
-            log.Println("event:", ev)
-        case err := <-watcher.Error:
-            log.Println("error:", err)
-        }
-    }
 
+	watcher, err := inotify.NewWatcher()
+	if err != nil {
+	    log.Fatal(err)
+	}
+	err = watcher.Watch("/tmp")
+	if err != nil {
+	    log.Fatal(err)
+	}
+	for {
+	    select {
+	    case ev := <-watcher.Event:
+	        log.Println("event:", ev)
+	    case err := <-watcher.Error:
+	        log.Println("error:", err)
+	    }
+	}
 */
-package main // import "golang.org/x/exp/inotify"
+package pankat_server // import "golang.org/x/exp/inotify"
 
 import (
 	"errors"

@@ -3,9 +3,9 @@ pankat is a static blog/wiki generator inspired by joey hess's ikiwiki.
 
 the primary motivation for rewriting ikiwiki was:
  - use pandoc as backend
- - use bootstrap (mobile first) in the frontend
+ - mobile first by using bootstrap
  - more usability in navigation / posts overview
- - no motivation to develop perl
+ - no interest in ikiwiki's perl
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
 

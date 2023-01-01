@@ -1,9 +1,0 @@
-[
-  {
-    "include": "../../libs.json",
-    "packages": [
-      "golang.org/x/net",
-      "github.com/jeffail/leaps"
-    ]
-  }
-]
