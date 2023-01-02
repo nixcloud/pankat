@@ -33,13 +33,15 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 				if !ok {
 					return
 				}
-				log.Println("event:", event)
+				//log.Println("event:", event)
 				if event.Has(fsnotify.Write) {
 					log.Println("modified file:", event.Name)
 				}
 				if event.Has(fsnotify.Create) {
 					log.Println("created file:", event.Name)
 				}
+				//Remove FIXME
+				//Rename FIXME
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					return
@@ -64,6 +66,7 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 	//		log.Println("error:", err)
 	//	}
 	//}
+	<-make(chan struct{})
 }
 
 var inputPath string
