@@ -13,11 +13,9 @@
 <script src="{{.RelativeSrcRootPath}}/js/jquery-ui-1.9.1.custom.min.js"></script>
 <script src="{{.RelativeSrcRootPath}}/js/jquery.tocify.js"></script>
 
-<!--
 <script src="../js/pankat-websocket.js"></script>
 <script src="../js/diffDOM.js"></script>
 <script src="../js/reconnecting-websocket.min.js"></script>
--->
 
 <link type="text/css" rel="stylesheet" href="{{.RelativeSrcRootPath}}/css/jquery.tocify.css" />
 {{end}}
@@ -98,7 +96,7 @@ code > span.in { color: #808080; font-weight: bold; font-style: italic; } /* Inf
       </button>
       <a class="navbar-brand" href="{{.SiteURL}}">{{.SiteBrandTitle}}</a>
     </div>
-      
+
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
@@ -107,16 +105,16 @@ code > span.in { color: #808080; font-weight: bold; font-style: italic; } /* Inf
 <!--         <li><a href="#">Tags</a></li> -->
 <!--         <li><a href="#">Recent Changes</a></li> -->
       </ul>
-        
+
       <ul class="nav navbar-nav navbar-right">
         <li><a href="{{.RelativeSrcRootPath}}/feed.html" id="feedIcon">feed</a></li>
-        <!-- <li><a href="/websocket" id="websocket"><span id="websocketStatus" class="glyphicon glyphicon-remove" aria-hidden="true"></span> websocket</a></li> -->
+        <li><a href="/websocket" id="websocket"><span id="websocketStatus" class="glyphicon glyphicon-remove" aria-hidden="true"></span> websocket</a></li>
 
       </ul>
-      <!--
+
           <li><a href="#">Edit</a></li>
           <li><a href="#">Preferences</a></li>
-      -->
+
 
       <!--<div id="right">
         <form class="navbar-form navbar-right">
@@ -154,7 +152,7 @@ $("#scrollUpBtn").click(function() {
 
 {{if .Anchorjs}}
 <script>
-window.onload = function(e){ 
+window.onload = function(e){
   anchors.add('h1')
   anchors.add('h2')
   anchors.add('h3')
@@ -182,12 +180,12 @@ $(document).ready(function() {
   //Calls the tocify method on your HTML div.
   $("#toc").tocify();
 });
-$("#toc").hover(function() { 
-  $("#toc").css("z-index", "111")  
-}, function() { 
-  $("#toc").css("z-index", "1")  
+$("#toc").hover(function() {
+  $("#toc").css("z-index", "111")
+}, function() {
+  $("#toc").css("z-index", "1")
 });
-</script>       
+</script>
 {{end}}
 
 <script>
@@ -200,10 +198,5 @@ $(window).keydown(function(event) {
   }
 });
 </script>
-
-
-
-
-
 </body>
 </html>

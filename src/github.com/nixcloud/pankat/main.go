@@ -58,6 +58,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Println("pankat starting")
 	fmt.Println("input Directory: ", inputPath)
 	fmt.Println("output Directory: ", outputPath)
 
@@ -101,7 +102,7 @@ func main() {
 	renderPosts(articlesTopLevel)
 
 	// generate posts.html (timeline)
-	renderPostsTimeline(articlesPosts)
+	renderTimeline(articlesPosts)
 
 	// render feed.html
 	renderFeed(articlesPosts)
@@ -121,12 +122,12 @@ func main() {
 		parts := strings.Fields(el)
 		head := parts[0]
 		parts = parts[1:]
+		fmt.Println("executing: ", el)
 		out, err := exec.Command(head, parts...).Output()
 		if err != nil {
 			fmt.Println(err)
 		}
-		//       fmt.Println("executing: ", el)
-		//       fmt.Println(string(out))
+		fmt.Println(string(out))
 		_ = out
 	}
 	mostRecentArticle := ""
@@ -354,7 +355,7 @@ func (p TagsSlice) Len() int           { return len(p) }
 func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func renderPostsTimeline(articles Articles) {
+func renderTimeline(articles Articles) {
 	var pageContent string
 	var article Article
 

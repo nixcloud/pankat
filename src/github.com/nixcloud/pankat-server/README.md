@@ -1,46 +1,37 @@
-# prototype code for using websockets with pandoc
+# pankat-server
 
-the server should do this:
+the **pankat-server** will generate **static pages** and once done will wait for further modifications or new articles using `github.com/fsnotify/fsnotify`.
 
-* generate a complete pandoc document into html
-* send it to the client
-* client uses html to display it on the right pane
-* each time an update comes in, which is basically a complete document each time, the diff is built between original and update and all differences are background-colored to yellow
-* ... until someone hits 'save' which creates a git commit and publishes the article
+    pankat-server --input documents/blog.lastlog.de/ --output output/blog.lastlog.de
 
-an exemplary implementation is in ../../pandoc-online-editor/ at qknights computer
+**note: this is still WIP**
 
-consider vue with server side rendering:
+afterwards open this in firefox/chromium 
+
+    localhost:8000
+
+planned: articles will have an `edit button` somewhere and if clicked the article will open using [leaps](https://github.com/Jeffail/leaps) on the left and a preview render on the right.
+
+## virtual dom ideas
 
 * https://vuejs.org/v2/examples/hackernews.html
 * https://medium.com/@adeshg7/vuejs-golang-a-rare-combination-53538b6fb918
 
+## websockets in go
+
+a few examples how to use
+
+* https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/08.2.html
+* https://github.com/golang-samples/websocket/blob/master/websocket-chat/src/chat/client.go
+
+
 ## websocket-pandoc
 
-websocket-pandoc is a experimental implementation of a websocket / virtual dom based updater which basically supports server side document generating with changes highlighting.
-
-### try it
-
-simply run:
-
-    nix-shell
-
-then:
-
-    go run main.go
-
-and afterwards do:
-
-    chromium localhost:8080
-
-and enjoy the editor!
-
-
-### screenshots
-
-see screenshots/ folder
+websocket-pandoc is an experimental implementation of a websocket / virtual dom based updater which basically supports server side document generating with changes highlighting.
 
 ### license
+
+See LICENSE file, AGPL v3
 
 * user interface was inspired by: https://notehub.org
 * websocket example code based on: https://github.com/golang-samples/websocket
