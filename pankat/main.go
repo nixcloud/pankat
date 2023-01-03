@@ -1,17 +1,13 @@
-package main
+package pankat
 
 import (
 	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	htemplate "html/template"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -22,133 +18,7 @@ import (
 	"time"
 )
 
-var inputPath string
-var outputPath string
-var SiteURL string
-var SiteTitle string
-var myMd5HashMapJson string
-
-func main() {
-	pflag.String("input", "documents", "input directory  ('documents'') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
-	pflag.String("output", "output", "output directory ('output') all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
-	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
-	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
-	pflag.Parse()
-	_ = viper.BindPFlags(pflag.CommandLine)
-
-	input := viper.GetString("input")
-	output := viper.GetString("output")
-	SiteURL = viper.GetString("siteURL")
-	SiteTitle = viper.GetString("siteTitle")
-
-	i1, err := filepath.Abs(input)
-	inputPath = i1
-
-	myMd5HashMapJson = path.Clean(inputPath + "/.ArticlesCache.json")
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	o1, err := filepath.Abs(output)
-	outputPath = o1
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	fmt.Println(color.GreenString("pankat"), "starting!")
-	fmt.Println("input Directory: ", inputPath)
-	fmt.Println("output Directory: ", outputPath)
-
-	err1 := os.Chdir(inputPath)
-	if err1 != nil {
-		fmt.Println(err1)
-		os.Exit(1)
-	}
-
-	// find all .mdwn files
-	f := make([]string, 0)
-	f = append(f, "")
-	articlesAll := getTargets(".", f)
-
-	articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
-	articlesPosts := articlesAll.Posts().FilterOutDrafts()
-
-	// sort them by date
-	sort.Sort(articlesPosts)
-
-	// override default values for posts
-	for _, e := range articlesPosts {
-		e.Anchorjs = true
-		e.Tocify = true
-	}
-
-	for _, e := range articlesPosts {
-		_ = e
-		// 		    fmt.Println(e.Title)
-		//     z:=e.SrcDirectoryName + "/" + e.SrcFileName
-		//     fmt.Println("   ", z)
-		//     fmt.Println("   ",e.SrcDirectoryName)
-		//     fmt.Println("   ",e.SrcFileName)
-		//     fmt.Println("   ",e.ModificationDate)
-		//     fmt.Println("   ",e.Tags)
-		//     fmt.Println("   ",e.Draft)
-		// 		    fmt.Println("   ",e.Series)
-	}
-
-	// generate about.html and additional pages
-	renderPosts(articlesTopLevel)
-
-	// generate posts.html (timeline)
-	renderTimeline(articlesPosts)
-
-	// render feed.html
-	renderFeed(articlesPosts)
-
-	// generate articles
-	renderPosts(articlesPosts)
-
-	// copy static files as fonts/css/js to the output folder
-	commands := []string{
-		"rsync -av --delete --relative js " + outputPath,
-		"rsync -av --delete --relative css " + outputPath,
-		"rsync -av --delete --relative fonts " + outputPath,
-		"rsync -av --delete --relative images " + outputPath,
-		"rsync -av --delete --relative posts/media " + outputPath,
-	}
-	// FIXME rsync -av --delete --relative .\documents/blog.lastlog.de/posts/media output\blog.lastlog.de works
-	for _, el := range commands {
-		parts := strings.Fields(el)
-		head := parts[0]
-		parts = parts[1:]
-		fmt.Println("executing: ", el)
-		out, err := exec.Command(head, parts...).Output()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(string(out))
-		_ = out
-	}
-	mostRecentArticle := ""
-	if len(articlesPosts) > 0 {
-		mostRecentArticle = path.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
-	} else {
-		mostRecentArticle = "posts.html"
-	}
-	indexContent :=
-		`
-<html>
-<meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
-</html>
-`
-	outIndexName := path.Clean(outputPath + "/" + "index.html")
-	errn := ioutil.WriteFile(outIndexName, []byte(indexContent), 0644)
-	if errn != nil {
-		panic(errn)
-	}
+type Pankat struct {
 }
 
 func tagToLinkList(a *Article) string {
@@ -161,7 +31,7 @@ func tagToLinkList(a *Article) string {
 		//     fmt.Println(outputPath)
 		//     fmt.Println(a.SrcDirectoryName)
 
-		// HACK should be moved to Articles
+		// HACK should be moved to pankat-core
 		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
 		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 
@@ -171,7 +41,7 @@ func tagToLinkList(a *Article) string {
 }
 
 // scan the direcotry for .mdwn files recurively
-func getTargets(path string, ret []string) Articles {
+func GetTargets(path string, ret []string) Articles {
 	var articles Articles
 	entries, _ := ioutil.ReadDir(path)
 	for _, entry := range entries {
@@ -183,7 +53,7 @@ func getTargets(path string, ret []string) Articles {
 			}
 			ret = append(ret, buf)
 			//       fmt.Println(buf)
-			n := getTargets(buf, ret)
+			n := GetTargets(buf, ret)
 			articles = append(articles, n...)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
@@ -318,7 +188,7 @@ func callPlugin(in []byte, article *Article) []byte {
 		//      fmt.Println("\n------------\n", article.SrcDirectoryName)
 		//      fmt.Println(f[1])
 
-		//HACK should be moved to Articles
+		//HACK should be moved to pankat-core
 		relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "./posts")
 		relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 		//      fmt.Println(relativeSrcRootPath)
@@ -357,7 +227,7 @@ func (p TagsSlice) Len() int           { return len(p) }
 func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func renderTimeline(articles Articles) {
+func RenderTimeline(articles Articles) {
 	var pageContent string
 	var article Article
 
@@ -571,7 +441,7 @@ func renderTimeline(articles Articles) {
 `
 	page := generateStandalonePage(articles, article, pageContent)
 
-	outD := outputPath + "/"
+	outD := GetConfig().OutputPath + "/"
 	err = os.MkdirAll(outD, 0755)
 	if err != nil {
 		panic(err)
@@ -583,7 +453,7 @@ func renderTimeline(articles Articles) {
 	}
 }
 
-func renderFeed(articles Articles) {
+func RenderFeed(articles Articles) {
 	var history string
 	var article Article
 
@@ -649,7 +519,7 @@ func renderFeed(articles Articles) {
     `
 	page := generateStandalonePage(articles, article, history)
 
-	outD := outputPath + "/"
+	outD := GetConfig().OutputPath + "/"
 	err := os.MkdirAll(outD, 0755)
 	if err != nil {
 		panic(err)
@@ -663,17 +533,17 @@ func renderFeed(articles Articles) {
 
 func generateFeedXML(articles Articles, fileName string) {
 	fmt.Println("Generating feed: " + fileName)
-	feedUrl := SiteURL + "/" + "feed.xml"
+	feedUrl := GetConfig().SiteURL + "/" + "feed.xml"
 	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
-  <id>` + SiteURL + "/" + "index.html" + `</id>
+  <id>` + GetConfig().SiteURL + "/" + "index.html" + `</id>
   <link type="text/html" rel="alternate" href="` + feedUrl + `"/>
   <link type="application/atom+xml" rel="self" href="` + feedUrl + `"/>
-  <title>` + SiteTitle + `</title>
+  <title>` + GetConfig().SiteTitle + `</title>
   <updated>` + time.Now().Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 	for _, e := range articles {
-		url := SiteURL + path.Clean("/"+e.SrcDirectoryName+"/"+e.DstFileName)
+		url := GetConfig().SiteURL + path.Clean("/"+e.SrcDirectoryName+"/"+e.DstFileName)
 		z += `
   <entry>
     <id>` + url + `</id>
@@ -684,7 +554,7 @@ func generateFeedXML(articles Articles, fileName string) {
     <updated>` + e.ModificationDate.Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 		for _, t := range e.Tags {
-			z += `<category scheme="` + SiteURL + `" term="` + t + `"/>`
+			z += `<category scheme="` + GetConfig().SiteURL + `" term="` + t + `"/>`
 		}
 		//BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
 		z += `<author>
@@ -695,12 +565,12 @@ func generateFeedXML(articles Articles, fileName string) {
   </entry>`
 	}
 	z += `</feed>`
-	errMkdir := os.MkdirAll(outputPath+"/feed", 0755)
+	errMkdir := os.MkdirAll(GetConfig().OutputPath+"/feed", 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
-	outName := path.Clean(outputPath + "/feed/" + fileName + ".xml")
+	outName := path.Clean(GetConfig().OutputPath + "/feed/" + fileName + ".xml")
 	err2 := ioutil.WriteFile(outName, []byte(z), 0644)
 	if err2 != nil {
 		fmt.Println(err2)
@@ -708,13 +578,13 @@ func generateFeedXML(articles Articles, fileName string) {
 	}
 }
 
-func renderPosts(articles Articles) {
+func RenderPosts(articles Articles) {
 	for _, e := range articles {
 		fmt.Println("Processing " + e.Title)
 
 		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
 
-		outD := path.Clean(outputPath + "/" + e.SrcDirectoryName + "/")
+		outD := path.Clean(GetConfig().OutputPath + "/" + e.SrcDirectoryName + "/")
 		//     fmt.Println(outD + e.DstFileName)
 		//     fmt.Println(string(standalonePageContent))
 
@@ -743,7 +613,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		panic(err)
 	}
 
-	//HACK should be moved to Articles
+	//HACK should be moved to pankat-core
 	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
 	relativeSrcRootPath = path.Clean(relativeSrcRootPath)
 	//   fmt.Println(relativeSrcRootPath)
@@ -835,8 +705,8 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 	}{
 		Title:               article.Title,
 		RelativeSrcRootPath: relativeSrcRootPath,
-		SiteURL:             SiteURL,
-		SiteBrandTitle:      SiteTitle,
+		SiteURL:             GetConfig().SiteURL,
+		SiteBrandTitle:      GetConfig().SiteTitle,
 		TitleNAV:            titleNAV,
 		SeriesNAV:           seriesNAV,
 		Meta:                meta,

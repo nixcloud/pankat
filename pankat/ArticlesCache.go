@@ -1,4 +1,4 @@
-package main
+package pankat
 
 import (
 	"bytes"
@@ -30,7 +30,7 @@ func (s ArticlesCache) computeHash(a Article) md5hash {
 // load hashes and articles via json from disk
 func (s ArticlesCache) load() {
 	var v = []ArticlesCacheList{}
-	b, errReadFile := ioutil.ReadFile(myMd5HashMapJson)
+	b, errReadFile := ioutil.ReadFile(GetConfig().MyMd5HashMapJson)
 	if errReadFile != nil {
 		fmt.Println(errReadFile)
 	} else {
@@ -48,14 +48,14 @@ func (s ArticlesCache) load() {
 
 // store hashes and articles (hash set) as list via json to disk
 func (s ArticlesCache) save() {
-	var v = []ArticlesCacheList {}
+	var v = []ArticlesCacheList{}
 	for key, value := range s.Store {
 		//fmt.Println("Key:", key, "Value:", value)
-		var q = ArticlesCacheList {
+		var q = ArticlesCacheList{
 			key,
 			value,
 		}
-		v = append (v, q)
+		v = append(v, q)
 	}
 	jsonBuff := bytes.NewBufferString("")
 	enc := json.NewEncoder(jsonBuff)
@@ -63,7 +63,7 @@ func (s ArticlesCache) save() {
 		fmt.Println(errEnc)
 	}
 	//fmt.Println(string(jsonBuff.Bytes()))
-	errn := ioutil.WriteFile(myMd5HashMapJson, jsonBuff.Bytes(), 0644)
+	errn := ioutil.WriteFile(GetConfig().MyMd5HashMapJson, jsonBuff.Bytes(), 0644)
 	if errn != nil {
 		panic(errn)
 	}

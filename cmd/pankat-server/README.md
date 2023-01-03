@@ -1,16 +1,29 @@
 # pankat-server
 
-the **pankat-server** will generate **static pages** and once done will wait for further modifications or new articles using `github.com/fsnotify/fsnotify`.
+the **pankat-server** will generate **static pages** and once done will wait for further modifications or new articles.
 
     pankat-server --input documents/blog.lastlog.de/ --output output/blog.lastlog.de
-
-**note: this is still WIP**
 
 afterwards open this in firefox/chromium 
 
     localhost:8000
 
 planned: articles will have an `edit button` somewhere and if clicked the article will open using [leaps](https://github.com/Jeffail/leaps) on the left and a preview render on the right.
+
+**note: this is still WIP**
+
+what does not work yet
+
+* edit button
+* leaps editor integration
+* rebuild of posts using pankat-server FS notifications on changes (but close)
+* there are problems with rsync currently
+* media folder needs a new way to be handled
+
+what works:
+
+* WS reload command on documents/blog.lastlog.de updates
+* localhost:8000 shows the documents
 
 ## virtual dom ideas
 
@@ -31,7 +44,7 @@ websocket-pandoc is an experimental implementation of a websocket / virtual dom 
 
 ### license
 
-See LICENSE file, AGPL v3
+see LICENSE file, AGPL v3
 
 * user interface was inspired by: https://notehub.org
 * websocket example code based on: https://github.com/golang-samples/websocket

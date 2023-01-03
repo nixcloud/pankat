@@ -1,34 +1,20 @@
 # what
 pankat is a static blog/wiki generator inspired by joey hess's ikiwiki.
 
+read on in this documentation
+
+* [pankat](src/github.com/nixcloud/cmd/pankat/README.md)
+* [pankat-server](src/github.com/nixcloud/cmd/pankat-server/README.md)
+
+![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
+
+# history
+
 the primary motivation for rewriting ikiwiki was:
  - use pandoc as backend
  - mobile first by using bootstrap
  - more usability in navigation / posts overview
  - no interest in ikiwiki's perl
-
-![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
-
-# how to compile
-
-    git clone https://github.com/nixcloud/pankat
-
-afterwards use go to compile the binary
-
-    pankat\src\github.com\nixcloud\pankat
-    go build pankat
-
-# how to use
-
-once pankat has been compiled, use blog.lastlog.de to see how to use the software:
-
-    pankat --input documents/blog.lastlog.de/ --output output/blog.lastlog.de
-
-run a local webserver in output/blog.lastlog.de to review the static page generator output
-
-    python -m http.server
-
-then visit localhost:8000 in any webbrowser.
 
 # where
 
@@ -36,27 +22,46 @@ a pankat generated blog can be found here:
 
 * <https://lastlog.de/blog>
 
+but you can easily use this software for your own blog as well!
+
 # license
 pankat is licensed AGPL v3, see LICENSE for details.
 
 # todo
 
+## programming
+
+* split pankat into pankat-core, pankat and pankat-server
+* rework md5 and article re-creation; add channel to communicate updated documents
+* each article must know the source file it was generated from to listen for updates
+
+* REST
+
+  * /tags
+  * /series
+
 * ArticlesCache: add error handling
-  * http://blog.j7mbo.com/bypassing-golangs-lack-of-constructors/
+
   
 * re-arrange directories: 
-  * update the go version, use more recent nixpkgs
-  * make it build with nix
-  * move templates and general stuff into base dir
-  * create hello world example so someone else can use this software
+* move templates and general stuff into base dir
+* fix rsync (windows and linux)
+* integrate leaps editor
+* BUG: pandoc integration with parser '-s' of html head/body and migration to the go template
 
-# content
+later
 
-Also the content of blog.lastlog.de needs some rework. Of course not related to the software but still listed here: 
+* create hello world example so someone else can use this software
+* implement comment system FIXME
+   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
+
+## content
+
+the content of blog.lastlog.de needs rework 
 
 * write a new article from time to time!? ;-)
 * rework warning/info/danger/error ...
-* write summary for each article
+* write summary for each article; write missing summary plugin (chatGPT?)
 * rewrite title names
 * fix images, add class="noFancy"
 * check h1,h2,...
@@ -65,10 +70,7 @@ Also the content of blog.lastlog.de needs some rework. Of course not related to 
 * libnoise_viewer.html fix video width
 
 * commit history using git and add revert link like ikiwiki does FIXME
-* implement comment system FIXME
-   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
 
-* BUG pandoc integration with parser '-s' of html head/body and migration to the go template
 
 // FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
 

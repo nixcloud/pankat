@@ -1,11 +1,12 @@
 go 1.19
 
-module pankat
+module pankat-static
 
 require (
 	github.com/fatih/color v1.13.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.14.0
+	pankat v0.0.0
 )
 
 require (
@@ -27,3 +28,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace pankat v0.0.0 => ../../pankat

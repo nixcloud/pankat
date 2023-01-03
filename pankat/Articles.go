@@ -1,4 +1,4 @@
-package main
+package pankat
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ type Article struct {
 }
 
 func (a Article) Render() string {
-	// i would love to get rid of this initialization here and implement this 'constructor' like instead
+	// FIXME i would love to get rid of this initialization here and implement this 'constructor' like instead
 	if articlesCache.Store == nil {
 		//fmt.Println("Initializing hash map")
 		articlesCache.Store = make(map[md5hash]string)
