@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	htemplate "html/template"
@@ -58,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("pankat starting")
+	fmt.Println(color.GreenString("pankat"), "starting!")
 	fmt.Println("input Directory: ", inputPath)
 	fmt.Println("output Directory: ", outputPath)
 
@@ -118,6 +119,7 @@ func main() {
 		"rsync -av --delete --relative images " + outputPath,
 		"rsync -av --delete --relative posts/media " + outputPath,
 	}
+	// FIXME rsync -av --delete --relative .\documents/blog.lastlog.de/posts/media output\blog.lastlog.de works
 	for _, el := range commands {
 		parts := strings.Fields(el)
 		head := parts[0]
