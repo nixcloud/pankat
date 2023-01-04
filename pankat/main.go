@@ -228,6 +228,8 @@ func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func RenderTimeline(articles Articles) {
+	defer timeElapsed("RenderTimeline")()
+
 	var pageContent string
 	var article Article
 
@@ -564,6 +566,7 @@ func generateFeedXML(articles Articles, fileName string) {
     <content type="html">` + htemplate.HTMLEscaper(e.Render()) + `</content>
   </entry>`
 	}
+
 	z += `</feed>`
 	errMkdir := os.MkdirAll(GetConfig().OutputPath+"/feed", 0755)
 	if errMkdir != nil {
@@ -579,8 +582,10 @@ func generateFeedXML(articles Articles, fileName string) {
 }
 
 func RenderPosts(articles Articles) {
+	defer timeElapsed("RenderPosts")()
+
 	for _, e := range articles {
-		fmt.Println("Processing " + e.Title)
+		fmt.Println("Rendering article '" + e.Title + "'")
 
 		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
 

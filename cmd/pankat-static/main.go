@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"pankat"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -31,7 +30,7 @@ func main() {
 	i1, err := filepath.Abs(input)
 	inputPath_ := i1
 
-	myMd5HashMapJson_ := path.Clean(inputPath_ + "/.ArticlesCache.json")
+	myMd5HashMapJson_ := filepath.Clean(inputPath_ + "/.ArticlesCache.json")
 
 	if err != nil {
 		fmt.Println(err)
@@ -96,24 +95,31 @@ func main() {
 	// generate about.html and additional pages
 	pankat.RenderPosts(articlesTopLevel)
 
+	// generate articles
+	pankat.RenderPosts(articlesPosts)
+
 	// generate posts.html (timeline)
 	pankat.RenderTimeline(articlesPosts)
 
 	// render feed.html
 	pankat.RenderFeed(articlesPosts)
 
-	// generate articles
-	pankat.RenderPosts(articlesPosts)
+	s, _ := os.Getwd()
+	//fmt.Println("Getwd path is: ", s)
+
+	v, _ := filepath.Rel(s, pankat.GetConfig().OutputPath)
+	v = filepath.ToSlash(v)
+	fmt.Println("relative path is: ", v) // FIXME windows specific hack
 
 	// copy static files as fonts/css/js to the output folder
 	commands := []string{
-		"rsync -av --relative js " + pankat.GetConfig().OutputPath,
-		"rsync -av --relative css " + pankat.GetConfig().OutputPath,
-		"rsync -av --relative fonts " + pankat.GetConfig().OutputPath,
-		"rsync -av --relative images " + pankat.GetConfig().OutputPath,
-		"rsync -av --relative posts/media " + pankat.GetConfig().OutputPath,
+		"rsync -av --relative js " + v,
+		"rsync -av --relative css " + v,
+		"rsync -av --relative fonts " + v,
+		"rsync -av --relative images " + v,
+		"rsync -av --relative posts/media " + v,
 	}
-	// FIXME rsync -av --delete --relative .\documents/blog.lastlog.de/posts/media output\blog.lastlog.de works
+
 	for _, el := range commands {
 		parts := strings.Fields(el)
 		head := parts[0]
@@ -128,7 +134,7 @@ func main() {
 	}
 	mostRecentArticle := ""
 	if len(articlesPosts) > 0 {
-		mostRecentArticle = path.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
+		mostRecentArticle = filepath.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
 	} else {
 		mostRecentArticle = "posts.html"
 	}
@@ -138,7 +144,7 @@ func main() {
 <meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
 </html>
 `
-	outIndexName := path.Clean(pankat.GetConfig().OutputPath + "/" + "index.html")
+	outIndexName := filepath.Clean(pankat.GetConfig().OutputPath + "/" + "index.html")
 	errn := ioutil.WriteFile(outIndexName, []byte(indexContent), 0644)
 	if errn != nil {
 		panic(errn)

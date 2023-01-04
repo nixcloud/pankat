@@ -1,22 +1,11 @@
 # what
-pankat is a static blog/wiki generator inspired by joey hess's ikiwiki.
+**pankat** is a **static blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
 
-read on in this documentation
-
-* [pankat](src/github.com/nixcloud/cmd/pankat/README.md)
-* [pankat-server](src/github.com/nixcloud/cmd/pankat-server/README.md)
+both pankat-static and pankat-server build a static blog.
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
 
-# history
-
-the primary motivation for rewriting ikiwiki was:
- - use pandoc as backend
- - mobile first by using bootstrap
- - more usability in navigation / posts overview
- - no interest in ikiwiki's perl
-
-# where
+## example
 
 a pankat generated blog can be found here:
 
@@ -24,15 +13,35 @@ a pankat generated blog can be found here:
 
 but you can easily use this software for your own blog as well!
 
+# pankat-static
+
+pankat-static can be used to render the articles.
+
+* [pankat-static](src/github.com/nixcloud/cmd/pankat-static/README.md)
+
+# pankat-server
+
+pankat-server can be executed on the client to provides a live preview of the generated static blog, later the result can be uploaded.
+
+* [pankat-server](src/github.com/nixcloud/cmd/pankat-server/README.md)
+
 # license
-pankat is licensed AGPL v3, see LICENSE for details.
+pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
+
+# history
+
+the primary motivation for rewriting ikiwiki was:
+- use pandoc as backend
+- mobile first by using bootstrap
+- more usability in navigation / posts overview
+- no interest in ikiwiki's perl
 
 # todo
 
 ## programming
 
-* split pankat into pankat-core, pankat and pankat-server
-* rework md5 and article re-creation; add channel to communicate updated documents
+* rework md5 and article re-creation; 
+* add channel to inject updated documents notifications
 * each article must know the source file it was generated from to listen for updates
 
 * REST
@@ -41,8 +50,7 @@ pankat is licensed AGPL v3, see LICENSE for details.
   * /series
 
 * ArticlesCache: add error handling
-
-  
+* feed.xml is not generated anymore, might have worked in f5e3232f1df691f3a3b21ca54b77c2b13a9db564
 * re-arrange directories: 
 * move templates and general stuff into base dir
 * fix rsync (windows and linux)
@@ -71,21 +79,7 @@ the content of blog.lastlog.de needs rework
 
 * commit history using git and add revert link like ikiwiki does FIXME
 
-
 // FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
-
-# advanced pankat editor
-
-* gocraft/web ansprechen
-* git backend ansprechen
-* leaps backend ansprechen
-* websockets preview mit long-polling
-* lokales speichern von artikeln, wenn ./pankat -daemon -i documents -o output/ verwendet wird
-
-* https://www.overleaf.com/4344023pmjpgq#/12921720/
-
-
-
 
 # who
 
