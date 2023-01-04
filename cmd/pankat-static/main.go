@@ -6,5 +6,5 @@ import (
 
 func main() {
 	pankat.Init()
-	pankat.CreateBlog()
+	pankat.UpdateBlog()
 }

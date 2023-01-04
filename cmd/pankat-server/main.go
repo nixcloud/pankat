@@ -40,7 +40,7 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
 				wsServer.SendAll("reload")
-				pankat.CreateBlog()
+				pankat.UpdateBlog()
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:

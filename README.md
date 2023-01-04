@@ -40,21 +40,20 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* make everything lazy, rework md5 and article re-creation, rework rsync, rework fsnotify checks on all files 
-* add channel to inject updated documents notifications
-  * asdf 
-* each article must know the source file it was generated from to listen for updates
+* make evaluation lazy, rework md5 and article re-creation, rework rsync, rework xml, rework timeline
+  * ArticlesCache: add error handling
+* rework fsnotify to know exactly which file was changed
+* extend MetaData for articles: must know the source file it was generated from to listen for updates, the md5 hash, ... 
+* add pub/sub system for websocket where clients can register a certain page with a hash
 
-* REST
+* add interface to inject updated documents notifications
+  * `func RenderPosts(articles Articles) { ... fmt.Println("NOTIFICATION: ", e.DstFileName)` 
 
-  * /tags
-  * /series
 
-* ArticlesCache: add error handling
 * feed.xml is not generated anymore, might have worked in f5e3232f1df691f3a3b21ca54b77c2b13a9db564
 * re-arrange directories: 
 * move templates and general stuff into base dir
-* fix rsync (windows and linux)
+* generalize rsync (windows and linux)
 * integrate leaps editor
 * BUG: pandoc integration with parser '-s' of html head/body and migration to the go template
 

@@ -43,8 +43,14 @@ func tagToLinkList(a *Article) string {
 	return output
 }
 
-// scan the direcotry for .mdwn files recurively
 func GetTargets(path string, ret []string) Articles {
+	defer timeElapsed("GetTargets")()
+	fmt.Println(color.YellowString("GetTargets: searching and parsing articles with *.mdwn"))
+	return getTargets_(path, ret)
+}
+
+// scan the direcotry for .mdwn files recurively
+func getTargets_(path string, ret []string) Articles {
 	var articles Articles
 	entries, _ := ioutil.ReadDir(path)
 	for _, entry := range entries {
@@ -56,7 +62,7 @@ func GetTargets(path string, ret []string) Articles {
 			}
 			ret = append(ret, buf)
 			//       fmt.Println(buf)
-			n := GetTargets(buf, ret)
+			n := getTargets_(buf, ret)
 			articles = append(articles, n...)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
@@ -202,9 +208,8 @@ func callPlugin(in []byte, article *Article) []byte {
 	case "summary":
 		article.Summary = strings.Join(f[1:], " ")
 	default:
-		fmt.Println(name, " plugin, called from ", article.SrcFileName, " NOT supported")
+		fmt.Println(article.SrcFileName + ": plugin '" + name + "'" + color.RedString(" NOT supported"))
 	}
-
 	return output
 }
 
@@ -232,6 +237,7 @@ func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func RenderTimeline(articles Articles) {
 	defer timeElapsed("RenderTimeline")()
+	fmt.Println(color.YellowString("Rendering timeline in posts.html"))
 
 	var pageContent string
 	var article Article
@@ -261,6 +267,9 @@ func RenderTimeline(articles Articles) {
 
 	// sort the tags
 	tagsSlice := rankByWordCount(tagsMap)
+	if GetConfig().Verbose > 0 {
+		fmt.Println(color.GreenString("tagsSlice"), tagsSlice)
+	}
 
 	pageContent += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
@@ -269,7 +278,10 @@ func RenderTimeline(articles Articles) {
 	pageContent += `</p>`
 
 	seriesSlice := rankByWordCount(seriesMap)
-	fmt.Println(seriesSlice)
+	if GetConfig().Verbose > 0 {
+		fmt.Println(color.GreenString("seriesSlice"), seriesSlice)
+	}
+
 	pageContent += `<p id="seriesCloud">`
 	for _, e := range seriesSlice {
 		pageContent += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + e.Key + `', 1)">` + e.Key + `</a>`
@@ -459,6 +471,9 @@ func RenderTimeline(articles Articles) {
 }
 
 func RenderFeed(articles Articles) {
+	defer timeElapsed("RenderFeed")()
+	fmt.Println(color.YellowString("Rendering all xml feeds"))
+
 	var history string
 	var article Article
 
@@ -537,7 +552,9 @@ func RenderFeed(articles Articles) {
 }
 
 func generateFeedXML(articles Articles, fileName string) {
-	fmt.Println("Generating feed: " + fileName)
+	if GetConfig().Verbose > 0 {
+		fmt.Println("Generating feed: " + fileName)
+	}
 	feedUrl := GetConfig().SiteURL + "/" + "feed.xml"
 	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
@@ -586,14 +603,17 @@ func generateFeedXML(articles Articles, fileName string) {
 
 func RenderPosts(articles Articles) {
 	defer timeElapsed("RenderPosts")()
+	fmt.Println(color.YellowString("Rendering posts"))
 
 	for _, e := range articles {
-		fmt.Println("Rendering article '" + e.Title + "'")
+		if GetConfig().Verbose > 0 {
+			fmt.Println("Rendering article '" + e.Title + "'")
+		}
 
 		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
 
 		outD := filepath.Clean(GetConfig().OutputPath + "/" + e.SrcDirectoryName + "/")
-		fmt.Println("NOTIFICATION: ", e.DstFileName)
+		//fmt.Println("NOTIFICATION: ", e.DstFileName)
 		//     fmt.Println(string(standalonePageContent))
 
 		errMkdir := os.MkdirAll(outD, 0755)
@@ -736,6 +756,8 @@ func Init() {
 	pflag.String("output", "output", "output directory ('output') all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
 	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
+	pflag.Int("verbose", 0, "verbosity level")
+
 	pflag.Parse()
 	_ = viper.BindPFlags(pflag.CommandLine)
 
@@ -774,63 +796,20 @@ func Init() {
 	GetConfig().SiteURL = siteURL_
 	GetConfig().SiteTitle = siteTitle_
 	GetConfig().MyMd5HashMapJson = myMd5HashMapJson_
+	GetConfig().Verbose = viper.GetInt("verbose")
+
 }
 
-func CreateBlog() {
-
-	fmt.Println(color.GreenString("pankat-static"), "starting!")
-	fmt.Println("input Directory: ", GetConfig().InputPath)
-	fmt.Println("output Directory: ", GetConfig().OutputPath)
-
-	// find all .mdwn files
-	f := make([]string, 0)
-	f = append(f, "")
-	articlesAll := GetTargets(".", f) // FIXME should that not be in Pankat.InputPath?
-
-	articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
-	articlesPosts := articlesAll.Posts().FilterOutDrafts()
-
-	// sort them by date
-	sort.Sort(articlesPosts)
-
-	// override default values for posts
-	for _, e := range articlesPosts {
-		e.Anchorjs = true
-		e.Tocify = true
-	}
-
-	for _, e := range articlesPosts {
-		_ = e
-		// 		    fmt.Println(e.Title)
-		//     z:=e.SrcDirectoryName + "/" + e.SrcFileName
-		//     fmt.Println("   ", z)
-		//     fmt.Println("   ",e.SrcDirectoryName)
-		//     fmt.Println("   ",e.SrcFileName)
-		//     fmt.Println("   ",e.ModificationDate)
-		//     fmt.Println("   ",e.Tags)
-		//     fmt.Println("   ",e.Draft)
-		// 		    fmt.Println("   ",e.Series)
-	}
-
-	// generate about.html and additional pages
-	RenderPosts(articlesTopLevel)
-
-	// generate articles
-	RenderPosts(articlesPosts)
-
-	// generate posts.html (timeline)
-	RenderTimeline(articlesPosts)
-
-	// render feed.html
-	RenderFeed(articlesPosts)
+func rsync() {
+	defer timeElapsed("rsync")()
+	fmt.Println(color.GreenString("rsync"), "files to output directory")
 
 	s, _ := os.Getwd()
 	//fmt.Println("Getwd path is: ", s)
 
 	v, _ := filepath.Rel(s, GetConfig().OutputPath)
 	v = filepath.ToSlash(v)
-	fmt.Println("relative path is: ", v) // FIXME windows specific hack
-
+	//fmt.Println("relative path is: ", v) // FIXME windows specific hack
 	// copy static files as fonts/css/js to the output folder
 	commands := []string{
 		"rsync -av --relative js " + v,
@@ -852,6 +831,53 @@ func CreateBlog() {
 		fmt.Println(string(out))
 		_ = out
 	}
+}
+
+func UpdateBlog() {
+	defer timeElapsed("UpdateBlog")()
+
+	fmt.Println(color.GreenString("pankat-static"), "starting!")
+	fmt.Println(color.YellowString("input Directory: "), GetConfig().InputPath)
+	fmt.Println(color.YellowString("output Directory: "), GetConfig().OutputPath)
+
+	// find all .mdwn files
+	f := make([]string, 0)
+	f = append(f, "")
+
+	articlesAll := GetTargets(".", f) // FIXME should that not be in Pankat.InputPath?
+
+	articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
+	articlesPosts := articlesAll.Posts().FilterOutDrafts()
+
+	// sort them by date
+	sort.Sort(articlesPosts)
+
+	fmt.Println(color.YellowString("GetTargets: found"), articlesPosts.Len(), color.YellowString("articles"))
+
+	// override default values for posts
+	for _, e := range articlesPosts {
+		e.Anchorjs = true
+		e.Tocify = true
+	}
+
+	//for _, e := range articlesPosts {
+	//	_ = e
+	//	// 		    fmt.Println(e.Title)
+	//	//     z:=e.SrcDirectoryName + "/" + e.SrcFileName
+	//	//     fmt.Println("   ", z)
+	//	//     fmt.Println("   ",e.SrcDirectoryName)
+	//	//     fmt.Println("   ",e.SrcFileName)
+	//	//     fmt.Println("   ",e.ModificationDate)
+	//	//     fmt.Println("   ",e.Tags)
+	//	//     fmt.Println("   ",e.Draft)
+	//	// 		    fmt.Println("   ",e.Series)
+	//}
+
+	RenderPosts(articlesTopLevel)
+	RenderPosts(articlesPosts)
+	RenderTimeline(articlesPosts)
+	RenderFeed(articlesPosts)
+	rsync()
 	mostRecentArticle := ""
 	if len(articlesPosts) > 0 {
 		mostRecentArticle = filepath.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
