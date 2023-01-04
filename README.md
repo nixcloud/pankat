@@ -40,8 +40,9 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* rework md5 and article re-creation; 
+* make everything lazy, rework md5 and article re-creation, rework rsync, rework fsnotify checks on all files 
 * add channel to inject updated documents notifications
+  * asdf 
 * each article must know the source file it was generated from to listen for updates
 
 * REST

@@ -5,14 +5,11 @@ import (
 	"github.com/fatih/color"
 	"github.com/gocraft/web"
 	"github.com/radovskyb/watcher"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
-	"os"
+	"pankat"
 	"pankat-server/ws"
-	"path/filepath"
 	"time"
 )
 
@@ -43,6 +40,7 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
 				wsServer.SendAll("reload")
+				pankat.CreateBlog()
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -82,51 +80,22 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 	//<-make(chan struct{})
 }
 
-var inputPath string
-var outputPath string
-var SiteURL string
-var SiteTitle string
-
 func main() {
-
-	pflag.String("input", "documents", "input directory  ('documents'') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
-	pflag.String("output", "output", "output directory ('output') all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
-	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
-	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
-	pflag.Parse()
-	_ = viper.BindPFlags(pflag.CommandLine)
-
-	input := viper.GetString("input")
-	output := viper.GetString("output")
-	SiteURL = viper.GetString("siteURL")
-	SiteTitle = viper.GetString("siteTitle")
-
-	i1, err := filepath.Abs(input)
-	inputPath = i1
-
-	o1, err := filepath.Abs(output)
-	outputPath = o1
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
 	fmt.Println(color.GreenString("pankat-server"), "starting!")
-	fmt.Println("input Directory: ", inputPath)
-	fmt.Println("output Directory: ", outputPath)
+
+	pankat.Init()
 
 	//   updateCh := make(chan string)
 	wsServer := ws.NewServer()
 
 	go wsServer.Listen()
-	go fsNotifyWatchDocumentsDirectory(wsServer, inputPath)
+	go fsNotifyWatchDocumentsDirectory(wsServer, pankat.GetConfig().InputPath)
 
 	router := web.New(Context{}). // Create your router
 					Middleware(web.LoggerMiddleware).
 					Middleware(web.ShowErrorsMiddleware).
 		//Middleware(web.StaticMiddleware("../output")).
-		Middleware(web.StaticMiddleware(outputPath)).
+		Middleware(web.StaticMiddleware(pankat.GetConfig().OutputPath)).
 		Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
 			websocket.Handler(wsServer.OnConnected).ServeHTTP(rw, req.Request)
 		}).
