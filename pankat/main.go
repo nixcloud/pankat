@@ -123,7 +123,7 @@ func getTargets_(path string, ret []string) Articles {
 func filterDocument(_article []byte, article *Article) []byte {
 	var _articlePostprocessed []byte
 
-	re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
+	re := regexp.MustCompile("^\\[\\[!(.*?)\\]\\]")
 	z := re.FindAllIndex(_article, -1)
 
 	prevPos := 0

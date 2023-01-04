@@ -16,9 +16,6 @@ what does not work yet
 
 * edit button
 * leaps editor integration
-* rebuild of posts using pankat-server FS notifications on changes (but close)
-* there are problems with rsync currently
-* media folder needs a new way to be handled
 
 what works:
 

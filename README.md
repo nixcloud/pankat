@@ -52,7 +52,7 @@ the primary motivation for rewriting ikiwiki was:
 
 * feed.xml is not generated anymore, might have worked in f5e3232f1df691f3a3b21ca54b77c2b13a9db564
 * re-arrange directories: 
-* move templates and general stuff into base dir
+  * move templates and general stuff into base dir
 * generalize rsync (windows and linux)
 * integrate leaps editor
 * BUG: pandoc integration with parser '-s' of html head/body and migration to the go template
