@@ -800,7 +800,7 @@ func Init() {
 
 }
 
-func rsync() {
+func Rsync() {
 	defer timeElapsed("rsync")()
 	fmt.Println(color.GreenString("rsync"), "files to output directory")
 
@@ -812,11 +812,11 @@ func rsync() {
 	//fmt.Println("relative path is: ", v) // FIXME windows specific hack
 	// copy static files as fonts/css/js to the output folder
 	commands := []string{
-		"rsync -av --relative js " + v,
-		"rsync -av --relative css " + v,
-		"rsync -av --relative fonts " + v,
-		"rsync -av --relative images " + v,
-		"rsync -av --relative posts/media " + v,
+		"Rsync -av --relative js " + v,
+		"Rsync -av --relative css " + v,
+		"Rsync -av --relative fonts " + v,
+		"Rsync -av --relative images " + v,
+		"Rsync -av --relative posts/media " + v,
 	}
 
 	for _, el := range commands {
@@ -830,6 +830,26 @@ func rsync() {
 		}
 		fmt.Println(string(out))
 		_ = out
+	}
+}
+
+func SetMostRecentArticle(articlesPosts Articles) {
+	mostRecentArticle := ""
+	if len(articlesPosts) > 0 {
+		mostRecentArticle = filepath.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
+	} else {
+		mostRecentArticle = "posts.html"
+	}
+	indexContent :=
+		`
+<html>
+<meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
+</html>
+`
+	outIndexName := filepath.Clean(GetConfig().OutputPath + "/" + "index.html")
+	errn := ioutil.WriteFile(outIndexName, []byte(indexContent), 0644)
+	if errn != nil {
+		panic(errn)
 	}
 }
 
@@ -860,39 +880,10 @@ func UpdateBlog() {
 		e.Tocify = true
 	}
 
-	//for _, e := range articlesPosts {
-	//	_ = e
-	//	// 		    fmt.Println(e.Title)
-	//	//     z:=e.SrcDirectoryName + "/" + e.SrcFileName
-	//	//     fmt.Println("   ", z)
-	//	//     fmt.Println("   ",e.SrcDirectoryName)
-	//	//     fmt.Println("   ",e.SrcFileName)
-	//	//     fmt.Println("   ",e.ModificationDate)
-	//	//     fmt.Println("   ",e.Tags)
-	//	//     fmt.Println("   ",e.Draft)
-	//	// 		    fmt.Println("   ",e.Series)
-	//}
-
 	RenderPosts(articlesTopLevel)
 	RenderPosts(articlesPosts)
 	RenderTimeline(articlesPosts)
 	RenderFeed(articlesPosts)
-	rsync()
-	mostRecentArticle := ""
-	if len(articlesPosts) > 0 {
-		mostRecentArticle = filepath.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
-	} else {
-		mostRecentArticle = "posts.html"
-	}
-	indexContent :=
-		`
-<html>
-<meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
-</html>
-`
-	outIndexName := filepath.Clean(GetConfig().OutputPath + "/" + "index.html")
-	errn := ioutil.WriteFile(outIndexName, []byte(indexContent), 0644)
-	if errn != nil {
-		panic(errn)
-	}
+	Rsync()
+	SetMostRecentArticle(articlesPosts)
 }
