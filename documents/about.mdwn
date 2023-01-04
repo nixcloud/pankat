@@ -16,10 +16,10 @@ i'm a **freelancer** so if you have something interesting to offer, feel free to
 
 ## resources
 
-* <https://lastlog.de/blog> - my blog
+* <https://lastlog.de/blog> - my blog
 * <https://lastlog.de/wiki> - my wiki
-* <https://github.com/qknight> - for personal projects
-* <https://github.com/nixcloud> - nixcloud related projects
+* <https://github.com/qknight> - for personal projects
+* <https://github.com/nixcloud> - nixcloud related projects
 * <http://stackoverflow.com/users/4243981/invalidmagic> - profile on stackoverflow
 * <http://stackoverflow.com/users/5988848/nixcloud> - profile on stackoverflow (nixcloud)
 
