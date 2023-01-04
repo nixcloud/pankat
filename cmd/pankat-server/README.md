@@ -27,6 +27,8 @@ what works:
 
 ## virtual dom ideas
 
+* http://fiduswriter.github.io/diffDOM/
+
 * https://vuejs.org/v2/examples/hackernews.html
 * https://medium.com/@adeshg7/vuejs-golang-a-rare-combination-53538b6fb918
 
