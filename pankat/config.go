@@ -7,6 +7,7 @@ type config struct {
 	SiteTitle        string
 	MyMd5HashMapJson string
 	Verbose          int
+	Force            int
 }
 
 var instance config

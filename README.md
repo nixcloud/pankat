@@ -40,28 +40,69 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
+* BUG: pandoc integration with parser '-s' of html head/body and migration to the go template
+
+* extend MetaData for articles: must know the source file it was generated from to listen for updates, the md5 hash, ...
+
 * make evaluation lazy, rework md5 and article re-creation, rework rsync, rework xml, rework timeline
+* // when to rerender article? Articles.go
+  // change in
+  // - title
+  // - Article
+  // - ModificationDate
+  // - tags
+  // - series
+  // - SrcFileName
+  // - DstFileName
+  // - BaseFileName
+  // - SrcDirectoryName
+  // - Anchorjs         
+  // - Tocify           
+  //
+  // but also when
+  // previous/next article have these changes
+  // - DstFileName
   * ArticlesCache: add error handling
+
+* create list of articles in draft state 
+
+* use Article.timeline field, don't call RenderPosts twice
+
+     articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
+     articlesPosts := articlesAll.Posts().FilterOutDrafts()
+     RenderPosts(articlesTopLevel)
+     RenderPosts(articlesPosts)
+
 * rework fsnotify to know exactly which file was changed
-* extend MetaData for articles: must know the source file it was generated from to listen for updates, the md5 hash, ... 
+  * https://medium.com/@skdomino/watch-this-file-watching-in-go-5b5a247cf71f
+ 
+* add drafts subpage which lists all articles in draft state 
 * add pub/sub system for websocket where clients can register a certain page with a hash
 
 * add interface to inject updated documents notifications
   * `func RenderPosts(articles Articles) { ... fmt.Println("NOTIFICATION: ", e.DstFileName)` 
 
-
+* https://github.com/nixcloud/pankat/issues/3
+  a href="https://lastlog.de/blog/media/tuex.png
+  should be
+  a href="https://lastlog.de/blog/posts/media/tuex.png
 * feed.xml is not generated anymore, might have worked in f5e3232f1df691f3a3b21ca54b77c2b13a9db564
 * re-arrange directories: 
   * move templates and general stuff into base dir
 * generalize rsync (windows and linux)
 * integrate leaps editor
-* BUG: pandoc integration with parser '-s' of html head/body and migration to the go template
-
+* BUG: timeline needs beginning year and end year, some have not both
 later
 
 * create hello world example so someone else can use this software
 * implement comment system FIXME
    see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
+* FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
+* FIX bug with regexp where grep_and_vim_idea.mdwn contains plugin calls which should not be rendered
+   func processPlugins(_article []byte, article *Article) []byte {
+  var _articlePostprocessed []byte
+
+  re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
 
 ## content
 
@@ -74,12 +115,7 @@ the content of blog.lastlog.de needs rework
 * fix images, add class="noFancy"
 * check h1,h2,...
 * use <div class="warn">...</div>
-* check [[!series ogre]] for other series like qt
 * libnoise_viewer.html fix video width
-
-* commit history using git and add revert link like ikiwiki does FIXME
-
-// FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
 
 # who
 

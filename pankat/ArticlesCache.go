@@ -5,7 +5,8 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"github.com/fatih/color"
+	"os"
 )
 
 type md5hash [md5.Size]byte
@@ -30,14 +31,18 @@ func (s ArticlesCache) computeHash(a Article) md5hash {
 // load hashes and articles via json from disk
 func (s ArticlesCache) load() {
 	var v = []ArticlesCacheList{}
-	b, errReadFile := ioutil.ReadFile(GetConfig().MyMd5HashMapJson)
-	if errReadFile != nil {
-		fmt.Println(errReadFile)
+	if GetConfig().Force == 1 {
+		fmt.Println(color.MagentaString("Forcing reevaluation, ignoring ArticlesCache"))
 	} else {
-		jBuff := bytes.NewBufferString(string(b))
-		dec := json.NewDecoder(jBuff)
-		if err := dec.Decode(&v); err != nil {
-			fmt.Println(err)
+		b, errReadFile := os.ReadFile(GetConfig().MyMd5HashMapJson)
+		if errReadFile != nil {
+			fmt.Println(errReadFile)
+		} else {
+			jBuff := bytes.NewBufferString(string(b))
+			dec := json.NewDecoder(jBuff)
+			if err := dec.Decode(&v); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 	for i := range v {
@@ -63,7 +68,7 @@ func (s ArticlesCache) save() {
 		fmt.Println(errEnc)
 	}
 	//fmt.Println(string(jsonBuff.Bytes()))
-	errn := ioutil.WriteFile(GetConfig().MyMd5HashMapJson, jsonBuff.Bytes(), 0644)
+	errn := os.WriteFile(GetConfig().MyMd5HashMapJson, jsonBuff.Bytes(), 0644)
 	if errn != nil {
 		panic(errn)
 	}

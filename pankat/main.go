@@ -88,7 +88,7 @@ func getTargets_(path string, ret []string) Articles {
 					panic(err)
 				}
 
-				_article = filterDocument(_article, &a)
+				_article = processPlugins(_article, &a)
 
 				a.Article = _article
 				articles = append(articles, &a)
@@ -120,13 +120,14 @@ func getTargets_(path string, ret []string) Articles {
 	return articles
 }
 
-func filterDocument(_article []byte, article *Article) []byte {
+func processPlugins(_article []byte, article *Article) []byte {
 	var _articlePostprocessed []byte
 
-	re := regexp.MustCompile("^\\[\\[!(.*?)\\]\\]")
+	re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
 	z := re.FindAllIndex(_article, -1)
 
 	prevPos := 0
+	var foundPlugins []string
 	for i := 0; i <= len(z); i++ {
 		if i == len(z) {
 			_articlePostprocessed = append(_articlePostprocessed, _article[prevPos:]...)
@@ -140,13 +141,18 @@ func filterDocument(_article []byte, article *Article) []byte {
 		}
 
 		// include plugin processed stuff
-		_articlePostprocessed = append(_articlePostprocessed, callPlugin(_article[n[0]:n[1]], article)...)
+		t, name := callPlugin(_article[n[0]:n[1]], article)
+		foundPlugins = append(foundPlugins, name)
+		_articlePostprocessed = append(_articlePostprocessed, t...)
 		prevPos = n[1]
+	}
+	if GetConfig().Verbose > 1 {
+		fmt.Println(article.DstFileName, color.GreenString("plugins:"), foundPlugins)
 	}
 	return _articlePostprocessed
 }
 
-func callPlugin(in []byte, article *Article) []byte {
+func callPlugin(in []byte, article *Article) ([]byte, string) {
 	a := len(in) - 2
 	p := string(in[3:a])
 	//   fmt.Println(p)
@@ -158,7 +164,7 @@ func callPlugin(in []byte, article *Article) []byte {
 		name = f[0]
 	} else {
 		var z []byte
-		return z
+		return z, ""
 	}
 
 	//   fmt.Println("\n=========== ", name, " ===========")
@@ -210,7 +216,7 @@ func callPlugin(in []byte, article *Article) []byte {
 	default:
 		fmt.Println(article.SrcFileName + ": plugin '" + name + "'" + color.RedString(" NOT supported"))
 	}
-	return output
+	return output, name
 }
 
 func rankByWordCount(wordFrequencies map[string]int) TagsSlice {
@@ -757,6 +763,7 @@ func Init() {
 	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Int("verbose", 0, "verbosity level")
+	pflag.Int("force", 0, "forced complete rebuild, not using cache")
 
 	pflag.Parse()
 	_ = viper.BindPFlags(pflag.CommandLine)
@@ -797,6 +804,7 @@ func Init() {
 	GetConfig().SiteTitle = siteTitle_
 	GetConfig().MyMd5HashMapJson = myMd5HashMapJson_
 	GetConfig().Verbose = viper.GetInt("verbose")
+	GetConfig().Force = viper.GetInt("force")
 
 }
 
@@ -812,11 +820,11 @@ func Rsync() {
 	//fmt.Println("relative path is: ", v) // FIXME windows specific hack
 	// copy static files as fonts/css/js to the output folder
 	commands := []string{
-		"Rsync -av --relative js " + v,
-		"Rsync -av --relative css " + v,
-		"Rsync -av --relative fonts " + v,
-		"Rsync -av --relative images " + v,
-		"Rsync -av --relative posts/media " + v,
+		"rsync -av --relative js " + v,
+		"rsync -av --relative css " + v,
+		"rsync -av --relative fonts " + v,
+		"rsync -av --relative images " + v,
+		"rsync -av --relative posts/media " + v,
 	}
 
 	for _, el := range commands {

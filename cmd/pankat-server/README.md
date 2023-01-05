@@ -12,16 +12,6 @@ planned: articles will have an `edit button` somewhere and if clicked the articl
 
 **note: this is still WIP**
 
-what does not work yet
-
-* edit button
-* leaps editor integration
-
-what works:
-
-* WS reload command on documents/blog.lastlog.de updates
-* localhost:8000 shows the documents
-
 ## virtual dom ideas
 
 * http://fiduswriter.github.io/diffDOM/

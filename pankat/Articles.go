@@ -3,6 +3,7 @@ package pankat
 import (
 	"bytes"
 	"fmt"
+	"github.com/fatih/color"
 	"io"
 	"os"
 	"os/exec"
@@ -39,7 +40,10 @@ func (a Article) Render() string {
 	}
 	var text string = ""
 	if articlesCache.Get(a) == "" {
-		pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
+		if GetConfig().Verbose > 1 {
+			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
+		}
+		pandocProcess := exec.Command("pandoc", "-s", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
 		stdin, err := pandocProcess.StdinPipe()
 		if err != nil {
 			fmt.Println(err)
@@ -71,6 +75,7 @@ func (a Article) Render() string {
 		text = string(buff.Bytes())
 		articlesCache.Set(a, text)
 	} else {
+		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
 		text = articlesCache.Get(a)
 	}
 	return text
