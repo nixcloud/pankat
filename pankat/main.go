@@ -454,7 +454,7 @@ func RenderTimeline(articles Articles) {
         setFilter(filter, 0)
       });
 
-      // browser pageContent button was used, so we need to update the page, but not the browser pageContent
+      // browser pageContent button was used, so we need to update the posts, but not the browser pageContent
       window.addEventListener("popstate", function() {
         var filter = getURLParameter("filter");
         setFilter(filter, 0);
@@ -462,7 +462,7 @@ func RenderTimeline(articles Articles) {
       </script>
       </div>
 `
-	page := generateStandalonePage(articles, article, pageContent)
+	posts := generateStandalonePage(articles, article, pageContent)
 
 	outD := GetConfig().OutputPath + "/"
 	err = os.MkdirAll(outD, 0755)
@@ -470,7 +470,7 @@ func RenderTimeline(articles Articles) {
 		panic(err)
 	}
 	outName := outD + "posts.html"
-	err1 := ioutil.WriteFile(outName, page, 0644)
+	err1 := os.WriteFile(outName, posts, 0644)
 	if err1 != nil {
 		panic(err1)
 	}
@@ -502,7 +502,7 @@ func RenderFeed(articles Articles) {
 	history += `
 	<p>
 		<div>want to follow the blog by feed, this one contains all articles:</div>
-		> <a href="feed.xml">feed.xml</a>
+		<a href="feed.xml">feed.xml</a>
     </p>
     `
 	for k := range tagsMap {
@@ -534,7 +534,7 @@ func RenderFeed(articles Articles) {
 	<p>
      Are you interested in a single tag or series? Then just make a selection above and copy the url from below afterwards:<br>
      
-     <div class="feedURL" id="feedURL"> > select tag or series</div>
+     <div class="feedURL" id="feedURL"> select tag or series</div>
      </p>
 
      <script>
@@ -543,7 +543,7 @@ func RenderFeed(articles Articles) {
      } 
      </script>
     `
-	page := generateStandalonePage(articles, article, history)
+	feed := generateStandalonePage(articles, article, history)
 
 	outD := GetConfig().OutputPath + "/"
 	err := os.MkdirAll(outD, 0755)
@@ -551,7 +551,7 @@ func RenderFeed(articles Articles) {
 		panic(err)
 	}
 	outName := outD + "feed.html"
-	err1 := ioutil.WriteFile(outName, page, 0644)
+	err1 := os.WriteFile(outName, feed, 0644)
 	if err1 != nil {
 		panic(err1)
 	}
@@ -599,8 +599,8 @@ func generateFeedXML(articles Articles, fileName string) {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
-	outName := filepath.Clean(GetConfig().OutputPath + "/feed/" + fileName + ".xml")
-	err2 := ioutil.WriteFile(outName, []byte(z), 0644)
+	feedName := filepath.Clean(GetConfig().OutputPath + "/feed/" + fileName + ".xml")
+	err2 := os.WriteFile(feedName, []byte(z), 0644)
 	if err2 != nil {
 		fmt.Println(err2)
 		panic(err2)
@@ -630,7 +630,7 @@ func RenderPosts(articles Articles) {
 
 		// write to disk
 		outName := filepath.Clean(outD + "/" + e.DstFileName)
-		err5 := ioutil.WriteFile(outName, standalonePageContent, 0644)
+		err5 := os.WriteFile(outName, standalonePageContent, 0644)
 		if err5 != nil {
 			fmt.Println(err5)
 			panic(e)
@@ -647,7 +647,6 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		panic(err)
 	}
 
-	//HACK should be moved to pankat-core
 	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
 	relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
 	//   fmt.Println(relativeSrcRootPath)
@@ -855,7 +854,7 @@ func SetMostRecentArticle(articlesPosts Articles) {
 </html>
 `
 	outIndexName := filepath.Clean(GetConfig().OutputPath + "/" + "index.html")
-	errn := ioutil.WriteFile(outIndexName, []byte(indexContent), 0644)
+	errn := os.WriteFile(outIndexName, []byte(indexContent), 0644)
 	if errn != nil {
 		panic(errn)
 	}
