@@ -40,10 +40,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* BUG: pandoc integration with parser '-s' of html head/body and migration to the go template
-
-* extend MetaData for articles: must know the source file it was generated from to listen for updates, the md5 hash, ...
-
 * make evaluation lazy, rework md5 and article re-creation, rework rsync, rework xml, rework timeline
 * // when to rerender article? Articles.go
   // change in
@@ -62,9 +58,10 @@ the primary motivation for rewriting ikiwiki was:
   // but also when
   // previous/next article have these changes
   // - DstFileName
-  * ArticlesCache: add error handling
+ 
+* ArticlesCache: add error handling
 
-* create list of articles in draft state 
+* create list of articles in draft state
 
 * use Article.timeline field, don't call RenderPosts twice
 
@@ -103,6 +100,8 @@ later
   var _articlePostprocessed []byte
 
   re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
+
+* FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
 ## content
 
