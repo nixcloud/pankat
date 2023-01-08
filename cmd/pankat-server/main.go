@@ -39,8 +39,10 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 			select {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
-				wsServer.SendAll("reload")
-				pankat.UpdateBlog()
+				wsServer.SendAll(event.String())
+
+				//wsServer.SendAll("reload")
+				//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -101,7 +103,7 @@ func main() {
 		}).
 		Get("/", redirectTo("/index.html"))
 
-	http.ListenAndServe("localhost:8000", router)
+	http.ListenAndServe(":8000", router)
 	// wait until ctrl+c
 }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	htemplate "html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -45,6 +46,7 @@ func tagToLinkList(a *Article) string {
 
 func GetTargets(path string, ret []string) Articles {
 	defer timeElapsed("GetTargets")()
+
 	fmt.Println(color.YellowString("GetTargets: searching and parsing articles with *.mdwn"))
 	return getTargets_(path, ret)
 }
@@ -82,13 +84,13 @@ func getTargets_(path string, ret []string) Articles {
 					fmt.Println(err)
 					panic(err)
 				}
-				_article, err := ioutil.ReadAll(f)
+				_article, err := io.ReadAll(f)
 				if err != nil {
 					fmt.Println(err)
 					panic(err)
 				}
 
-				_article = processPlugins(_article, &a)
+				_article = ProcessPlugins(_article, &a)
 
 				a.Article = _article
 				articles = append(articles, &a)
@@ -101,26 +103,10 @@ func getTargets_(path string, ret []string) Articles {
 		}
 	}
 
-	// FIXME
-	//// if new article is added, this force-triggers a rebuild on the previous one
-	//for index := 0; index < len(articles); index++ {
-	//	a := articles[index]
-	//	if index > 0 {
-	//		t := []byte(articles[index-1].ModificationDate.String())
-	//		oldHash := a.Hash
-	//		a.Hash = md5.Sum(append(oldHash[:], t...))
-	//	}
-	//	if index < len(entries) {
-	//		t := []byte(articles[index+1].ModificationDate.String())
-	//		oldHash := a.Hash
-	//		a.Hash = md5.Sum(append(oldHash[:], t...))
-	//	}
-	//}
-
 	return articles
 }
 
-func processPlugins(_article []byte, article *Article) []byte {
+func ProcessPlugins(_article []byte, article *Article) []byte {
 	var _articlePostprocessed []byte
 
 	re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")

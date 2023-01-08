@@ -25,6 +25,20 @@ pankat-server can be executed on the client to provides a live preview of the ge
 
 * [pankat-server](src/github.com/nixcloud/cmd/pankat-server/README.md)
 
+# pankat-docker
+
+Build programs:
+
+    docker build -t pankat-docker:latest .
+
+Use program `pankat-static`:
+
+    docker run -it --rm -v ${PWD}/documents:/documents -v ${PWD}/output:/output pankat-docker:latest pankat-static --input /documents/blog.lastlog.de/ --output /output/blog.lastlog.de/
+
+Use program `pankat-server`:
+
+    docker run -it --rm -p 8000:8000 -v ${PWD}/documents:/documents -v ${PWD}/output:/output pankat-docker:latest pankat-server --input /documents/blog.lastlog.de/ --output /output/blog.lastlog.de/
+
 # license
 pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
 
@@ -39,6 +53,11 @@ the primary motivation for rewriting ikiwiki was:
 # todo
 
 ## programming
+
+
+* https://github.com/rogchap/v8go
+
+* update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
 
 * make evaluation lazy, rework md5 and article re-creation, rework rsync, rework xml, rework timeline
 * // when to rerender article? Articles.go
@@ -59,7 +78,6 @@ the primary motivation for rewriting ikiwiki was:
   // previous/next article have these changes
   // - DstFileName
  
-* ArticlesCache: add error handling
 
 * create list of articles in draft state
 
@@ -74,7 +92,8 @@ the primary motivation for rewriting ikiwiki was:
   * https://medium.com/@skdomino/watch-this-file-watching-in-go-5b5a247cf71f
  
 * add drafts subpage which lists all articles in draft state 
-* add pub/sub system for websocket where clients can register a certain page with a hash
+
+* ArticlesCache: add error handling
 
 * add interface to inject updated documents notifications
   * `func RenderPosts(articles Articles) { ... fmt.Println("NOTIFICATION: ", e.DstFileName)` 

@@ -8,8 +8,6 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/gocraft/web v0.0.0-20190207150652-9707327fb69b
 	github.com/radovskyb/watcher v1.0.7
-	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.14.0
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b
 )
 
@@ -25,6 +23,8 @@ require (
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.14.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
 	golang.org/x/text v0.4.0 // indirect
