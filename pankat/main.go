@@ -592,6 +592,16 @@ func generateFeedXML(articles Articles, fileName string) {
 	}
 }
 
+var sendLiveUpdateViaWS func(string, string) = emtpyFunc
+
+func emtpyFunc(string, string) {
+
+}
+
+func OnArticleChange(f func(string, string)) {
+	sendLiveUpdateViaWS = f
+}
+
 func RenderPosts(articlesAll Articles) {
 	defer timeElapsed("RenderPosts")()
 	fmt.Println(color.YellowString("Rendering posts"))
@@ -606,8 +616,8 @@ func RenderPosts(articlesAll Articles) {
 			}
 			standalonePageContent := generateStandalonePage(articles, *article, article.Render())
 			outD := filepath.Clean(GetConfig().OutputPath + "/" + article.SrcDirectoryName + "/")
-			//fmt.Println("NOTIFICATION: ", article.DstFileName)
-			//     fmt.Println(string(standalonePageContent))
+			sendLiveUpdateViaWS(article.SrcFileName, article.Render())
+
 			errMkdir := os.MkdirAll(outD, 0755)
 			if errMkdir != nil {
 				fmt.Println(errMkdir)

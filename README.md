@@ -53,10 +53,10 @@ the primary motivation for rewriting ikiwiki was:
 # todo
 
 ## programming
-* 
 * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
 
 * experiment with diffDOM.js -> got the code in pankat-websockets.js
+    https://github.com/fiduswriter/diffDOM#usage
 
 * rework rsync: drop it completely
 

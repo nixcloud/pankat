@@ -40,11 +40,12 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
 
-				hhh := "<b>About to apply the diff</b><br><b>from the WS context</b><br><b>from go</b>"
-				wsServer.SendAll(hhh)
+				//hhh := "<b>About to apply the diff</b><br><b>from the WS context</b><br><b>from go</b>"
+				//wsServer.SendAll(hhh)
 
 				//wsServer.SendAll("reload")
 				//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
+				pankat.UpdateBlog()
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -84,17 +85,23 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 	//<-make(chan struct{})
 }
 
+func OnArticleChange(wsServer *ws.Server) func(string, string) {
+	return func(srcFileName string, RenderedArticle string) {
+		fmt.Println(srcFileName)
+		if srcFileName == "docker_compose_vs_nixcloud.mdwn" {
+			wsServer.SendAll(RenderedArticle)
+		}
+	}
+}
+
 func main() {
 	fmt.Println(color.GreenString("pankat-server"), "starting!")
-
 	pankat.Init()
-
-	//   updateCh := make(chan string)
 	wsServer := ws.NewServer()
-
+	ona := OnArticleChange(wsServer)
+	pankat.OnArticleChange(ona)
 	go wsServer.Listen()
 	go fsNotifyWatchDocumentsDirectory(wsServer, pankat.GetConfig().InputPath)
-
 	router := web.New(Context{}). // Create your router
 					Middleware(web.LoggerMiddleware).
 					Middleware(web.ShowErrorsMiddleware).
@@ -104,9 +111,7 @@ func main() {
 			websocket.Handler(wsServer.OnConnected).ServeHTTP(rw, req.Request)
 		}).
 		Get("/", redirectTo("/index.html"))
-
-	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router)
-	// wait until ctrl+c
+	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router) // wait until ctrl+c
 }
 
 func redirectTo(to string) func(web.ResponseWriter, *web.Request) {
