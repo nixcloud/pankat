@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 	htemplate "html/template"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -54,7 +53,7 @@ func GetTargets(path string, ret []string) Articles {
 // scan the direcotry for .mdwn files recurively
 func getTargets_(path string, ret []string) Articles {
 	var articles Articles
-	entries, _ := ioutil.ReadDir(path)
+	entries, _ := os.ReadDir(path)
 	for _, entry := range entries {
 		buf := path + "/" + entry.Name()
 		//     fmt.Println("reading buf: ", buf)
@@ -593,33 +592,34 @@ func generateFeedXML(articles Articles, fileName string) {
 	}
 }
 
-func RenderPosts(articles Articles) {
+func RenderPosts(articlesAll Articles) {
 	defer timeElapsed("RenderPosts")()
 	fmt.Println(color.YellowString("Rendering posts"))
+	var RenderRuns []Articles
+	RenderRuns = append(RenderRuns, articlesAll.TopLevel())
+	RenderRuns = append(RenderRuns, articlesAll.Posts())
 
-	for _, e := range articles {
-		if GetConfig().Verbose > 0 {
-			fmt.Println("Rendering article '" + e.Title + "'")
-		}
-
-		standalonePageContent := generateStandalonePage(articles, *e, e.Render())
-
-		outD := filepath.Clean(GetConfig().OutputPath + "/" + e.SrcDirectoryName + "/")
-		//fmt.Println("NOTIFICATION: ", e.DstFileName)
-		//     fmt.Println(string(standalonePageContent))
-
-		errMkdir := os.MkdirAll(outD, 0755)
-		if errMkdir != nil {
-			fmt.Println(errMkdir)
-			panic(errMkdir)
-		}
-
-		// write to disk
-		outName := filepath.Clean(outD + "/" + e.DstFileName)
-		err5 := os.WriteFile(outName, standalonePageContent, 0644)
-		if err5 != nil {
-			fmt.Println(err5)
-			panic(e)
+	for _, articles := range RenderRuns {
+		for _, article := range articles {
+			if GetConfig().Verbose > 0 {
+				fmt.Println("Rendering article '" + article.Title + "'")
+			}
+			standalonePageContent := generateStandalonePage(articles, *article, article.Render())
+			outD := filepath.Clean(GetConfig().OutputPath + "/" + article.SrcDirectoryName + "/")
+			//fmt.Println("NOTIFICATION: ", article.DstFileName)
+			//     fmt.Println(string(standalonePageContent))
+			errMkdir := os.MkdirAll(outD, 0755)
+			if errMkdir != nil {
+				fmt.Println(errMkdir)
+				panic(errMkdir)
+			}
+			// write to disk
+			outName := filepath.Clean(outD + "/" + article.DstFileName)
+			err5 := os.WriteFile(outName, standalonePageContent, 0644)
+			if err5 != nil {
+				fmt.Println(err5)
+				panic(article)
+			}
 		}
 	}
 }
@@ -858,26 +858,22 @@ func UpdateBlog() {
 	f := make([]string, 0)
 	f = append(f, "")
 
-	articlesAll := GetTargets(".", f) // FIXME should that not be in Pankat.InputPath?
-
-	articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
-	articlesPosts := articlesAll.Posts().FilterOutDrafts()
+	articles := GetTargets(".", f).FilterOutDrafts()
 
 	// sort them by date
-	sort.Sort(articlesPosts)
+	sort.Sort(articles)
 
-	fmt.Println(color.YellowString("GetTargets: found"), articlesPosts.Len(), color.YellowString("articles"))
+	fmt.Println(color.YellowString("GetTargets: found"), articles.Posts().Len(), color.YellowString("articles"))
 
 	// override default values for posts
-	for _, e := range articlesPosts {
+	for _, e := range articles.Posts() {
 		e.Anchorjs = true
 		e.Tocify = true
 	}
 
-	RenderPosts(articlesTopLevel)
-	RenderPosts(articlesPosts)
-	RenderTimeline(articlesPosts)
-	RenderFeed(articlesPosts)
+	RenderPosts(articles)
+	RenderTimeline(articles.Posts())
+	RenderFeed(articles.Posts())
+	SetMostRecentArticle(articles.Posts())
 	Rsync()
-	SetMostRecentArticle(articlesPosts)
 }

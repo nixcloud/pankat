@@ -53,13 +53,17 @@ the primary motivation for rewriting ikiwiki was:
 # todo
 
 ## programming
+* 
+* update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
 
+* experiment with diffDOM.js -> got the code in pankat-websockets.js
+
+* rework rsync: drop it completely
 
 * https://github.com/rogchap/v8go
 
-* update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
 
-* make evaluation lazy, rework md5 and article re-creation, rework rsync, rework xml, rework timeline
+* make evaluation lazy, rework md5 and article re-creation, , rework xml, rework timeline
 * // when to rerender article? Articles.go
   // change in
   // - title
@@ -78,15 +82,7 @@ the primary motivation for rewriting ikiwiki was:
   // previous/next article have these changes
   // - DstFileName
  
-
 * create list of articles in draft state
-
-* use Article.timeline field, don't call RenderPosts twice
-
-     articlesTopLevel := articlesAll.TopLevel().FilterOutDrafts()
-     articlesPosts := articlesAll.Posts().FilterOutDrafts()
-     RenderPosts(articlesTopLevel)
-     RenderPosts(articlesPosts)
 
 * rework fsnotify to know exactly which file was changed
   * https://medium.com/@skdomino/watch-this-file-watching-in-go-5b5a247cf71f
@@ -105,7 +101,6 @@ the primary motivation for rewriting ikiwiki was:
 * feed.xml is not generated anymore, might have worked in f5e3232f1df691f3a3b21ca54b77c2b13a9db564
 * re-arrange directories: 
   * move templates and general stuff into base dir
-* generalize rsync (windows and linux)
 * integrate leaps editor
 * BUG: timeline needs beginning year and end year, some have not both
 later

@@ -39,7 +39,9 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 			select {
 			case event := <-w.Event:
 				fmt.Println(event) // Print the event's info.
-				wsServer.SendAll(event.String())
+
+				hhh := "<b>About to apply the diff</b><br><b>from the WS context</b><br><b>from go</b>"
+				wsServer.SendAll(hhh)
 
 				//wsServer.SendAll("reload")
 				//wsServer.SendAll(pankat.PandocMarkdown2HTML("")

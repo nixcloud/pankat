@@ -4,7 +4,7 @@
       <settings>
         <option name="imageTag" value="pankat-docker:latest" />
         <option name="buildOnly" value="true" />
-        <option name="command" value="./pankat-server --help" />
+        <option name="command" value="./pankat-server" />
         <option name="containerName" value="pankat-docker" />
         <option name="sourceFilePath" value="Dockerfile" />
         <option name="volumeBindings">
