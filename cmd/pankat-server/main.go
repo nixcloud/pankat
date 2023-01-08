@@ -103,7 +103,7 @@ func main() {
 		}).
 		Get("/", redirectTo("/index.html"))
 
-	http.ListenAndServe(":8000", router)
+	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router)
 	// wait until ctrl+c
 }
 

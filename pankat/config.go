@@ -8,6 +8,7 @@ type config struct {
 	MyMd5HashMapJson string
 	Verbose          int
 	Force            int
+	ListenAndServe   string
 }
 
 var instance config

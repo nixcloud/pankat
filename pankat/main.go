@@ -749,6 +749,7 @@ func Init() {
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Int("verbose", 0, "verbosity level")
 	pflag.Int("force", 0, "forced complete rebuild, not using cache")
+	pflag.String("ListenAndServe", ":8000", "ip:port where pankat-server listens, for example: 'localhost:8000'")
 
 	pflag.Parse()
 	_ = viper.BindPFlags(pflag.CommandLine)
@@ -790,7 +791,7 @@ func Init() {
 	GetConfig().MyMd5HashMapJson = myMd5HashMapJson_
 	GetConfig().Verbose = viper.GetInt("verbose")
 	GetConfig().Force = viper.GetInt("force")
-
+	GetConfig().ListenAndServe = viper.GetString("ListenAndServe")
 }
 
 func Rsync() {
