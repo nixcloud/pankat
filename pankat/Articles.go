@@ -32,7 +32,7 @@ type Article struct {
 }
 
 func PandocMarkdown2HTML(articleMarkdown []byte) string {
-	pandocProcess := exec.Command("pandoc", "-s", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
+	pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
 	stdin, err := pandocProcess.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
