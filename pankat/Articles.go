@@ -31,6 +31,39 @@ type Article struct {
 	Timeline         bool
 }
 
+func PandocMarkdown2HTML(articleMarkdown []byte) string {
+	pandocProcess := exec.Command("pandoc", "-s", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
+	stdin, err := pandocProcess.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+		return "error rendering article"
+	}
+	buff := bytes.NewBufferString("")
+	pandocProcess.Stdout = buff
+	pandocProcess.Stderr = os.Stderr
+	err1 := pandocProcess.Start()
+	if err1 != nil {
+		fmt.Println("An error occured: ", err1)
+		return "error rendering article"
+	}
+	_, err2 := io.WriteString(stdin, string(articleMarkdown))
+	if err2 != nil {
+		fmt.Println("An error occured: ", err2)
+		return "error rendering article"
+	}
+	err3 := stdin.Close()
+	if err3 != nil {
+		fmt.Println("An error occured: ", err3)
+		return "error rendering article"
+	}
+	err4 := pandocProcess.Wait()
+	if err4 != nil {
+		fmt.Println("An error occured during pandocProess wait: ", err4)
+		return "error rendering article"
+	}
+	return string(buff.Bytes())
+}
+
 func (a Article) Render() string {
 	// FIXME i would love to get rid of this initialization here and implement this 'constructor' like instead
 	if articlesCache.Store == nil {
@@ -43,36 +76,7 @@ func (a Article) Render() string {
 		if GetConfig().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
-		pandocProcess := exec.Command("pandoc", "-s", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
-		stdin, err := pandocProcess.StdinPipe()
-		if err != nil {
-			fmt.Println(err)
-			return "error rendering article"
-		}
-		buff := bytes.NewBufferString("")
-		pandocProcess.Stdout = buff
-		pandocProcess.Stderr = os.Stderr
-		err1 := pandocProcess.Start()
-		if err1 != nil {
-			fmt.Println("An error occured: ", err1)
-			return "error rendering article"
-		}
-		_, err2 := io.WriteString(stdin, string(a.Article))
-		if err2 != nil {
-			fmt.Println("An error occured: ", err2)
-			return "error rendering article"
-		}
-		err3 := stdin.Close()
-		if err3 != nil {
-			fmt.Println("An error occured: ", err3)
-			return "error rendering article"
-		}
-		err4 := pandocProcess.Wait()
-		if err4 != nil {
-			fmt.Println("An error occured during pandocProess wait: ", err4)
-			return "error rendering article"
-		}
-		text = string(buff.Bytes())
+		text = PandocMarkdown2HTML(a.Article)
 		articlesCache.Set(a, text)
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
