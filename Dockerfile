@@ -41,7 +41,7 @@ RUN ln -s /pankat-server /bin/pankat-server
 RUN ln -s /pankat-static /bin/pankat-static
 
 RUN addgroup -S pankat
-RUN adduser -S -D -h /usr/app/src pankat pankat
+RUN adduser -S -D -H pankat pankat
 USER pankat
 
 EXPOSE 8000
