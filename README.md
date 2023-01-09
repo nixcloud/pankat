@@ -53,16 +53,16 @@ the primary motivation for rewriting ikiwiki was:
 # todo
 
 ## programming
-* update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
 
+* tidy generated html code
+* rework rsync: drop it completely.
+
+
+* live preview lacks tags, creation date and title
+* update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
 * experiment with diffDOM.js -> got the code in pankat-websockets.js
     https://github.com/fiduswriter/diffDOM#usage
-
-* rework rsync: drop it completely
-
-* https://github.com/rogchap/v8go
-
-
+* use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client 
 * make evaluation lazy, rework md5 and article re-creation, , rework xml, rework timeline
 * // when to rerender article? Articles.go
   // change in
@@ -82,6 +82,8 @@ the primary motivation for rewriting ikiwiki was:
   // previous/next article have these changes
   // - DstFileName
  
+* add support for source viewing
+
 * create list of articles in draft state
 
 * rework fsnotify to know exactly which file was changed

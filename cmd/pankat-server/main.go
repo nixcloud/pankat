@@ -85,7 +85,7 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 	//<-make(chan struct{})
 }
 
-func OnArticleChange(wsServer *ws.Server) func(string, string) {
+func onArticleChange(wsServer *ws.Server) func(string, string) {
 	return func(srcFileName string, RenderedArticle string) {
 		fmt.Println(srcFileName)
 		if srcFileName == "docker_compose_vs_nixcloud.mdwn" {
@@ -98,7 +98,7 @@ func main() {
 	fmt.Println(color.GreenString("pankat-server"), "starting!")
 	pankat.Init()
 	wsServer := ws.NewServer()
-	ona := OnArticleChange(wsServer)
+	ona := onArticleChange(wsServer)
 	pankat.OnArticleChange(ona)
 	go wsServer.Listen()
 	go fsNotifyWatchDocumentsDirectory(wsServer, pankat.GetConfig().InputPath)
