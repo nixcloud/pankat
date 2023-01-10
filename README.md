@@ -54,9 +54,12 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
+* FIXME does not work $("#toc").tocify();
 * tidy generated html code
-* rework rsync: drop it completely.
+  * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
+* rework rsync: drop it completely. and merge output/documents folder. store myMd5HashMapJson_ in workdir
+* add support for source viewing
 
 * live preview lacks tags, creation date and title
 * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
@@ -82,7 +85,6 @@ the primary motivation for rewriting ikiwiki was:
   // previous/next article have these changes
   // - DstFileName
  
-* add support for source viewing
 
 * create list of articles in draft state
 
@@ -105,11 +107,6 @@ the primary motivation for rewriting ikiwiki was:
   * move templates and general stuff into base dir
 * integrate leaps editor
 * BUG: timeline needs beginning year and end year, some have not both
-later
-
-* create hello world example so someone else can use this software
-* implement comment system FIXME
-   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
 * FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
 * FIX bug with regexp where grep_and_vim_idea.mdwn contains plugin calls which should not be rendered
    func processPlugins(_article []byte, article *Article) []byte {
@@ -117,7 +114,9 @@ later
 
   re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
 
-* FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
+* create hello world example so someone else can use this software
+* implement comment system FIXME
+  see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
 
 ## content
 
