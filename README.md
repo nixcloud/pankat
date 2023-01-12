@@ -54,11 +54,14 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* FIXME does not work $("#toc").tocify();
+* add support for source viewing
+
+* pankat-server live updates do not update the TOC, because $("#toc").tocify(); called twice does nothing.
+
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
-* add support for source viewing
+
 
 * live preview lacks tags, creation date and title
 * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
