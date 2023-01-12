@@ -54,8 +54,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* rework rsync: drop it completely. and merge output/documents folder. store myMd5HashMapJson_ in workdir
-
 * FIXME does not work $("#toc").tocify();
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
