@@ -1,8 +1,7 @@
 package pankat
 
 type config struct {
-	InputPath        string
-	OutputPath       string
+	DocumentsPath    string
 	SiteURL          string
 	SiteTitle        string
 	MyMd5HashMapJson string

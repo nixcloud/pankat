@@ -45,7 +45,7 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 
 				//wsServer.SendAll("reload")
 				//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
-				pankat.UpdateBlog()
+				//pankat.UpdateBlog()
 			case err := <-w.Error:
 				log.Fatalln(err)
 			case <-w.Closed:
@@ -101,12 +101,12 @@ func main() {
 	ona := onArticleChange(wsServer)
 	pankat.OnArticleChange(ona)
 	go wsServer.Listen()
-	go fsNotifyWatchDocumentsDirectory(wsServer, pankat.GetConfig().InputPath)
+	go fsNotifyWatchDocumentsDirectory(wsServer, pankat.GetConfig().DocumentsPath)
 	router := web.New(Context{}). // Create your router
 					Middleware(web.LoggerMiddleware).
 					Middleware(web.ShowErrorsMiddleware).
 		//Middleware(web.StaticMiddleware("../output")).
-		Middleware(web.StaticMiddleware(pankat.GetConfig().OutputPath)).
+		Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath)).
 		Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
 			websocket.Handler(wsServer.OnConnected).ServeHTTP(rw, req.Request)
 		}).

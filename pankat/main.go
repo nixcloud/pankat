@@ -11,7 +11,6 @@ import (
 	htemplate "html/template"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -449,7 +448,7 @@ func RenderTimeline(articles Articles) {
 `
 	posts := generateStandalonePage(articles, article, pageContent)
 
-	outD := GetConfig().OutputPath + "/"
+	outD := GetConfig().DocumentsPath + "/"
 	err = os.MkdirAll(outD, 0755)
 	if err != nil {
 		panic(err)
@@ -530,7 +529,7 @@ func RenderFeed(articles Articles) {
     `
 	feed := generateStandalonePage(articles, article, history)
 
-	outD := GetConfig().OutputPath + "/"
+	outD := GetConfig().DocumentsPath + "/"
 	err := os.MkdirAll(outD, 0755)
 	if err != nil {
 		panic(err)
@@ -579,12 +578,12 @@ func generateFeedXML(articles Articles, fileName string) {
 	}
 
 	z += `</feed>`
-	errMkdir := os.MkdirAll(GetConfig().OutputPath+"/feed", 0755)
+	errMkdir := os.MkdirAll(GetConfig().DocumentsPath+"/feed", 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
-	feedName := filepath.Clean(GetConfig().OutputPath + "/feed/" + fileName + ".xml")
+	feedName := filepath.Clean(GetConfig().DocumentsPath + "/feed/" + fileName + ".xml")
 	err2 := os.WriteFile(feedName, []byte(z), 0644)
 	if err2 != nil {
 		fmt.Println(err2)
@@ -615,7 +614,7 @@ func RenderPosts(articlesAll Articles) {
 				fmt.Println("Rendering article '" + article.Title + "'")
 			}
 			standalonePageContent := generateStandalonePage(articles, *article, article.Render())
-			outD := filepath.Clean(GetConfig().OutputPath + "/" + article.SrcDirectoryName + "/")
+			outD := filepath.Clean(GetConfig().DocumentsPath + "/" + article.SrcDirectoryName + "/")
 			sendLiveUpdateViaWS(article.SrcFileName, article.Render())
 
 			errMkdir := os.MkdirAll(outD, 0755)
@@ -753,8 +752,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 }
 
 func Init() {
-	pflag.String("input", "documents", "input directory  ('documents'') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
-	pflag.String("output", "output", "output directory ('output') all generated files will be stored there and all directories like css/ js/ images and fonts/ will be rsynced there")
+	pflag.String("documents", "myblog/", "input directory ('documents'') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
 	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Int("verbose", 0, "verbosity level")
@@ -764,77 +762,34 @@ func Init() {
 	pflag.Parse()
 	_ = viper.BindPFlags(pflag.CommandLine)
 
-	input := viper.GetString("input")
-	output := viper.GetString("output")
+	input := viper.GetString("documents")
 	siteURL_ := viper.GetString("siteURL")
 	siteTitle_ := viper.GetString("siteTitle")
 
 	i1, err := filepath.Abs(input)
-	inputPath_ := i1
+	documentsPath := i1
 
-	myMd5HashMapJson_ := filepath.Clean(inputPath_ + "/.ArticlesCache.json")
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	o1, err := filepath.Abs(output)
-	outputPath_ := o1
+	myMd5HashMapJson_ := filepath.Clean(documentsPath + "/.ArticlesCache.json")
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	err1 := os.Chdir(inputPath_)
+	err1 := os.Chdir(documentsPath)
 	if err1 != nil {
 		fmt.Println(err1)
 		os.Exit(1)
 	}
 
 	GetConfig().SiteURL = siteURL_
-	GetConfig().InputPath = inputPath_
-	GetConfig().OutputPath = outputPath_
+	GetConfig().DocumentsPath = documentsPath
 	GetConfig().SiteURL = siteURL_
 	GetConfig().SiteTitle = siteTitle_
 	GetConfig().MyMd5HashMapJson = myMd5HashMapJson_
 	GetConfig().Verbose = viper.GetInt("verbose")
 	GetConfig().Force = viper.GetInt("force")
 	GetConfig().ListenAndServe = viper.GetString("ListenAndServe")
-}
-
-func Rsync() {
-	defer timeElapsed("rsync")()
-	fmt.Println(color.GreenString("rsync"), "files to output directory")
-
-	s, _ := os.Getwd()
-	//fmt.Println("Getwd path is: ", s)
-
-	v, _ := filepath.Rel(s, GetConfig().OutputPath)
-	v = filepath.ToSlash(v)
-	//fmt.Println("relative path is: ", v) // FIXME windows specific hack
-	// copy static files as fonts/css/js to the output folder
-	commands := []string{
-		"rsync -av --relative js " + v,
-		"rsync -av --relative css " + v,
-		"rsync -av --relative fonts " + v,
-		"rsync -av --relative images " + v,
-		"rsync -av --relative posts/media " + v,
-	}
-
-	for _, el := range commands {
-		parts := strings.Fields(el)
-		head := parts[0]
-		parts = parts[1:]
-		fmt.Println("executing: ", el)
-		out, err := exec.Command(head, parts...).Output()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(string(out))
-		_ = out
-	}
 }
 
 func SetMostRecentArticle(articlesPosts Articles) {
@@ -850,19 +805,14 @@ func SetMostRecentArticle(articlesPosts Articles) {
 <meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
 </html>
 `
-	outIndexName := filepath.Clean(GetConfig().OutputPath + "/" + "index.html")
+	outIndexName := filepath.Clean(GetConfig().DocumentsPath + "/" + "index.html")
 	errn := os.WriteFile(outIndexName, []byte(indexContent), 0644)
 	if errn != nil {
 		panic(errn)
 	}
 }
 
-func UpdateBlog() {
-	defer timeElapsed("UpdateBlog")()
-
-	fmt.Println(color.GreenString("pankat-static"), "starting!")
-	fmt.Println(color.YellowString("input Directory: "), GetConfig().InputPath)
-	fmt.Println(color.YellowString("output Directory: "), GetConfig().OutputPath)
+func GetArticles() Articles {
 
 	// find all .mdwn files
 	f := make([]string, 0)
@@ -880,10 +830,18 @@ func UpdateBlog() {
 		e.Anchorjs = true
 		e.Tocify = true
 	}
+	return articles
+}
 
+func UpdateBlog() {
+	defer timeElapsed("UpdateBlog")()
+
+	fmt.Println(color.GreenString("pankat-static"), "starting!")
+	fmt.Println(color.YellowString("Documents path: "), GetConfig().DocumentsPath)
+
+	articles := GetArticles()
 	RenderPosts(articles)
 	RenderTimeline(articles.Posts())
 	RenderFeed(articles.Posts())
 	SetMostRecentArticle(articles.Posts())
-	Rsync()
 }

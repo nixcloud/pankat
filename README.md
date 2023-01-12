@@ -33,11 +33,11 @@ Build programs:
 
 Use program `pankat-static`:
 
-    docker run -it --rm -v ${PWD}/documents:/documents -v ${PWD}/output:/output pankat-docker:latest pankat-static --input /documents/blog.lastlog.de/ --output /output/blog.lastlog.de/
+    docker run -it --rm -v ${PWD}/documents:/documents -v ${PWD}/output:/output pankat-docker:latest pankat-static --documents /documents/blog.lastlog.de/
 
 Use program `pankat-server`:
 
-    docker run -it --rm -p 8000:8000 -v ${PWD}/documents:/documents -v ${PWD}/output:/output pankat-docker:latest pankat-server --input /documents/blog.lastlog.de/ --output /output/blog.lastlog.de/
+    docker run -it --rm -p 8000:8000 -v ${PWD}/documents:/documents pankat-docker:latest pankat-server --documents /documents/blog.lastlog.de/
 
 # license
 pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
@@ -54,11 +54,12 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
+* rework rsync: drop it completely. and merge output/documents folder. store myMd5HashMapJson_ in workdir
+
 * FIXME does not work $("#toc").tocify();
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
-* rework rsync: drop it completely. and merge output/documents folder. store myMd5HashMapJson_ in workdir
 * add support for source viewing
 
 * live preview lacks tags, creation date and title
