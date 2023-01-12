@@ -719,29 +719,31 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 	}
 
 	noItems := struct {
-		Title               string
-		RelativeSrcRootPath string
-		SiteURL             string
-		SiteBrandTitle      string
-		TitleNAV            string
-		SeriesNAV           string
-		Meta                string
-		Anchorjs            bool
-		Tocify              bool
-		Timeline            bool
-		Body                string
+		Title                string
+		RelativeSrcRootPath  string
+		SiteURL              string
+		SiteBrandTitle       string
+		TitleNAV             string
+		SeriesNAV            string
+		Meta                 string
+		Anchorjs             bool
+		Tocify               bool
+		Timeline             bool
+		Body                 string
+		ArticleSourceCodeURL string
 	}{
-		Title:               article.Title,
-		RelativeSrcRootPath: relativeSrcRootPath,
-		SiteURL:             GetConfig().SiteURL,
-		SiteBrandTitle:      GetConfig().SiteTitle,
-		TitleNAV:            titleNAV,
-		SeriesNAV:           seriesNAV,
-		Meta:                meta,
-		Anchorjs:            article.Anchorjs,
-		Tocify:              article.Tocify,
-		Timeline:            article.Timeline,
-		Body:                body,
+		Title:                article.Title,
+		RelativeSrcRootPath:  relativeSrcRootPath,
+		SiteURL:              GetConfig().SiteURL,
+		SiteBrandTitle:       GetConfig().SiteTitle,
+		TitleNAV:             titleNAV,
+		SeriesNAV:            seriesNAV,
+		Meta:                 meta,
+		Anchorjs:             article.Anchorjs,
+		Tocify:               article.Tocify,
+		Timeline:             article.Timeline,
+		Body:                 body,
+		ArticleSourceCodeURL: article.SrcFileName,
 	}
 	err = t.Execute(buff, noItems)
 	if err != nil {

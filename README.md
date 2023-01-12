@@ -54,8 +54,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* add support for source viewing
-
 * pankat-server live updates do not update the TOC, because $("#toc").tocify(); called twice does nothing.
 
 * tidy generated html code
