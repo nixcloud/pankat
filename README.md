@@ -53,9 +53,9 @@ the primary motivation for rewriting ikiwiki was:
 # todo
 
 ## programming
+* BUG: timeline needs beginning year and end year, some have not both
 
 * merge images and posts/media folder
-
 
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
@@ -88,7 +88,7 @@ the primary motivation for rewriting ikiwiki was:
   // previous/next article have these changes
   // - DstFileName
  
-
+* mobile html is the horror
 * add drafts subpage which lists all articles in draft state 
 
 * ArticlesCache: add error handling
@@ -97,7 +97,6 @@ the primary motivation for rewriting ikiwiki was:
   a href="https://lastlog.de/blog/media/tuex.png
   should be
   a href="https://lastlog.de/blog/posts/media/tuex.png
-* BUG: timeline needs beginning year and end year, some have not both
 * FIX bug with regexp where grep_and_vim_idea.mdwn contains plugin calls which should not be rendered
    func processPlugins(_article []byte, article *Article) []byte {
   var _articlePostprocessed []byte
@@ -108,7 +107,7 @@ the primary motivation for rewriting ikiwiki was:
 * implement comment system FIXME
   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
 * FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
-* consider RSS/ATOM feed
+
 ## content
 
 the content of blog.lastlog.de needs rework 
