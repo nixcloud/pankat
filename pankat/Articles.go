@@ -29,6 +29,7 @@ type Article struct {
 	Anchorjs         bool
 	Tocify           bool
 	Timeline         bool
+	SourceReference  bool
 }
 
 func PandocMarkdown2HTML(articleMarkdown []byte) string {
@@ -156,6 +157,7 @@ func (s Articles) TopLevel() Articles {
 	var _filtered Articles
 	for _, e := range s {
 		if e.SrcDirectoryName == "" || e.SrcDirectoryName == "." {
+			e.SourceReference = true
 			_filtered = append(_filtered, e)
 		}
 	}
@@ -166,6 +168,9 @@ func (s Articles) Posts() Articles {
 	var _filtered Articles
 	for _, e := range s {
 		if e.SrcDirectoryName != "" && e.SrcDirectoryName != "." {
+			e.Anchorjs = true
+			e.Tocify = true
+			e.SourceReference = true
 			_filtered = append(_filtered, e)
 		}
 	}

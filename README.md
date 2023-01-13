@@ -54,8 +54,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* BUG article source also visible for feed and timeline; timeline css broken
-
 * merge images and posts/media folder
 
 

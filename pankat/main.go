@@ -731,6 +731,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		Anchorjs             bool
 		Tocify               bool
 		Timeline             bool
+		SourceReference      bool
 		Body                 string
 		ArticleSourceCodeURL string
 	}{
@@ -744,6 +745,7 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		Anchorjs:             article.Anchorjs,
 		Tocify:               article.Tocify,
 		Timeline:             article.Timeline,
+		SourceReference:      article.SourceReference,
 		Body:                 body,
 		ArticleSourceCodeURL: article.SrcFileName,
 	}
@@ -829,11 +831,6 @@ func GetArticles() Articles {
 
 	fmt.Println(color.YellowString("GetTargets: found"), articles.Posts().Len(), color.YellowString("articles"))
 
-	// override default values for posts
-	for _, e := range articles.Posts() {
-		e.Anchorjs = true
-		e.Tocify = true
-	}
 	return articles
 }
 
