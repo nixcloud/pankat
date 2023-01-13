@@ -486,7 +486,7 @@ func RenderFeed(articles Articles) {
 	history += `
 	<p>
 		<div>want to follow the blog by feed, this one contains all articles:</div>
-		<a href="feed.xml">feed.xml</a>
+		<a href="feed/feed.xml">feed.xml</a>
     </p>
     `
 	for k := range tagsMap {
@@ -496,6 +496,8 @@ func RenderFeed(articles Articles) {
 	for k := range seriesMap {
 		generateFeedXML(articles.FilterBySeries(k), "series_"+k)
 	}
+
+	generateFeedXML(articles, "feed")
 
 	history += `
     <h2>feed by tag/series</h2>
@@ -545,7 +547,7 @@ func generateFeedXML(articles Articles, fileName string) {
 	if GetConfig().Verbose > 0 {
 		fmt.Println("Generating feed: " + fileName)
 	}
-	feedUrl := GetConfig().SiteURL + "/" + "feed.xml"
+	feedUrl := GetConfig().SiteURL + "/feed/" + "feed.xml"
 	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
   <id>` + GetConfig().SiteURL + "/" + "index.html" + `</id>
