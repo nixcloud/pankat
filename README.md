@@ -54,18 +54,23 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* pankat-server live updates do not update the TOC, because $("#toc").tocify(); called twice does nothing.
+* BUG article source also visible for feed and timeline; timeline css broken
+
+* merge images and posts/media folder
+
 
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
+* live preview
+  * pankat-server live updates do not update the TOC, because $("#toc").tocify(); called twice does nothing.
+  * lacks tags, creation date and title
+  * rework fsnotify to know exactly which file was changed
+    * https://medium.com/@skdomino/watch-this-file-watching-in-go-5b5a247cf71f
+  * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
+  * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
+  * integrate leaps editor
 
-
-* live preview lacks tags, creation date and title
-* update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
-* experiment with diffDOM.js -> got the code in pankat-websockets.js
-    https://github.com/fiduswriter/diffDOM#usage
-* use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client 
 * make evaluation lazy, rework md5 and article re-creation, , rework xml, rework timeline
 * // when to rerender article? Articles.go
   // change in
@@ -86,28 +91,15 @@ the primary motivation for rewriting ikiwiki was:
   // - DstFileName
  
 
-* create list of articles in draft state
-
-* rework fsnotify to know exactly which file was changed
-  * https://medium.com/@skdomino/watch-this-file-watching-in-go-5b5a247cf71f
- 
 * add drafts subpage which lists all articles in draft state 
 
 * ArticlesCache: add error handling
 
-* add interface to inject updated documents notifications
-  * `func RenderPosts(articles Articles) { ... fmt.Println("NOTIFICATION: ", e.DstFileName)` 
-
-* https://github.com/nixcloud/pankat/issues/3
+* BUG https://github.com/nixcloud/pankat/issues/3
   a href="https://lastlog.de/blog/media/tuex.png
   should be
   a href="https://lastlog.de/blog/posts/media/tuex.png
-* feed.xml is not generated anymore, might have worked in f5e3232f1df691f3a3b21ca54b77c2b13a9db564
-* re-arrange directories: 
-  * move templates and general stuff into base dir
-* integrate leaps editor
 * BUG: timeline needs beginning year and end year, some have not both
-* FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
 * FIX bug with regexp where grep_and_vim_idea.mdwn contains plugin calls which should not be rendered
    func processPlugins(_article []byte, article *Article) []byte {
   var _articlePostprocessed []byte
@@ -117,7 +109,8 @@ the primary motivation for rewriting ikiwiki was:
 * create hello world example so someone else can use this software
 * implement comment system FIXME
   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
-
+* FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
+* consider RSS/ATOM feed
 ## content
 
 the content of blog.lastlog.de needs rework 
