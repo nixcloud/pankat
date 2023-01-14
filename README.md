@@ -53,23 +53,25 @@ the primary motivation for rewriting ikiwiki was:
 # todo
 
 ## programming
-* BUG: timeline needs beginning year and end year, some have not both
 
+* consider using nix-instantiate instead own md5 hash system
 * merge images and posts/media folder
+
+ 
+* BUG: timeline needs beginning year and end year, some don't, so they are not rendered
+
 
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
 * live preview
-  * pankat-server live updates do not update the TOC, because $("#toc").tocify(); called twice does nothing.
+  * live updates of TOC not working: $("#toc").tocify(); called twice does nothing.
   * lacks tags, creation date and title
-  * rework fsnotify to know exactly which file was changed
-    * https://medium.com/@skdomino/watch-this-file-watching-in-go-5b5a247cf71f
   * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
   * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
   * integrate leaps editor
 
-* make evaluation lazy, rework md5 and article re-creation, , rework xml, rework timeline
+* make evaluation lazy, rework md5 and article re-creation, rework xml, rework timeline
 * // when to rerender article? Articles.go
   // change in
   // - title
@@ -87,8 +89,10 @@ the primary motivation for rewriting ikiwiki was:
   // but also when
   // previous/next article have these changes
   // - DstFileName
+
+* scroll up: some articles render it inside the paper, some outside
  
-* mobile html is the horror
+* mobile html is the horror; font size bogus, background paper while it would look better fullscreen
 * add drafts subpage which lists all articles in draft state 
 
 * ArticlesCache: add error handling
@@ -107,6 +111,8 @@ the primary motivation for rewriting ikiwiki was:
 * implement comment system FIXME
   see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
 * FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
+* write a links plugin
+* remove media/* and HTML documents where there is no reference to anymore (GC)
 
 ## content
 

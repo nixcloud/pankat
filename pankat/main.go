@@ -745,7 +745,7 @@ func GetArticles() Articles {
 	return articles
 }
 
-func UpdateBlog() {
+func UpdateBlog(ArticlesOnly bool) {
 	defer timeElapsed("UpdateBlog")()
 
 	fmt.Println(color.GreenString("pankat-static"), "starting!")
@@ -753,7 +753,9 @@ func UpdateBlog() {
 
 	articles := GetArticles()
 	RenderPosts(articles)
-	RenderTimeline(articles.Posts())
-	RenderFeed(articles.Posts())
+	if ArticlesOnly == false {
+		RenderTimeline(articles.Posts())
+		RenderFeed(articles.Posts())
+	}
 	SetMostRecentArticle(articles.Posts())
 }

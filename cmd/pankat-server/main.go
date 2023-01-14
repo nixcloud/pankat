@@ -8,8 +8,11 @@ import (
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
+	"os"
 	"pankat"
 	"pankat-server/ws"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -20,33 +23,36 @@ type Context struct {
 func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 	w := watcher.New()
 
-	// SetMaxEvents to 1 to allow at most 1 event's to be received
-	// on the Event channel per watching cycle.
-	//
-	// If SetMaxEvents is not set, the default is to send all events.
-	//w.SetMaxEvents(1)
-
-	// Only notify rename and move events.
-	//w.FilterOps(watcher.Create, watcher.Write)
-
-	// Only files that match the regular expression during file listings
-	// will be watched.
-	//r := regexp.MustCompile("^abc$")
-	//w.AddFilterHook(watcher.RegexFilterHook(r, false))
-
 	go func() {
 		for {
 			select {
 			case event := <-w.Event:
-				fmt.Println(event) // Print the event's info.
-
-				//hhh := "<b>About to apply the diff</b><br><b>from the WS context</b><br><b>from go</b>"
-				//wsServer.SendAll(hhh)
-
-				//wsServer.SendAll("reload")
-				//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
-				//pankat.UpdateBlog()
+				if event.FileInfo.IsDir() == false {
+					if strings.HasSuffix(event.Name(), ".mdwn") {
+						if event.Op == watcher.Remove {
+							fmt.Println("file removed:", event.Name())
+						}
+						if event.Op == watcher.Write || event.Op == watcher.Create {
+							fmt.Println("Name", event.Name())
+							//fmt.Println("Path", event.Path)
+							//wsServer.SendAll("reload")
+							//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
+							//pankat.UpdateBlog(true)
+						}
+					}
+				}
+				if event.FileInfo.IsDir() == true {
+					if event.Op == watcher.Remove {
+						w.Remove(event.Path)
+					}
+					if event.Op == watcher.Create {
+						w.Add(event.Path)
+					}
+				}
 			case err := <-w.Error:
+				if err == watcher.ErrWatchedFileDeleted {
+					continue
+				}
 				log.Fatalln(err)
 			case <-w.Closed:
 				return
@@ -54,35 +60,24 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 		}
 	}()
 
-	// Watch this folder for changes.
-	if err := w.Add(directory); err != nil {
-		log.Fatalln(err)
+	walkFunc := watchDir(w)
+	if err := filepath.Walk(directory, walkFunc); err != nil {
+		fmt.Println("ERROR", err)
 	}
 
-	// Print a list of all files and folders currently
-	// being watched and their paths.
-	//for path, f := range w.WatchedFiles() {
-	//	fmt.Printf("%s: %s\n", path, f.Name())
-	//}
-
-	//fmt.Println()
-
-	//fmt.Println("fsNotifyWatchDocumentsDirectory started")
-	//for {
-	//	select {
-	//	case ev := <-watcher.Event:
-	//		// send updats to client if changes happen
-	//		wsServer.SendAll("reload")
-	//		log.Println("event:", ev)
-	//	case err := <-watcher.Error:
-	//		log.Println("error:", err)
-	//	}
-	//}
 	// Start the watching process - it'll check for changes every 100ms.
 	if err := w.Start(time.Millisecond * 100); err != nil {
 		log.Fatalln(err)
 	}
-	//<-make(chan struct{})
+}
+
+func watchDir(w *watcher.Watcher) filepath.WalkFunc {
+	return func(path string, fi os.FileInfo, err error) error {
+		if fi.Mode().IsDir() {
+			return w.Add(path)
+		}
+		return nil
+	}
 }
 
 func onArticleChange(wsServer *ws.Server) func(string, string) {
