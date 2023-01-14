@@ -57,16 +57,14 @@ the primary motivation for rewriting ikiwiki was:
 * consider using nix-instantiate instead own md5 hash system
 * merge images and posts/media folder
 
- 
 * BUG: timeline needs beginning year and end year, some don't, so they are not rendered
-
 
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
 * live preview
-  * live updates of TOC not working: $("#toc").tocify(); called twice does nothing.
   * lacks tags, creation date and title
+  * live updates of TOC not working: $("#toc").tocify(); called twice does nothing.
   * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
   * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
   * integrate leaps editor
@@ -92,7 +90,12 @@ the primary motivation for rewriting ikiwiki was:
 
 * scroll up: some articles render it inside the paper, some outside
  
-* mobile html is the horror; font size bogus, background paper while it would look better fullscreen
+* mobile html is the horror:
+  * font size bogus, 
+  * background paper while it would look better fullscreen
+  * < and > for series is not expanding to vertical size
+  * main menu is hard to read
+  * source code boxes are tiny compared to the rest
 * add drafts subpage which lists all articles in draft state 
 
 * ArticlesCache: add error handling

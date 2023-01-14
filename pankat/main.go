@@ -3,18 +3,15 @@ package pankat
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	htemplate "html/template"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -225,285 +222,6 @@ func (p TagsSlice) Len() int           { return len(p) }
 func (p TagsSlice) Less(i, j int) bool { return p[i].Value < p[j].Value }
 func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func RenderTimeline(articles Articles) {
-	defer timeElapsed("RenderTimeline")()
-	fmt.Println(color.YellowString("Rendering timeline in posts.html"))
-
-	var pageContent string
-	var article Article
-
-	article.Title = "all posts"
-	article.Timeline = true
-
-	article.SrcDirectoryName = ""
-
-	t, err := json.Marshal(articles.CreateJSMetadata())
-	if err != nil {
-		fmt.Println("json.Marshal error:", err)
-	}
-	pageContent += `<script type="application/json" id="MetaData">` + string(t) + `</script>`
-
-	tagsMap := make(map[string]int)
-	seriesMap := make(map[string]int)
-
-	for _, article := range articles {
-		if article.Series != "" {
-			seriesMap[article.Series]++
-		}
-		for _, t := range article.Tags {
-			tagsMap[t]++
-		}
-	}
-
-	// sort the tags
-	tagsSlice := rankByWordCount(tagsMap)
-	if GetConfig().Verbose > 0 {
-		fmt.Println(color.GreenString("tagsSlice"), tagsSlice)
-	}
-
-	pageContent += `<p id="tagCloud">`
-	for _, e := range tagsSlice {
-		pageContent += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e.Key + `', 1)">` + e.Key + `</a>`
-	}
-	pageContent += `</p>`
-
-	seriesSlice := rankByWordCount(seriesMap)
-	if GetConfig().Verbose > 0 {
-		fmt.Println(color.GreenString("seriesSlice"), seriesSlice)
-	}
-
-	pageContent += `<p id="seriesCloud">`
-	for _, e := range seriesSlice {
-		pageContent += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + e.Key + `', 1)">` + e.Key + `</a>`
-	}
-	pageContent += `</p>`
-
-	pageContent += `
-
-    <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
-
-    <p class="lead">filter the posts (click tag/series) above:</p>
-    
-    <div id="timeline" class="timeline-container">
-    <br class="clear">
-`
-
-	var year string
-
-	for i, article := range articles {
-		if i == 0 {
-			v := article.ModificationDate.Add(1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
-			year = v.Format("2006")
-			pageContent += `
-	          <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-	            <dl class="timeline-series">
-                 <h2 class="timeline-time"><span>` + year + `</span></h2>`
-			year = article.ModificationDate.Format("2006")
-		}
-
-		//     fmt.Println("----")
-		//     fmt.Println("  ", e.Title)
-		//     fmt.Println("  ", e.SrcDirectoryName)
-		//     fmt.Println("  ", inputPath)
-
-		if year != article.ModificationDate.Format("2006") {
-			pageContent += `
-         </dl><!-- /.timeline-series -->
-       </div><!-- /.timeline-wrapper -->
-       <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-    	<h2 class="timeline-time"><span>` + year + `</span></h2>
-			<dl class="timeline-series">`
-			year = article.ModificationDate.Format("2006")
-		}
-
-		// a hacky but straight-forward way to make tagToLinkList(...) work by
-		// fooling a different base article
-		var v Article
-		v = *article
-		v.SrcDirectoryName = ""
-
-		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
-		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
-		pageContent += `
-          <dt class="timeline-event posting_` + strconv.Itoa(i) + `">` + article.Title + `</dt>
-          <dd class="timeline-event-content posting_` + strconv.Itoa(i) + `">
-            <div class="postingsEntry">
-              <p class="summary">` + article.Summary + ` <a href="` + filepath.Clean(article.SrcDirectoryName+"/"+article.DstFileName) + `">open complete article</a></p>
-              <p class="tag">` + tagToLinkList(&v) + `</p>
-            </div>
-            <br class="clear">
-          </dd><!-- /.timeline-event-content -->`
-		if i == len(articles)-1 {
-
-			v := article.ModificationDate.Add(-1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
-			year = v.Format("2006")
-
-			pageContent += `
-            <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-			<dl class="timeline-series">
-
-    	    <h2 class="timeline-time"><span>` + year + `</span></h2>
-			</dl><!-- /.timeline-series -->
-			</div><!-- /.timeline-wrapper -->
-			`
-
-			pageContent += `
-		    </dl><!-- /.timeline-series -->
-		  </div><!-- /.timeline-wrapper -->
-			`
-		}
-	}
-
-	pageContent += `
-      </div>
-`
-	posts := generateStandalonePage(articles, article, pageContent)
-
-	outD := GetConfig().DocumentsPath + "/"
-	err = os.MkdirAll(outD, 0755)
-	if err != nil {
-		panic(err)
-	}
-	outName := outD + "posts.html"
-	err1 := os.WriteFile(outName, posts, 0644)
-	if err1 != nil {
-		panic(err1)
-	}
-}
-
-func RenderFeed(articles Articles) {
-	defer timeElapsed("RenderFeed")()
-	fmt.Println(color.YellowString("Rendering all xml feeds"))
-
-	var history string
-	var article Article
-
-	article.Title = "feed"
-
-	article.SrcDirectoryName = ""
-
-	tagsMap := make(map[string]int)
-	seriesMap := make(map[string]int)
-
-	for _, a := range articles {
-		if a.Series != "" {
-			seriesMap[a.Series]++
-		}
-		for _, t := range a.Tags {
-			tagsMap[t]++
-		}
-	}
-
-	history += `
-	<p>
-		<div>want to follow the blog by feed, this one contains all articles:</div>
-		<a href="feed/feed.xml">feed.xml</a>
-    </p>
-    `
-	for k := range tagsMap {
-		generateFeedXML(articles.FilterByTag(k), "tag_"+k)
-	}
-
-	for k := range seriesMap {
-		generateFeedXML(articles.FilterBySeries(k), "series_"+k)
-	}
-
-	generateFeedXML(articles, "feed")
-
-	history += `
-    <h2>feed by tag/series</h2>
-    `
-	// sort the tags
-	tagsSlice := rankByWordCount(tagsMap)
-
-	history += `<p id="tagCloud">`
-	for _, e := range tagsSlice {
-		history += `<a class="tagbtn btn btn-primary" onClick="showXML('tag_` + e.Key + `')">` + e.Key + `</a>`
-	}
-
-	seriesSlice := rankByWordCount(seriesMap)
-	//fmt.Println(seriesSlice)
-	history += `<p id="seriesCloud">`
-	for _, e := range seriesSlice {
-		history += `<a class="seriesbtn btn btn-primary" onClick="showXML('series_` + e.Key + `')">` + e.Key + `</a>`
-	}
-	history += `</p>
-	<p>
-     Are you interested in a single tag or series? Then just make a selection above and copy the url from below afterwards:<br>
-     
-     <div class="feedURL" id="feedURL"> select tag or series</div>
-     </p>
-
-     <script>
-     var showXML = function(name) {
-        $('#feedURL')[0].innerHTML="> <a href=\"feed/" + name +".xml\">" + name +".xml</a>"
-     } 
-     </script>
-    `
-	feed := generateStandalonePage(articles, article, history)
-
-	outD := GetConfig().DocumentsPath + "/"
-	err := os.MkdirAll(outD, 0755)
-	if err != nil {
-		panic(err)
-	}
-	outName := outD + "feed.html"
-	err1 := os.WriteFile(outName, feed, 0644)
-	if err1 != nil {
-		panic(err1)
-	}
-}
-
-func generateFeedXML(articles Articles, fileName string) {
-	if GetConfig().Verbose > 0 {
-		fmt.Println("Generating feed: " + fileName)
-	}
-	feedUrl := GetConfig().SiteURL + "/feed/" + "feed.xml"
-	z := `<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
-  <id>` + GetConfig().SiteURL + "/" + "index.html" + `</id>
-  <link type="text/html" rel="alternate" href="` + feedUrl + `"/>
-  <link type="application/atom+xml" rel="self" href="` + feedUrl + `"/>
-  <title>` + GetConfig().SiteTitle + `</title>
-  <updated>` + time.Now().Format("2006-01-02T15:04:05-07:00") + `</updated>`
-
-	for _, e := range articles {
-		url := GetConfig().SiteURL + filepath.Clean("/"+e.SrcDirectoryName+"/"+e.DstFileName)
-		z += `
-  <entry>
-    <id>` + url + `</id>
-    <link type="text/html" rel="alternate" href="` + url + `"/>
-    <title>
-        ` + e.Title + `
-    </title>
-    <updated>` + e.ModificationDate.Format("2006-01-02T15:04:05-07:00") + `</updated>`
-
-		for _, t := range e.Tags {
-			z += `<category scheme="` + GetConfig().SiteURL + `" term="` + t + `"/>`
-		}
-		//BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
-		z += `<author>
-      <name>qknight</name>
-      <uri>https://github.com/qknight</uri>
-    </author>
-    <content type="html">` + htemplate.HTMLEscaper(e.Render()) + `</content>
-  </entry>`
-	}
-
-	z += `</feed>`
-	errMkdir := os.MkdirAll(GetConfig().DocumentsPath+"/feed", 0755)
-	if errMkdir != nil {
-		fmt.Println(errMkdir)
-		panic(errMkdir)
-	}
-	feedName := filepath.Clean(GetConfig().DocumentsPath + "/feed/" + fileName + ".xml")
-	err2 := os.WriteFile(feedName, []byte(z), 0644)
-	if err2 != nil {
-		fmt.Println(err2)
-		panic(err2)
-	}
-}
-
 var sendLiveUpdateViaWS func(string, string) = emtpyFunc
 
 func emtpyFunc(string, string) {
@@ -579,8 +297,8 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 		next = filepath.Clean(relativeSrcRootPath + "/" + n.SrcDirectoryName + "/" + n.DstFileName)
 		titleNAV +=
 			`<span id="articleNavRight"><a href="` + next + `"> 
-       next article <span class="glyphiconLink glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article"></span>
-    </a></span>`
+        next article <span class="glyphiconLink glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article"></span>
+    </a> </span>`
 	}
 	seriesNAV := ""
 	var sPrev string

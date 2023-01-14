@@ -37,7 +37,7 @@ func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
 							//fmt.Println("Path", event.Path)
 							//wsServer.SendAll("reload")
 							//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
-							//pankat.UpdateBlog(true)
+							pankat.UpdateBlog(true)
 						}
 					}
 				}
