@@ -54,7 +54,7 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* timeline html is broken with commit 284fffcf889f721886720dd495275cac5e366cf8 with the template split
+* BUG websocket functionality for about.html not working?!
 
 * merge images and posts/media folder
 

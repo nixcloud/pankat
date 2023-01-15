@@ -62,7 +62,7 @@ func RenderTimeline(articles Articles) {
 	}
 	pageContent += `</p>`
 
-	pageContent += `
+	pageContent += `  <div class="article">
 
     <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
 
@@ -140,6 +140,7 @@ func RenderTimeline(articles Articles) {
 
 	pageContent += `
       </div>
+    </div>
 `
 	posts := generateStandalonePage(articles, article, pageContent)
 
