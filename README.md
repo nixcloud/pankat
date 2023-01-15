@@ -54,7 +54,13 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
+* timeline html is broken with commit 284fffcf889f721886720dd495275cac5e366cf8 with the template split
+
 * merge images and posts/media folder
+
+* live preview
+  * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
+  * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
 
 * BUG: timeline needs beginning year and end year, some don't, so they are not rendered
 
@@ -63,11 +69,7 @@ the primary motivation for rewriting ikiwiki was:
 
 * consider for series that they can be either in posts or any posts/arbitrary folder but are then generated into posts (warn on name collision)
 
-* live preview
-  * live updates of TOC not working: $("#toc").tocify(); called twice does nothing.
-  * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
-  * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
-  * integrate leaps editor
+
 
 * make evaluation lazy, rework md5 and article re-creation, rework xml, rework timeline
 * // when to rerender article? Articles.go
@@ -116,6 +118,7 @@ the primary motivation for rewriting ikiwiki was:
 * FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
 * write a links plugin
 * remove media/* and HTML documents where there is no reference to anymore (GC)
+* integrate leaps editor
 
 ## content
 
