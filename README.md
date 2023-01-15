@@ -54,8 +54,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* BUG websocket functionality for about.html not working?!
-
 * merge images and posts/media folder
 
 * live preview
@@ -69,38 +67,16 @@ the primary motivation for rewriting ikiwiki was:
 
 * consider for series that they can be either in posts or any posts/arbitrary folder but are then generated into posts (warn on name collision)
 
-
-
-* make evaluation lazy, rework md5 and article re-creation, rework xml, rework timeline
-* // when to rerender article? Articles.go
-  // change in
-  // - title
-  // - Article
-  // - ModificationDate
-  // - tags
-  // - series
-  // - SrcFileName
-  // - DstFileName
-  // - BaseFileName
-  // - SrcDirectoryName
-  // - Anchorjs         
-  // - Tocify           
-  //
-  // but also when
-  // previous/next article have these changes
-  // - DstFileName
-
-* scroll up: some articles render it inside the paper, some outside
+* BUG pankat-server timeline not updated on article update
  
 * mobile html is the horror:
+  * scroll up: some articles render it inside the paper, some outside
   * font size bogus, 
   * background paper while it would look better fullscreen
   * < and > for series is not expanding to vertical size
   * main menu is hard to read
   * source code boxes are tiny compared to the rest
 * add drafts subpage which lists all articles in draft state 
-
-* ArticlesCache: add error handling
 
 * BUG https://github.com/nixcloud/pankat/issues/3
   a href="https://lastlog.de/blog/media/tuex.png
@@ -114,9 +90,7 @@ the primary motivation for rewriting ikiwiki was:
 
 * create hello world example so someone else can use this software
 * implement comment system FIXME
-  see example: https://www.reddit.com/r/golang/comments/1xbxzk/default_value_in_structs/
-* FIXME create a [[!pandocFormat mdwn]] plugin which makes more pandoc dialects available
-* write a links plugin
+* write a [[!links example.com]] plugin, should generate [1] and a reference to the # links section below
 * remove media/* and HTML documents where there is no reference to anymore (GC)
 * integrate leaps editor
 

@@ -30,6 +30,7 @@ type Article struct {
 	Tocify           bool
 	Timeline         bool
 	SourceReference  bool
+	WebsocketSupport bool
 }
 
 func PandocMarkdown2HTML(articleMarkdown []byte) string {
@@ -237,6 +238,7 @@ func (s Articles) TopLevel() Articles {
 	for _, e := range s {
 		if e.SrcDirectoryName == "" || e.SrcDirectoryName == "." {
 			e.SourceReference = true
+			e.WebsocketSupport = true
 			_filtered = append(_filtered, e)
 		}
 	}
@@ -250,6 +252,7 @@ func (s Articles) Posts() Articles {
 			e.Anchorjs = true
 			e.Tocify = true
 			e.SourceReference = true
+			e.WebsocketSupport = true
 			_filtered = append(_filtered, e)
 		}
 	}
