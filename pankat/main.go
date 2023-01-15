@@ -334,17 +334,19 @@ func GenerateNavTitleArticleSource(articles Articles, article Article, body stri
 	}
 
 	noItems := struct {
-		Title     string
-		TitleNAV  string
-		SeriesNAV string
-		Meta      string
-		Body      string
+		Title                string
+		TitleNAV             string
+		SeriesNAV            string
+		Meta                 string
+		Body                 string
+		NavAndSeriesElements bool
 	}{
-		Title:     article.Title,
-		TitleNAV:  articles.GetTitleNAV(&article),
-		SeriesNAV: articles.GetSeriesNAV(&article),
-		Meta:      meta,
-		Body:      body,
+		Title:                article.Title,
+		TitleNAV:             articles.GetTitleNAV(&article),
+		SeriesNAV:            articles.GetSeriesNAV(&article),
+		Meta:                 meta,
+		Body:                 body,
+		NavAndSeriesElements: article.NavAndSeriesElements,
 	}
 	err = t.Execute(buff, noItems)
 	if err != nil {

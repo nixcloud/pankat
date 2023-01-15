@@ -15,22 +15,23 @@ import (
 var articlesCache ArticlesCache
 
 type Article struct {
-	Title            string
-	Article          []byte
-	ModificationDate time.Time
-	Summary          string
-	Tags             []string
-	Series           string
-	Draft            bool
-	SrcFileName      string
-	DstFileName      string
-	BaseFileName     string
-	SrcDirectoryName string
-	Anchorjs         bool
-	Tocify           bool
-	Timeline         bool
-	SourceReference  bool
-	WebsocketSupport bool
+	Title                string
+	Article              []byte
+	ModificationDate     time.Time
+	Summary              string
+	Tags                 []string
+	Series               string
+	Draft                bool
+	SrcFileName          string
+	DstFileName          string
+	BaseFileName         string
+	SrcDirectoryName     string
+	Anchorjs             bool
+	Tocify               bool
+	Timeline             bool
+	SourceReference      bool
+	WebsocketSupport     bool
+	NavAndSeriesElements bool
 }
 
 func PandocMarkdown2HTML(articleMarkdown []byte) string {
@@ -253,6 +254,7 @@ func (s Articles) Posts() Articles {
 			e.Tocify = true
 			e.SourceReference = true
 			e.WebsocketSupport = true
+			e.NavAndSeriesElements = true
 			_filtered = append(_filtered, e)
 		}
 	}

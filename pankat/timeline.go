@@ -62,7 +62,7 @@ func RenderTimeline(articles Articles) {
 	}
 	pageContent += `</p>`
 
-	pageContent += `  <div class="article">
+	pageContent += ` 
 
     <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
 
@@ -140,9 +140,10 @@ func RenderTimeline(articles Articles) {
 
 	pageContent += `
       </div>
-    </div>
 `
-	posts := generateStandalonePage(articles, article, pageContent)
+
+	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, pageContent)
+	standalonePageContent := generateStandalonePage(articles, article, navTitleArticleSource)
 
 	outD := GetConfig().DocumentsPath + "/"
 	err = os.MkdirAll(outD, 0755)
@@ -150,7 +151,7 @@ func RenderTimeline(articles Articles) {
 		panic(err)
 	}
 	outName := outD + "posts.html"
-	err1 := os.WriteFile(outName, posts, 0644)
+	err1 := os.WriteFile(outName, standalonePageContent, 0644)
 	if err1 != nil {
 		panic(err1)
 	}
