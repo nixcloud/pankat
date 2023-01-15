@@ -292,6 +292,7 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 		ArticleSourceCodeURL  string
 		SourceReference       bool
 		WebsocketSupport      bool
+		NavAndSeriesElements  bool
 	}{
 		Title:                 article.Title,
 		RelativeSrcRootPath:   relativeSrcRootPath,
@@ -304,6 +305,7 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 		ArticleSourceCodeURL:  article.SrcFileName,
 		SourceReference:       article.SourceReference,
 		WebsocketSupport:      article.WebsocketSupport,
+		NavAndSeriesElements:  article.NavAndSeriesElements,
 	}
 	err = t.Execute(buff, noItems)
 	if err != nil {
