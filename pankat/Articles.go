@@ -148,6 +148,85 @@ func (s Articles) NextArticleInSeries(a *Article) *Article {
 	return z
 }
 
+func (s Articles) GetTitleNAV(article *Article) string {
+	articles := s
+	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
+	relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
+	//   fmt.Println(relativeSrcRootPath)
+
+	//   fmt.Println("---------------")
+	titleNAV := ""
+	var prev string
+	var next string
+	//   fmt.Println(article.Title)
+	p := articles.PrevArticle(article)
+	if p != nil {
+		prev = filepath.Clean(relativeSrcRootPath + "/" + p.SrcDirectoryName + "/" + p.DstFileName)
+		// link is active
+		titleNAV +=
+			`<span id="articleNavLeft"> <a href="` + prev + `"> 
+      <span class="glyphiconLink glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article"> </span> prev. article
+    </a> </span>`
+	}
+	n := articles.NextArticle(article)
+	if n != nil {
+		// link is active
+		next = filepath.Clean(relativeSrcRootPath + "/" + n.SrcDirectoryName + "/" + n.DstFileName)
+		titleNAV +=
+			`<span id="articleNavRight"><a href="` + next + `"> 
+        next article <span class="glyphiconLink glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article"></span>
+    </a> </span>`
+	}
+
+	return titleNAV
+}
+
+func (s Articles) GetSeriesNAV(article *Article) string {
+	articles := s
+	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
+	relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
+	//   fmt.Println(relativeSrcRootPath)
+
+	seriesNAV := ""
+	var sPrev string
+	var sNext string
+
+	if article.Series != "" {
+		sp := articles.PrevArticleInSeries(article)
+		if sp != nil {
+			sPrev = filepath.Clean(relativeSrcRootPath + "/" + sp.SrcDirectoryName + "/" + sp.DstFileName)
+		}
+
+		sn := articles.NextArticleInSeries(article)
+		if sn != nil {
+			sNext = filepath.Clean(relativeSrcRootPath + "/" + sn.SrcDirectoryName + "/" + sn.DstFileName)
+		}
+		seriesNAV =
+			`
+      <div id="seriesContainer">
+      <a href="` + relativeSrcRootPath + `/posts.html?filter=series::` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
+				article.Series + `</a>
+        <header class="seriesHeader">
+          <div id="seriesLeft">`
+		if sp != nil {
+			seriesNAV += `<a href="` + sPrev + `">` +
+				`<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
+            </a> `
+		}
+		seriesNAV += `  </div>
+          <div id="seriesRight">`
+		if sn != nil {
+			seriesNAV += `   <a href="` + sNext + `">
+              <span class="glyphiconLinkSeries glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article in series"></span>
+            </a>`
+		}
+		seriesNAV += `</div>
+        </header>
+      </div>`
+	}
+	return seriesNAV
+}
+
 func (s Articles) MakeRelativeLink(a *Article, b *Article) string {
 	relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, b.SrcDirectoryName)
 	return relativeSrcRootPath

@@ -4,88 +4,22 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/gocraft/web"
-	"github.com/radovskyb/watcher"
 	"golang.org/x/net/websocket"
-	"log"
 	"net/http"
-	"os"
 	"pankat"
 	"pankat-server/ws"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 type Context struct {
 	//     HelloCount int
 }
 
-func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
-	w := watcher.New()
-
-	go func() {
-		for {
-			select {
-			case event := <-w.Event:
-				if event.FileInfo.IsDir() == false {
-					if strings.HasSuffix(event.Name(), ".mdwn") {
-						if event.Op == watcher.Remove {
-							fmt.Println("file removed:", event.Name())
-						}
-						if event.Op == watcher.Write || event.Op == watcher.Create {
-							fmt.Println("Name", event.Name())
-							//fmt.Println("Path", event.Path)
-							//wsServer.SendAll("reload")
-							//wsServer.SendAll(pankat.PandocMarkdown2HTML("")
-							pankat.UpdateBlog(true)
-						}
-					}
-				}
-				if event.FileInfo.IsDir() == true {
-					if event.Op == watcher.Remove {
-						w.Remove(event.Path)
-					}
-					if event.Op == watcher.Create {
-						w.Add(event.Path)
-					}
-				}
-			case err := <-w.Error:
-				if err == watcher.ErrWatchedFileDeleted {
-					continue
-				}
-				log.Fatalln(err)
-			case <-w.Closed:
-				return
-			}
-		}
-	}()
-
-	walkFunc := watchDir(w)
-	if err := filepath.Walk(directory, walkFunc); err != nil {
-		fmt.Println("ERROR", err)
-	}
-
-	// Start the watching process - it'll check for changes every 100ms.
-	if err := w.Start(time.Millisecond * 100); err != nil {
-		log.Fatalln(err)
-	}
-}
-
-func watchDir(w *watcher.Watcher) filepath.WalkFunc {
-	return func(path string, fi os.FileInfo, err error) error {
-		if fi.Mode().IsDir() {
-			return w.Add(path)
-		}
-		return nil
-	}
-}
-
 func onArticleChange(wsServer *ws.Server) func(string, string) {
 	return func(srcFileName string, RenderedArticle string) {
 		fmt.Println(srcFileName)
-		if srcFileName == "docker_compose_vs_nixcloud.mdwn" {
-			wsServer.SendAll(RenderedArticle)
-		}
+		//if srcFileName == "docker_compose_vs_nixcloud.mdwn" {
+		wsServer.SendAll(RenderedArticle)
+		//}
 	}
 }
 

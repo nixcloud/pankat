@@ -238,33 +238,37 @@ func RenderPosts(articlesAll Articles) {
 	var RenderRuns []Articles
 	RenderRuns = append(RenderRuns, articlesAll.TopLevel())
 	RenderRuns = append(RenderRuns, articlesAll.Posts())
-
 	for _, articles := range RenderRuns {
 		for _, article := range articles {
-			if GetConfig().Verbose > 0 {
-				fmt.Println("Rendering article '" + article.Title + "'")
-			}
-			standalonePageContent := generateStandalonePage(articles, *article, article.Render())
-			outD := filepath.Clean(GetConfig().DocumentsPath + "/" + article.SrcDirectoryName + "/")
-			sendLiveUpdateViaWS(article.SrcFileName, article.Render())
-
-			errMkdir := os.MkdirAll(outD, 0755)
-			if errMkdir != nil {
-				fmt.Println(errMkdir)
-				panic(errMkdir)
-			}
-			// write to disk
-			outName := filepath.Clean(outD + "/" + article.DstFileName)
-			err5 := os.WriteFile(outName, standalonePageContent, 0644)
-			if err5 != nil {
-				fmt.Println(err5)
-				panic(article)
-			}
+			RenderPost(articles, article)
 		}
 	}
 }
 
-func generateStandalonePage(articles Articles, article Article, body string) []byte {
+func RenderPost(articles Articles, article *Article) {
+	if GetConfig().Verbose > 0 {
+		fmt.Println("Rendering article '" + article.Title + "'")
+	}
+	navTitleArticleSource := GenerateNavTitleArticleSource(articles, *article, article.Render())
+	standalonePageContent := generateStandalonePage(articles, *article, navTitleArticleSource)
+	outD := filepath.Clean(GetConfig().DocumentsPath + "/" + article.SrcDirectoryName + "/")
+	sendLiveUpdateViaWS(article.SrcFileName, navTitleArticleSource)
+
+	errMkdir := os.MkdirAll(outD, 0755)
+	if errMkdir != nil {
+		fmt.Println(errMkdir)
+		panic(errMkdir)
+	}
+	// write to disk
+	outName := filepath.Clean(outD + "/" + article.DstFileName)
+	err5 := os.WriteFile(outName, standalonePageContent, 0644)
+	if err5 != nil {
+		fmt.Println(err5)
+		panic(article)
+	}
+}
+
+func generateStandalonePage(articles Articles, article Article, navTitleArticleSource string) []byte {
 	buff := bytes.NewBufferString("")
 	t, err := template.New("standalonePage.tmpl").
 		ParseFiles("templates/standalonePage.tmpl")
@@ -275,67 +279,45 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 
 	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
 	relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
-	//   fmt.Println(relativeSrcRootPath)
 
-	//   fmt.Println("---------------")
-	titleNAV := ""
-	var prev string
-	var next string
-	//   fmt.Println(article.Title)
-	p := articles.PrevArticle(&article)
-	if p != nil {
-		prev = filepath.Clean(relativeSrcRootPath + "/" + p.SrcDirectoryName + "/" + p.DstFileName)
-		// link is active
-		titleNAV +=
-			`<span id="articleNavLeft"> <a href="` + prev + `"> 
-      <span class="glyphiconLink glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article"> </span> prev. article
-    </a> </span>`
+	noItems := struct {
+		Title                 string
+		RelativeSrcRootPath   string
+		SiteURL               string
+		SiteBrandTitle        string
+		Anchorjs              bool
+		Tocify                bool
+		Timeline              bool
+		NavTitleArticleSource string
+		ArticleSourceCodeURL  string
+		SourceReference       bool
+	}{
+		Title:                 article.Title,
+		RelativeSrcRootPath:   relativeSrcRootPath,
+		SiteURL:               GetConfig().SiteURL,
+		SiteBrandTitle:        GetConfig().SiteTitle,
+		Anchorjs:              article.Anchorjs,
+		Tocify:                article.Tocify,
+		Timeline:              article.Timeline,
+		NavTitleArticleSource: navTitleArticleSource,
+		ArticleSourceCodeURL:  article.SrcFileName,
+		SourceReference:       article.SourceReference,
 	}
-	n := articles.NextArticle(&article)
-	if n != nil {
-		// link is active
-		next = filepath.Clean(relativeSrcRootPath + "/" + n.SrcDirectoryName + "/" + n.DstFileName)
-		titleNAV +=
-			`<span id="articleNavRight"><a href="` + next + `"> 
-        next article <span class="glyphiconLink glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article"></span>
-    </a> </span>`
+	err = t.Execute(buff, noItems)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
 	}
-	seriesNAV := ""
-	var sPrev string
-	var sNext string
+	return buff.Bytes()
+}
 
-	if article.Series != "" {
-		sp := articles.PrevArticleInSeries(&article)
-		if sp != nil {
-			sPrev = filepath.Clean(relativeSrcRootPath + "/" + sp.SrcDirectoryName + "/" + sp.DstFileName)
-		}
-
-		sn := articles.NextArticleInSeries(&article)
-		if sn != nil {
-			sNext = filepath.Clean(relativeSrcRootPath + "/" + sn.SrcDirectoryName + "/" + sn.DstFileName)
-		}
-		seriesNAV =
-			`
-      <div id="seriesContainer">
-      <a href="` + relativeSrcRootPath + `/posts.html?filter=series::` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
-				article.Series + `</a>
-        <header class="seriesHeader">
-          <div id="seriesLeft">`
-		if sp != nil {
-			seriesNAV += `<a href="` + sPrev + `">` +
-				`<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
-            </a> `
-		}
-		seriesNAV += `  </div>
-          <div id="seriesRight">`
-		if sn != nil {
-			seriesNAV += `   <a href="` + sNext + `">
-              <span class="glyphiconLinkSeries glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article in series"></span>
-            </a>`
-		}
-		seriesNAV += `</div>
-        </header>
-      </div>`
+func GenerateNavTitleArticleSource(articles Articles, article Article, body string) string {
+	buff := bytes.NewBufferString("")
+	t, err := template.New("navTitleArticleSource.tmpl").
+		ParseFiles("templates/navTitleArticleSource.tmpl")
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
 	}
 
 	var meta string
@@ -350,40 +332,24 @@ func generateStandalonePage(articles Articles, article Article, body string) []b
 	}
 
 	noItems := struct {
-		Title                string
-		RelativeSrcRootPath  string
-		SiteURL              string
-		SiteBrandTitle       string
-		TitleNAV             string
-		SeriesNAV            string
-		Meta                 string
-		Anchorjs             bool
-		Tocify               bool
-		Timeline             bool
-		SourceReference      bool
-		Body                 string
-		ArticleSourceCodeURL string
+		Title     string
+		TitleNAV  string
+		SeriesNAV string
+		Meta      string
+		Body      string
 	}{
-		Title:                article.Title,
-		RelativeSrcRootPath:  relativeSrcRootPath,
-		SiteURL:              GetConfig().SiteURL,
-		SiteBrandTitle:       GetConfig().SiteTitle,
-		TitleNAV:             titleNAV,
-		SeriesNAV:            seriesNAV,
-		Meta:                 meta,
-		Anchorjs:             article.Anchorjs,
-		Tocify:               article.Tocify,
-		Timeline:             article.Timeline,
-		SourceReference:      article.SourceReference,
-		Body:                 body,
-		ArticleSourceCodeURL: article.SrcFileName,
+		Title:     article.Title,
+		TitleNAV:  articles.GetTitleNAV(&article),
+		SeriesNAV: articles.GetSeriesNAV(&article),
+		Meta:      meta,
+		Body:      body,
 	}
 	err = t.Execute(buff, noItems)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	return buff.Bytes()
+	return buff.String()
 }
 
 func Init() {
@@ -463,7 +429,7 @@ func GetArticles() Articles {
 	return articles
 }
 
-func UpdateBlog(ArticlesOnly bool) {
+func UpdateBlog() {
 	defer timeElapsed("UpdateBlog")()
 
 	fmt.Println(color.GreenString("pankat-static"), "starting!")
@@ -471,9 +437,7 @@ func UpdateBlog(ArticlesOnly bool) {
 
 	articles := GetArticles()
 	RenderPosts(articles)
-	if ArticlesOnly == false {
-		RenderTimeline(articles.Posts())
-		RenderFeed(articles.Posts())
-	}
+	RenderTimeline(articles.Posts())
+	RenderFeed(articles.Posts())
 	SetMostRecentArticle(articles.Posts())
 }

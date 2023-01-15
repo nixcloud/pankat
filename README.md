@@ -54,7 +54,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* consider using nix-instantiate instead own md5 hash system
 * merge images and posts/media folder
 
 * BUG: timeline needs beginning year and end year, some don't, so they are not rendered
@@ -62,8 +61,9 @@ the primary motivation for rewriting ikiwiki was:
 * tidy generated html code
   * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
 
+* consider for series that they can be either in posts or any posts/arbitrary folder but are then generated into posts (warn on name collision)
+
 * live preview
-  * lacks tags, creation date and title
   * live updates of TOC not working: $("#toc").tocify(); called twice does nothing.
   * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; if registered page is changed on the source side live updates are sent
   * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
