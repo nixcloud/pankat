@@ -60,6 +60,8 @@ the primary motivation for rewriting ikiwiki was:
   * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
   * integrate leaps editor
 
+* flat directory output structure, articles are generated to posts/ no matter what folder they were in
+
 * timeline
   * BUG: timeline needs beginning year and end year, some don't, so they are not rendered
   * timeline adds tags to articles, but not series
