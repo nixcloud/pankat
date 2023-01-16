@@ -54,55 +54,6 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* BUG: if about.mdwn is live edited it looses websocket support because RenderPosts's
-     RenderRuns = append(RenderRuns, articlesAll.TopLevel())
-     RenderRuns = append(RenderRuns, articlesAll.Posts())
-  is not used anymore
-
-* flat output directory structure, articles are generated to posts/ no matter what folder they were in
-
-* timeline
-  * BUG: timeline needs beginning year and end year, some don't, so they are not rendered
-  * timeline adds tags to articles, but not series
-  * FEATURE pankat-server timeline not updated on article updated ATM
-
-* tidy generated html code
-  * FIX gohtml.FormatBytes() is not working properly, css needs fixes for posts.html, did not work for normal pages, duno why - but won't do this ATM
-
-* consider for series that they can be either in posts or any posts/arbitrary folder but are then generated into posts (warn on name collision)
-* BUG: when running pankat-server, a pankat-static run will crash it
-
-* merge images and posts/media folder
-
-* mobile html is the horror:
-  * scroll up: some articles render it inside the paper, some outside
-  * font size bogus, 
-  * background paper while it would look better fullscreen
-  * < and > for series is not expanding to vertical size
-  * main menu is hard to read
-  * source code boxes are tiny compared to the rest
-* add drafts subpage which lists all articles in draft state 
-
-* BUG https://github.com/nixcloud/pankat/issues/3
-  a href="https://lastlog.de/blog/media/tuex.png
-  should be
-  a href="https://lastlog.de/blog/posts/media/tuex.png
-* FIX bug with regexp where grep_and_vim_idea.mdwn contains plugin calls which should not be rendered
-   func processPlugins(_article []byte, article *Article) []byte {
-  var _articlePostprocessed []byte
-
-  re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
-
-* create hello world example so someone else can use this software
-* implement comment system 
-  * twitter example https://gamerant.com/hogwarts-legacy-steam-deck-verified/
-  * discourse https://meta.discourse.org/t/using-discourse-as-a-comment-system/107663
-* write a [[!links example.com]] plugin, should generate [1] and a reference to the # links section below
-* remove media/* and HTML documents where there is no reference to anymore (GC)
-
-* live preview
-  * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
-  * integrate leaps editor
 
 ## content
 
