@@ -78,7 +78,9 @@ func RenderFeed(articles Articles) {
      }
      </script>
     `
-	feed := generateStandalonePage(articles, article, history)
+
+	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, history)
+	standalonePageContent := generateStandalonePage(articles, article, navTitleArticleSource)
 
 	outD := GetConfig().DocumentsPath + "/"
 	err := os.MkdirAll(outD, 0755)
@@ -86,7 +88,7 @@ func RenderFeed(articles Articles) {
 		panic(err)
 	}
 	outName := outD + "feed.html"
-	err1 := os.WriteFile(outName, feed, 0644)
+	err1 := os.WriteFile(outName, standalonePageContent, 0644)
 	if err1 != nil {
 		panic(err1)
 	}
