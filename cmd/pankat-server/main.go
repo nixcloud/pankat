@@ -10,34 +10,33 @@ import (
 	"pankat-server/ws"
 )
 
-type Context struct {
-	//     HelloCount int
-}
+type Context struct{}
 
-func onArticleChange(wsServer *ws.Server) func(string, string) {
+func onArticleChange(registry *ws.Registry) func(string, string) {
 	return func(srcFileName string, RenderedArticle string) {
 		fmt.Println(srcFileName)
-		//if srcFileName == "docker_compose_vs_nixcloud.mdwn" {
-		wsServer.SendAll(RenderedArticle)
-		//}
+		registry.OnArticleChange(srcFileName, RenderedArticle)
 	}
 }
 
 func main() {
 	fmt.Println(color.GreenString("pankat-server"), "starting!")
 	pankat.Init()
-	wsServer := ws.NewServer()
-	ona := onArticleChange(wsServer)
+	registry := ws.NewRegistry()
+
+	server := ws.NewServer(registry)
+	go server.Listen()
+
+	ona := onArticleChange(registry)
 	pankat.OnArticleChange(ona)
-	go wsServer.Listen()
-	go fsNotifyWatchDocumentsDirectory(wsServer, pankat.GetConfig().DocumentsPath)
+	go fsNotifyWatchDocumentsDirectory(pankat.GetConfig().DocumentsPath)
 	router := web.New(Context{}). // Create your router
 					Middleware(web.LoggerMiddleware).
 					Middleware(web.ShowErrorsMiddleware).
 		//Middleware(web.StaticMiddleware("../output")).
 		Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath)).
 		Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
-			websocket.Handler(wsServer.OnConnected).ServeHTTP(rw, req.Request)
+			websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
 		}).
 		Get("/", redirectTo("/index.html"))
 	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router) // wait until ctrl+c

@@ -6,13 +6,12 @@ import (
 	"log"
 	"os"
 	"pankat"
-	"pankat-server/ws"
 	"path/filepath"
 	"strings"
 	"time"
 )
 
-func fsNotifyWatchDocumentsDirectory(wsServer *ws.Server, directory string) {
+func fsNotifyWatchDocumentsDirectory(directory string) {
 	w := watcher.New()
 
 	go func() {

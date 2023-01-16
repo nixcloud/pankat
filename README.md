@@ -54,13 +54,12 @@ the primary motivation for rewriting ikiwiki was:
 
 ## programming
 
-* live preview
-  * update cmd/pankat-server/ws/server.go to use pub/sub system for websocket where clients can register a certain page; 
-    if registered page is changed on the source side live updates are sent
-  * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
-  * integrate leaps editor
+* BUG: if about.mdwn is live edited it looses websocket support because RenderPosts's
+     RenderRuns = append(RenderRuns, articlesAll.TopLevel())
+     RenderRuns = append(RenderRuns, articlesAll.Posts())
+  is not used anymore
 
-* flat directory output structure, articles are generated to posts/ no matter what folder they were in
+* flat output directory structure, articles are generated to posts/ no matter what folder they were in
 
 * timeline
   * BUG: timeline needs beginning year and end year, some don't, so they are not rendered
@@ -95,18 +94,23 @@ the primary motivation for rewriting ikiwiki was:
   re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
 
 * create hello world example so someone else can use this software
-* implement comment system FIXME
+* implement comment system 
+  * twitter example https://gamerant.com/hogwarts-legacy-steam-deck-verified/
+  * discourse https://meta.discourse.org/t/using-discourse-as-a-comment-system/107663
 * write a [[!links example.com]] plugin, should generate [1] and a reference to the # links section below
 * remove media/* and HTML documents where there is no reference to anymore (GC)
+
+* live preview
+  * use v8 https://github.com/rogchap/v8go with serverside diffDOM.js to mainly send diffs to the client
+  * integrate leaps editor
 
 ## content
 
 the content of blog.lastlog.de needs rework 
 
-* write a new article from time to time!? ;-)
 * rework warning/info/danger/error ...
-* write summary for each article; write missing summary plugin (chatGPT?)
-* rewrite title names
+* write summary for each article; write missing summary plugin
+* rewrite title names, - and _
 * fix images, add class="noFancy"
 * check h1,h2,...
 * use <div class="warn">...</div>

@@ -1,7 +1,5 @@
 package ws
 
-// WARNING: i need to rewrite this code, license status is unclear, source: https://github.com/golang-samples/websocket
-
 import (
 	"fmt"
 	"golang.org/x/net/websocket"
@@ -11,33 +9,28 @@ import (
 
 const channelBufSize = 100
 
-var maxId int = 0
-
 // Chat client.
 type Client struct {
-	id     int
-	ws     *websocket.Conn
-	server *Server
-	ch     chan *string
-	doneCh chan bool
+	ws       *websocket.Conn
+	server   *Server
+	ch       chan *string
+	doneCh   chan bool
+	registry *Registry
 }
 
 // Create new chat client.
-func NewClient(ws *websocket.Conn, server *Server) *Client {
-
+func NewClient(ws *websocket.Conn, server *Server, registry *Registry) *Client {
 	if ws == nil {
 		panic("ws cannot be nil")
 	}
-
 	if server == nil {
 		panic("server cannot be nil")
 	}
 
-	maxId++
 	ch := make(chan *string, channelBufSize)
 	doneCh := make(chan bool)
 
-	return &Client{maxId, ws, server, ch, doneCh}
+	return &Client{ws, server, ch, doneCh, registry}
 }
 
 func (c *Client) Conn() *websocket.Conn {
@@ -49,7 +42,7 @@ func (c *Client) Write(msg *string) {
 	case c.ch <- msg:
 	default:
 		c.server.Del(c)
-		err := fmt.Errorf("client %d is disconnected.", c.id)
+		err := fmt.Errorf("client disconnected.")
 		c.server.Err(err)
 	}
 }
@@ -69,22 +62,11 @@ func (c *Client) listenWrite() {
 	log.Println("Listening write to client")
 	for {
 		select {
-
 		// send message to the client
 		case msg := <-c.ch:
 			//fmt.Println("-------------------------------------")
 			//fmt.Println("Send:", *msg)
-
-			//fmt.Println(RenderedArticle)
-			//bytes, err := json.Marshal(msg)
-			//if err != nil {
-			//	fmt.Println("generator json error")
-			//} else {
-			//	websocket.JSON.Send(c.ws, bytes)
-			//}
 			websocket.JSON.Send(c.ws, *msg)
-
-			//websocket.Message.Send(c.ws, msg)
 
 		// receive done request
 		case <-c.doneCh:
@@ -116,7 +98,8 @@ func (c *Client) listenRead() {
 			} else if err != nil {
 				c.server.Err(err)
 			} else {
-				//c.server.SendAll(msg)
+				fmt.Println("client.go: Receive ws registry message:", msg)
+				c.registry.Add(msg, c)
 			}
 		}
 	}
