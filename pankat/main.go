@@ -291,6 +291,7 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 		NavTitleArticleSource string
 		SrcDirectoryName      string
 		ArticleSourceCodeURL  string
+		ArticleSourceCodeFS   string
 		SourceReference       bool
 		WebsocketSupport      bool
 		NavAndSeriesElements  bool
@@ -304,7 +305,8 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 		Timeline:              article.Timeline,
 		NavTitleArticleSource: navTitleArticleSource,
 		SrcDirectoryName:      article.SrcDirectoryName,
-		ArticleSourceCodeURL:  filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName),
+		ArticleSourceCodeFS:   filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName),
+		ArticleSourceCodeURL:  article.SrcFileName,
 		SourceReference:       article.SourceReference,
 		WebsocketSupport:      article.WebsocketSupport,
 		NavAndSeriesElements:  article.NavAndSeriesElements,
