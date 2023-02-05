@@ -50,23 +50,6 @@ the primary motivation for rewriting ikiwiki was:
 - more usability in navigation / posts overview
 - no interest in ikiwiki's perl
 
-# todo
-
-## programming
-
-
-## content
-
-the content of blog.lastlog.de needs rework 
-
-* rework warning/info/danger/error ...
-* write summary for each article; write missing summary plugin
-* rewrite title names, - and _
-* fix images, add class="noFancy"
-* check h1,h2,...
-* use <div class="warn">...</div>
-* libnoise_viewer.html fix video width
-
 # who
 
 pankat is written and maintained by joachim schiele <js@lastlog.de>

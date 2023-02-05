@@ -22,6 +22,7 @@ func onArticleChange(registry *ws.Registry) func(string, string) {
 func main() {
 	fmt.Println(color.GreenString("pankat-server"), "starting!")
 	pankat.Init()
+	pankat.UpdateBlog()
 	registry := ws.NewRegistry()
 
 	server := ws.NewServer(registry)

@@ -14,10 +14,10 @@ afterwards use go to compile the binary
 
 once pankat has been compiled, use blog.lastlog.de to see how to use the software:
 
-    pankat --input documents/blog.lastlog.de/ --output output/blog.lastlog.de
+    pankat --documents documents/blog.lastlog.de/
 
-run a local webserver in output/blog.lastlog.de to review the static page generator output
+run a local webserver in documents/blog.lastlog.de to review the static page generator output
 
     python -m http.server
 
-then visit localhost:8000 in any webbrowser.
+then visit localhost:8000 in any browser.

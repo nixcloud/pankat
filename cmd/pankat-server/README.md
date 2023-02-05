@@ -1,39 +1,20 @@
 # pankat-server
 
-the **pankat-server** will generate **static pages** and once done will wait for further modifications or new articles.
+the **pankat-server** will first generate **static pages**. once this is done it will open a
+socket on localhost:8000 which needs to be visited with a browser. there one can experience
+the blog as if it were deployed on a webserver but the main difference is, that it offers a live
+preview of the pages.
 
-    pankat-server --input documents/blog.lastlog.de/ --output output/blog.lastlog.de
+1. start the server
 
-afterwards open this in firefox/chromium 
+    pankat-server --documents documents/blog.lastlog.de/ 
+
+2. afterwards open this in firefox/chromium 
 
     localhost:8000
 
-planned: articles will have an `edit button` somewhere and if clicked the article will open using [leaps](https://github.com/Jeffail/leaps) on the left and a preview render on the right.
-
-**note: this is still WIP**
-
-## virtual dom ideas
-
-* http://fiduswriter.github.io/diffDOM/
-
-* https://vuejs.org/v2/examples/hackernews.html
-* https://medium.com/@adeshg7/vuejs-golang-a-rare-combination-53538b6fb918
-
-## websockets in go
-
-a few examples how to use
-
-* https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/08.2.html
-* https://github.com/golang-samples/websocket/blob/master/websocket-chat/src/chat/client.go
-
-
-## websocket-pandoc
-
-websocket-pandoc is an experimental implementation of a websocket / virtual dom based updater which basically supports server side document generating with changes highlighting.
+3. open the mdwn documents with any editor and one a change is saved it will update the article in the browser without reload
 
 ### license
 
 see LICENSE file, AGPL v3
-
-* user interface was inspired by: https://notehub.org
-* websocket example code based on: https://github.com/golang-samples/websocket
