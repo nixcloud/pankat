@@ -65,39 +65,32 @@ func getTargets_(path string, ret []string) Articles {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
 				var a Article
 				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
-
-				a.Title = strings.Replace(v, "_", " ", -1) // add whitespaces
+				a.Title = strings.Replace(v, "_", " ", -1)     // add whitespaces
 				a.DstFileName = v + ".html"
 				a.BaseFileName = v
 				a.SrcFileName = entry.Name()
 				a.SrcDirectoryName = path
-				fh, err := os.Open(path + "/" + entry.Name())
-
+				fh, errOpen := os.Open(path + "/" + entry.Name())
+				if errOpen != nil {
+					fmt.Println(errOpen)
+					continue
+				}
 				f := bufio.NewReader(fh)
-
-				if err != nil {
-					fmt.Println(err)
-					panic(err)
+				_article, errRead := io.ReadAll(f)
+				if errRead != nil {
+					fmt.Println(errRead)
+					continue
 				}
-				_article, err := io.ReadAll(f)
-				if err != nil {
-					fmt.Println(err)
-					panic(err)
-				}
-
 				_article = ProcessPlugins(_article, &a)
-
 				a.Article = _article
 				articles = append(articles, &a)
-				err = fh.Close()
-				if err != nil {
-					fmt.Println(err)
-					panic(err)
+				errClose := fh.Close()
+				if errClose != nil {
+					fmt.Println(errClose)
 				}
 			}
 		}
 	}
-
 	return articles
 }
 

@@ -28,8 +28,8 @@ func main() {
 	server := ws.NewServer(registry)
 	go server.Listen()
 
-	ona := onArticleChange(registry)
-	pankat.OnArticleChange(ona)
+	onArticleChangeFunction := onArticleChange(registry)
+	pankat.OnArticleChange(onArticleChangeFunction)
 	go fsNotifyWatchDocumentsDirectory(pankat.GetConfig().DocumentsPath)
 	router := web.New(Context{}). // Create your router
 					Middleware(web.LoggerMiddleware).

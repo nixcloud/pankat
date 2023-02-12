@@ -1,5 +1,5 @@
 # what
-**pankat** is a **static blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
+**pankat** is a **blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
 
 both pankat-static and pankat-server build a static blog.
 
@@ -45,10 +45,10 @@ pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
 # history
 
 the primary motivation for rewriting ikiwiki was:
-- use pandoc as backend
+- no interest in ikiwiki's perl language choice
+- use pandoc as backend for rendering articles
 - mobile first by using bootstrap
 - more usability in navigation / posts overview
-- no interest in ikiwiki's perl
 
 # who
 
