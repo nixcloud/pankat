@@ -16,18 +16,19 @@ var articlesCache ArticlesCache
 
 type Article struct {
 	Title                string
-	Article              []byte
+	ArticleSource        []byte
 	ModificationDate     time.Time
 	Summary              string
 	Tags                 []string
 	Series               string
-	Draft                bool
 	SrcFileName          string
 	SrcDirectoryName     string
 	DstFileName          string
+	SpecialPage          bool // used for posts.html, about.html (not added to timeline if true, not added in list of articles)
+	Draft                bool
 	Anchorjs             bool
 	Tocify               bool
-	Timeline             bool
+	Timeline             bool // generating posts.html uses this flag in RenderTimeline(..)
 	SourceReference      bool
 	WebsocketSupport     bool
 	NavAndSeriesElements bool
@@ -78,7 +79,7 @@ func (a Article) Render() string {
 		if GetConfig().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
-		text = PandocMarkdown2HTML(a.Article)
+		text = PandocMarkdown2HTML(a.ArticleSource)
 		articlesCache.Set(a, text)
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
@@ -162,7 +163,7 @@ func (s Articles) GetTitleNAV(article *Article) string {
 	//   fmt.Println(article.Title)
 	p := articles.PrevArticle(article)
 	if p != nil {
-		prev = filepath.Clean(relativeSrcRootPath + "/" + p.SrcDirectoryName + "/" + p.DstFileName)
+		prev = filepath.Clean(relativeSrcRootPath + "/" + p.DstFileName)
 		// link is active
 		titleNAV +=
 			`<span id="articleNavLeft"> <a href="` + prev + `"> 
@@ -172,7 +173,7 @@ func (s Articles) GetTitleNAV(article *Article) string {
 	n := articles.NextArticle(article)
 	if n != nil {
 		// link is active
-		next = filepath.Clean(relativeSrcRootPath + "/" + n.SrcDirectoryName + "/" + n.DstFileName)
+		next = filepath.Clean(relativeSrcRootPath + "/" + n.DstFileName)
 		titleNAV +=
 			`<span id="articleNavRight"><a href="` + next + `"> 
         next article <span class="glyphiconLink glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article"></span>
@@ -195,12 +196,12 @@ func (s Articles) GetSeriesNAV(article *Article) string {
 	if article.Series != "" {
 		sp := articles.PrevArticleInSeries(article)
 		if sp != nil {
-			sPrev = filepath.Clean(relativeSrcRootPath + "/" + sp.SrcDirectoryName + "/" + sp.DstFileName)
+			sPrev = filepath.Clean(relativeSrcRootPath + "/" + sp.DstFileName)
 		}
 
 		sn := articles.NextArticleInSeries(article)
 		if sn != nil {
-			sNext = filepath.Clean(relativeSrcRootPath + "/" + sn.SrcDirectoryName + "/" + sn.DstFileName)
+			sNext = filepath.Clean(relativeSrcRootPath + "/" + sn.DstFileName)
 		}
 		seriesNAV =
 			`
@@ -233,29 +234,21 @@ func (s Articles) MakeRelativeLink(a *Article, b *Article) string {
 	return relativeSrcRootPath
 }
 
-func (s Articles) TopLevel() Articles {
+func (s Articles) Targets() Articles {
 	var _filtered Articles
 	for _, e := range s {
-		if e.SrcDirectoryName == "" || e.SrcDirectoryName == "." {
-			e.SourceReference = true
-			e.WebsocketSupport = true
-			_filtered = append(_filtered, e)
-		}
-	}
-	return _filtered
-}
-
-func (s Articles) Posts() Articles {
-	var _filtered Articles
-	for _, e := range s {
-		if e.SrcDirectoryName != "" && e.SrcDirectoryName != "." {
+		e.SourceReference = true
+		e.WebsocketSupport = true
+		if e.SpecialPage == true {
+			e.NavAndSeriesElements = false
+			e.Anchorjs = false
+			e.Tocify = false
+		} else {
+			e.NavAndSeriesElements = true
 			e.Anchorjs = true
 			e.Tocify = true
-			e.SourceReference = true
-			e.WebsocketSupport = true
-			e.NavAndSeriesElements = true
-			_filtered = append(_filtered, e)
 		}
+		_filtered = append(_filtered, e)
 	}
 	return _filtered
 }

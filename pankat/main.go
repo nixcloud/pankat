@@ -39,15 +39,15 @@ func tagToLinkList(a *Article) string {
 	return output
 }
 
-func GetTargets(path string, ret []string) Articles {
+func GetTargets(path string) Articles {
 	defer timeElapsed("GetTargets")()
 
 	fmt.Println(color.YellowString("GetTargets: searching and parsing articles with *.mdwn"))
-	return getTargets_(path, ret)
+	return getTargets_(path)
 }
 
-// scan the direcotry for .mdwn files recurively
-func getTargets_(path string, ret []string) Articles {
+// scan the directory for .mdwn files recursively
+func getTargets_(path string) Articles {
 	var articles Articles
 	entries, _ := os.ReadDir(path)
 	for _, entry := range entries {
@@ -57,9 +57,8 @@ func getTargets_(path string, ret []string) Articles {
 			if entry.Name() == ".git" {
 				continue
 			}
-			ret = append(ret, buf)
 			//       fmt.Println(buf)
-			n := getTargets_(buf, ret)
+			n := getTargets_(buf)
 			articles = append(articles, n...)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
@@ -81,7 +80,7 @@ func getTargets_(path string, ret []string) Articles {
 					continue
 				}
 				_article = ProcessPlugins(_article, &a)
-				a.Article = _article
+				a.ArticleSource = _article
 				articles = append(articles, &a)
 				errClose := fh.Close()
 				if errClose != nil {
@@ -143,6 +142,8 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 	//   fmt.Println("\n=========== ", name, " ===========")
 
 	switch name {
+	case "SpecialPage":
+		article.SpecialPage = true
 	case "meta":
 		re := regexp.MustCompile("[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+")
 		z := re.FindIndex(in)
@@ -177,7 +178,7 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 		//      fmt.Println(f[1])
 
 		//HACK should be moved to pankat-core
-		relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "./posts")
+		relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, ".")
 		relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
 		//      fmt.Println(relativeSrcRootPath)
 
@@ -227,13 +228,8 @@ func OnArticleChange(f func(string, string)) {
 func RenderPosts(articlesAll Articles) {
 	defer timeElapsed("RenderPosts")()
 	fmt.Println(color.YellowString("Rendering posts"))
-	var RenderRuns []Articles
-	RenderRuns = append(RenderRuns, articlesAll.TopLevel())
-	RenderRuns = append(RenderRuns, articlesAll.Posts())
-	for _, articles := range RenderRuns {
-		for _, article := range articles {
-			RenderPost(articles, article)
-		}
+	for _, article := range articlesAll {
+		RenderPost(articlesAll, article)
 	}
 }
 
@@ -243,7 +239,7 @@ func RenderPost(articles Articles, article *Article) {
 	}
 	navTitleArticleSource := GenerateNavTitleArticleSource(articles, *article, article.Render())
 	standalonePageContent := generateStandalonePage(articles, *article, navTitleArticleSource)
-	outD := filepath.Clean(GetConfig().DocumentsPath + "/" + article.SrcDirectoryName + "/")
+	outD := filepath.Clean(GetConfig().DocumentsPath + "/")
 	sendLiveUpdateViaWS(article.SrcFileName, navTitleArticleSource)
 
 	errMkdir := os.MkdirAll(outD, 0755)
@@ -286,7 +282,7 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 		ArticleSourceCodeFS   string
 		SourceReference       bool
 		WebsocketSupport      bool
-		NavAndSeriesElements  bool
+		SpecialPage           bool
 	}{
 		Title:                 article.Title,
 		RelativeSrcRootPath:   relativeSrcRootPath,
@@ -297,11 +293,11 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 		Timeline:              article.Timeline,
 		NavTitleArticleSource: navTitleArticleSource,
 		SrcDirectoryName:      article.SrcDirectoryName,
-		ArticleSourceCodeFS:   filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName),
-		ArticleSourceCodeURL:  article.SrcFileName,
+		ArticleSourceCodeFS:   article.SrcFileName,
+		ArticleSourceCodeURL:  filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName),
 		SourceReference:       article.SourceReference,
 		WebsocketSupport:      article.WebsocketSupport,
-		NavAndSeriesElements:  article.NavAndSeriesElements,
+		SpecialPage:           article.SpecialPage,
 	}
 	err = t.Execute(buff, noItems)
 	if err != nil {
@@ -332,19 +328,19 @@ func GenerateNavTitleArticleSource(articles Articles, article Article, body stri
 	}
 
 	noItems := struct {
-		Title                string
-		TitleNAV             string
-		SeriesNAV            string
-		Meta                 string
-		Body                 string
-		NavAndSeriesElements bool
+		Title       string
+		TitleNAV    string
+		SeriesNAV   string
+		Meta        string
+		Body        string
+		SpecialPage bool
 	}{
-		Title:                article.Title,
-		TitleNAV:             articles.GetTitleNAV(&article),
-		SeriesNAV:            articles.GetSeriesNAV(&article),
-		Meta:                 meta,
-		Body:                 body,
-		NavAndSeriesElements: article.NavAndSeriesElements,
+		Title:       article.Title,
+		TitleNAV:    articles.GetTitleNAV(&article),
+		SeriesNAV:   articles.GetSeriesNAV(&article),
+		Meta:        meta,
+		Body:        body,
+		SpecialPage: article.SpecialPage,
 	}
 	err = t.Execute(buff, noItems)
 	if err != nil {
@@ -398,7 +394,7 @@ func Init() {
 func SetMostRecentArticle(articlesPosts Articles) {
 	mostRecentArticle := ""
 	if len(articlesPosts) > 0 {
-		mostRecentArticle = filepath.Clean(articlesPosts[0].SrcDirectoryName + "/" + articlesPosts[0].DstFileName)
+		mostRecentArticle = filepath.Clean(articlesPosts[0].DstFileName)
 	} else {
 		mostRecentArticle = "posts.html"
 	}
@@ -416,30 +412,21 @@ func SetMostRecentArticle(articlesPosts Articles) {
 }
 
 func GetArticles() Articles {
-
 	// find all .mdwn files
-	f := make([]string, 0)
-	f = append(f, "")
-
-	articles := GetTargets(".", f).FilterOutDrafts()
-
+	articles := GetTargets(".").FilterOutDrafts()
 	// sort them by date
 	sort.Sort(articles)
-
-	fmt.Println(color.YellowString("GetTargets: found"), articles.Posts().Len(), color.YellowString("articles"))
-
+	fmt.Println(color.YellowString("GetTargets: found"), articles.Targets().Len(), color.YellowString("articles"))
 	return articles
 }
 
 func UpdateBlog() {
 	defer timeElapsed("UpdateBlog")()
-
 	fmt.Println(color.GreenString("pankat-static"), "starting!")
 	fmt.Println(color.YellowString("Documents path: "), GetConfig().DocumentsPath)
-
 	articles := GetArticles()
 	RenderPosts(articles)
-	RenderTimeline(articles.Posts())
-	RenderFeed(articles.Posts())
-	SetMostRecentArticle(articles.Posts())
+	RenderTimeline(articles.Targets()) // FIXME maybe i can get rid of .Targets()
+	RenderFeed(articles.Targets())
+	SetMostRecentArticle(articles.Targets())
 }
