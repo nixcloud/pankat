@@ -64,11 +64,10 @@ func getTargets_(path string, ret []string) Articles {
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
 				var a Article
+				a.SrcFileName = entry.Name()
 				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
 				a.Title = strings.Replace(v, "_", " ", -1)     // add whitespaces
 				a.DstFileName = v + ".html"
-				a.BaseFileName = v
-				a.SrcFileName = entry.Name()
 				a.SrcDirectoryName = path
 				fh, errOpen := os.Open(path + "/" + entry.Name())
 				if errOpen != nil {

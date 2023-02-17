@@ -23,9 +23,8 @@ type Article struct {
 	Series               string
 	Draft                bool
 	SrcFileName          string
-	DstFileName          string
-	BaseFileName         string
 	SrcDirectoryName     string
+	DstFileName          string
 	Anchorjs             bool
 	Tocify               bool
 	Timeline             bool
