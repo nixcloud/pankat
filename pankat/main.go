@@ -171,7 +171,6 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 		}
 	case "draft":
 		article.Draft = true
-
 	case "img":
 		b := strings.Join(f[1:], " ")
 		//      fmt.Println("\n------------\n", article.SrcDirectoryName)

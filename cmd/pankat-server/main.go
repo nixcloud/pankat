@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"pankat"
 	"pankat-server/ws"
+	"path/filepath"
 )
 
 type Context struct{}
@@ -34,10 +35,23 @@ func main() {
 	router := web.New(Context{}). // Create your router
 					Middleware(web.LoggerMiddleware).
 					Middleware(web.ShowErrorsMiddleware).
-		//Middleware(web.StaticMiddleware("../output")).
-		Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath)).
-		Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
+					Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath)).
+					Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
 			websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
+		}).
+		Get("/draft", func(rw web.ResponseWriter, req *web.Request) {
+			articles := pankat.GetTargets(".")
+			var draftList string
+			for _, article := range articles {
+				if article.Draft == true {
+					draftList += filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) + "<br>"
+				}
+			}
+			var article pankat.Article
+			article.Title = "Drafts"
+			article.SpecialPage = true
+			ret := pankat.GenerateNavTitleArticleSource(articles, article, draftList)
+			rw.Write([]byte(ret))
 		}).
 		Get("/", redirectTo("/index.html"))
 	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router) // wait until ctrl+c
