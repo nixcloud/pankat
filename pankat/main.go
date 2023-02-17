@@ -237,10 +237,10 @@ func RenderPost(articles Articles, article *Article) {
 	if GetConfig().Verbose > 0 {
 		fmt.Println("Rendering article '" + article.Title + "'")
 	}
-	navTitleArticleSource := GenerateNavTitleArticleSource(articles, *article, article.Render())
-	standalonePageContent := generateStandalonePage(articles, *article, navTitleArticleSource)
+	navTitleArticleHTML := GenerateNavTitleArticleSource(articles, *article, article.Render())
+	standalonePageContent := generateStandalonePage(articles, *article, navTitleArticleHTML)
 	outD := filepath.Clean(GetConfig().DocumentsPath + "/")
-	sendLiveUpdateViaWS(article.SrcFileName, navTitleArticleSource)
+	sendLiveUpdateViaWS(article.SrcFileName, navTitleArticleHTML)
 
 	errMkdir := os.MkdirAll(outD, 0755)
 	if errMkdir != nil {
@@ -308,7 +308,6 @@ func generateStandalonePage(articles Articles, article Article, navTitleArticleS
 }
 
 func GenerateNavTitleArticleSource(articles Articles, article Article, body string) string {
-	buff := bytes.NewBufferString("")
 	t, err := template.New("navTitleArticleSource.tmpl").
 		ParseFiles("templates/navTitleArticleSource.tmpl")
 	if err != nil {
@@ -342,12 +341,13 @@ func GenerateNavTitleArticleSource(articles Articles, article Article, body stri
 		Body:        body,
 		SpecialPage: article.SpecialPage,
 	}
-	err = t.Execute(buff, noItems)
+	generatedHTMLbuff := bytes.NewBufferString("")
+	err = t.Execute(generatedHTMLbuff, noItems)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	return buff.String()
+	return generatedHTMLbuff.String()
 }
 
 func Init() {
