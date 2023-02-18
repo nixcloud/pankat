@@ -15,6 +15,16 @@ preview of the pages.
 
 3. open the mdwn documents with any editor and one a change is saved it will update the article in the browser without reload
 
+## draft editing
+
+drafts are not published. they are only visible in the browser when the pankat-server is running on localhost:8000/draft
+
+that is, if a document contains a [[!draft]] reference:
+
+* it will not be rendered into the timeline (/posts) 
+* no html document will be generated thus published
+* the source code (mdwn) probably gets published, so be aware of that
+
 ### license
 
 see LICENSE file, AGPL v3
