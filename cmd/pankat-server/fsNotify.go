@@ -47,6 +47,7 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 								if filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) == eventRelFileName {
 									fmt.Println("pankat.RenderPost(articles, article)")
 									article.SourceReference = true
+									article.WebsocketSupport = true
 									pankat.RenderPost(articles, article)
 								}
 							}

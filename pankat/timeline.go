@@ -16,7 +16,7 @@ func RenderTimeline(articles Articles) {
 	var pageContent string
 	var article Article
 
-	article.Title = "all posts"
+	article.Title = "all posts timeline"
 	article.Timeline = true
 
 	article.SrcDirectoryName = ""

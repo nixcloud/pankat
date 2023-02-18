@@ -289,7 +289,7 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		SiteBrandTitle:        GetConfig().SiteTitle,
 		Anchorjs:              article.Anchorjs,
 		Tocify:                article.Tocify,
-		Timeline:              article.Timeline,
+		Timeline:              article.Timeline, // FIXME maybe we can get rid of this attribute
 		NavTitleArticleSource: navTitleArticleSource,
 		SrcDirectoryName:      article.SrcDirectoryName,
 		ArticleSourceCodeFS:   article.SrcFileName,

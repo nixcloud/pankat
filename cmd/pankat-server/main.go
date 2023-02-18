@@ -45,7 +45,7 @@ func main() {
 		articleQueryName := req.URL.Query().Get("article")
 		if articleQueryName == "" {
 			var draftList string
-			draftList += "This is a list of all drafts. Click on one to edit it.<br>"
+			draftList += "<p>this is a list of all drafts. Click on one to edit!</p>"
 			draftList += "<ul>"
 			for _, article := range articles {
 				if article.Draft == true {
@@ -55,7 +55,7 @@ func main() {
 			}
 			draftList += "</ul>"
 			var article pankat.Article
-			article.Title = "Drafts"
+			article.Title = "drafts"
 			article.SpecialPage = true
 			navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, article, draftList)
 			standalonePageContent := pankat.GenerateStandalonePage(articles, article, navTitleArticleHTML)
