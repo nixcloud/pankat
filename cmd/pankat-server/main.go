@@ -32,28 +32,46 @@ func main() {
 	onArticleChangeFunction := onArticleChange(registry)
 	pankat.OnArticleChange(onArticleChangeFunction)
 	go fsNotifyWatchDocumentsDirectory(pankat.GetConfig().DocumentsPath)
-	router := web.New(Context{}). // Create your router
-					Middleware(web.LoggerMiddleware).
-					Middleware(web.ShowErrorsMiddleware).
-					Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath)).
-					Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
-			websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
-		}).
-		Get("/draft", func(rw web.ResponseWriter, req *web.Request) {
-			articles := pankat.GetTargets(".")
+
+	router := web.New(Context{})
+	router.Middleware(web.LoggerMiddleware)
+	router.Middleware(web.ShowErrorsMiddleware)
+	router.Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath))
+	router.Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
+		websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
+	})
+	router.Get("/draft", func(rw web.ResponseWriter, req *web.Request) {
+		articles := pankat.GetTargets(".")
+		articleQueryName := req.URL.Query().Get("article")
+		if articleQueryName == "" {
 			var draftList string
+			draftList += "This is a list of all drafts. Click on one to edit it.<br>"
+			draftList += "<ul>"
 			for _, article := range articles {
 				if article.Draft == true {
-					draftList += filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) + "<br>"
+					aname := filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName)
+					draftList += "<li><a href=\"/draft?article=" + aname + "\">" + aname + "</a></li>"
 				}
 			}
+			draftList += "</ul>"
 			var article pankat.Article
 			article.Title = "Drafts"
 			article.SpecialPage = true
-			ret := pankat.GenerateNavTitleArticleSource(articles, article, draftList)
-			rw.Write([]byte(ret))
-		}).
-		Get("/", redirectTo("/index.html"))
+			navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, article, draftList)
+			standalonePageContent := pankat.GenerateStandalonePage(articles, article, navTitleArticleHTML)
+			rw.Write([]byte(standalonePageContent))
+		} else {
+			for _, article := range articles {
+				if filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) == articleQueryName {
+					article.WebsocketSupport = true
+					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, *article, article.Render())
+					standalonePageContent := pankat.GenerateStandalonePage(articles, *article, navTitleArticleHTML)
+					rw.Write([]byte(standalonePageContent))
+				}
+			}
+		}
+	})
+	router.Get("/", redirectTo("/index.html"))
 	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router) // wait until ctrl+c
 }
 

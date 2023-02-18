@@ -80,7 +80,7 @@ func RenderFeed(articles Articles) {
     `
 
 	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, history)
-	standalonePageContent := generateStandalonePage(articles, article, navTitleArticleSource)
+	standalonePageContent := GenerateStandalonePage(articles, article, navTitleArticleSource)
 
 	outD := GetConfig().DocumentsPath + "/"
 	err := os.MkdirAll(outD, 0755)

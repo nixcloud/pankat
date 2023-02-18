@@ -237,7 +237,7 @@ func RenderPost(articles Articles, article *Article) {
 		fmt.Println("Rendering article '" + article.Title + "'")
 	}
 	navTitleArticleHTML := GenerateNavTitleArticleSource(articles, *article, article.Render())
-	standalonePageContent := generateStandalonePage(articles, *article, navTitleArticleHTML)
+	standalonePageContent := GenerateStandalonePage(articles, *article, navTitleArticleHTML)
 	outD := filepath.Clean(GetConfig().DocumentsPath + "/")
 	sendLiveUpdateViaWS(article.SrcFileName, navTitleArticleHTML)
 
@@ -255,7 +255,7 @@ func RenderPost(articles Articles, article *Article) {
 	}
 }
 
-func generateStandalonePage(articles Articles, article Article, navTitleArticleSource string) []byte {
+func GenerateStandalonePage(articles Articles, article Article, navTitleArticleSource string) []byte {
 	buff := bytes.NewBufferString("")
 	t, err := template.New("standalonePage.tmpl").
 		ParseFiles("templates/standalonePage.tmpl")

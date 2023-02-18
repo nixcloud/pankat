@@ -143,7 +143,7 @@ func RenderTimeline(articles Articles) {
 `
 
 	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, pageContent)
-	standalonePageContent := generateStandalonePage(articles, article, navTitleArticleSource)
+	standalonePageContent := GenerateStandalonePage(articles, article, navTitleArticleSource)
 
 	outD := GetConfig().DocumentsPath + "/"
 	err = os.MkdirAll(outD, 0755)
