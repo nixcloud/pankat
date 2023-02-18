@@ -239,7 +239,7 @@ func RenderPost(articles Articles, article *Article) {
 	navTitleArticleHTML := GenerateNavTitleArticleSource(articles, *article, article.Render())
 	standalonePageContent := GenerateStandalonePage(articles, *article, navTitleArticleHTML)
 	outD := filepath.Clean(GetConfig().DocumentsPath + "/")
-	sendLiveUpdateViaWS(article.SrcFileName, navTitleArticleHTML)
+	sendLiveUpdateViaWS(filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName), navTitleArticleHTML)
 
 	errMkdir := os.MkdirAll(outD, 0755)
 	if errMkdir != nil {

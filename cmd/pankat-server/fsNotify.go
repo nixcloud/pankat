@@ -7,9 +7,21 @@ import (
 	"os"
 	"pankat"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
+
+func getArticlesFilteredByDraftsExceptOne(eventRelFileName string) pankat.Articles {
+	var _filtered pankat.Articles
+	for _, e := range pankat.GetTargets(".") {
+		if e.Draft == false || filepath.Clean(e.SrcDirectoryName+"/"+e.SrcFileName) == eventRelFileName {
+			_filtered = append(_filtered, e)
+		}
+	}
+	sort.Sort(_filtered)
+	return _filtered
+}
 
 func fsNotifyWatchDocumentsDirectory(directory string) {
 	w := watcher.New()
@@ -20,15 +32,21 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 			case event := <-w.Event:
 				if event.FileInfo.IsDir() == false {
 					if strings.HasSuffix(event.Name(), ".mdwn") {
+						documentsPath, err := os.Getwd()
+						if err != nil {
+							log.Println(err)
+						}
+						eventRelFileName, _ := filepath.Rel(documentsPath, event.Path)
 						if event.Op == watcher.Remove {
 							fmt.Println("file removed:", event.Name())
 						}
 						if event.Op == watcher.Write || event.Op == watcher.Create {
-							fmt.Println("Name, full path", event.Name(), event.Path)
-							articles := pankat.GetArticles()
+							fmt.Println("File write|create detected in ", eventRelFileName)
+							articles := getArticlesFilteredByDraftsExceptOne(eventRelFileName)
 							for _, article := range articles {
-								if article.SrcFileName == event.Name() {
+								if filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) == eventRelFileName {
 									fmt.Println("pankat.RenderPost(articles, article)")
+									article.SourceReference = true
 									pankat.RenderPost(articles, article)
 								}
 							}
