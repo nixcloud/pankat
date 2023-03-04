@@ -15,23 +15,22 @@ import (
 var articlesCache ArticlesCache
 
 type Article struct {
-	Title                string
-	ArticleSource        []byte
-	ModificationDate     time.Time
-	Summary              string
-	Tags                 []string
-	Series               string
-	SrcFileName          string
-	SrcDirectoryName     string
-	DstFileName          string
-	SpecialPage          bool // used for posts.html, about.html (not added to timeline if true, not added in list of articles)
-	Draft                bool
-	Anchorjs             bool
-	Tocify               bool
-	Timeline             bool // generating posts.html uses this flag in RenderTimeline(..)
-	SourceReference      bool
-	WebsocketSupport     bool
-	NavAndSeriesElements bool
+	Title             string
+	ArticleMDWNSource []byte
+	ModificationDate  time.Time
+	Summary           string
+	Tags              []string
+	Series            string
+	SrcFileName       string // foo.mdwn
+	SrcDirectoryName  string // /home/user/documents (lacks foo.mdwn)
+	DstFileName       string // /home/user/documents/foo.html
+	SpecialPage       bool   // used for posts.html, about.html (not added to timeline if true, not added in list of articles)
+	Draft             bool
+	Anchorjs          bool
+	Tocify            bool
+	Timeline          bool // generating posts.html uses this flag in RenderTimeline(..)
+	SourceReference   bool // switch for showing the document source mdwn at bottom
+	WebsocketSupport  bool // live update support via WS on/off
 }
 
 func PandocMarkdown2HTML(articleMarkdown []byte) string {
@@ -79,7 +78,7 @@ func (a Article) Render() string {
 		if GetConfig().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
-		text = PandocMarkdown2HTML(a.ArticleSource)
+		text = PandocMarkdown2HTML(a.ArticleMDWNSource)
 		articlesCache.Set(a, text)
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
@@ -240,11 +239,9 @@ func (s Articles) Targets() Articles {
 		e.SourceReference = true
 		e.WebsocketSupport = true
 		if e.SpecialPage == true {
-			e.NavAndSeriesElements = false
 			e.Anchorjs = false
 			e.Tocify = false
 		} else {
-			e.NavAndSeriesElements = true
 			e.Anchorjs = true
 			e.Tocify = true
 		}

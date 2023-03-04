@@ -1,7 +1,7 @@
 # what
 **pankat** is a **blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
 
-both pankat-static and pankat-server build a static blog.
+pankat-static and pankat-server build a static blog.
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
 
@@ -11,7 +11,7 @@ a pankat generated blog can be found here:
 
 * <https://lastlog.de/blog>
 
-but you can easily use this software for your own blog as well!
+but you can easily use pankat for your own blog!
 
 # pankat-static
 
@@ -24,6 +24,8 @@ pankat-static can be used to render the articles.
 pankat-server can be executed on the client to provides a live preview of the generated static blog, later the result can be uploaded.
 
 * [pankat-server](src/github.com/nixcloud/cmd/pankat-server/README.md)
+
+it is a helpful tool to modify drafts before publishing them.
 
 # pankat-docker
 

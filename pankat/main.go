@@ -43,7 +43,11 @@ func GetTargets(path string) Articles {
 	defer timeElapsed("GetTargets")()
 
 	fmt.Println(color.YellowString("GetTargets: searching and parsing articles with *.mdwn"))
-	return getTargets_(path)
+	targets := getTargets_(path)
+
+	// sort them by date
+	sort.Sort(targets)
+	return targets
 }
 
 // scan the directory for .mdwn files recursively
@@ -80,7 +84,7 @@ func getTargets_(path string) Articles {
 					continue
 				}
 				_article = ProcessPlugins(_article, &a)
-				a.ArticleSource = _article
+				a.ArticleMDWNSource = _article
 				articles = append(articles, &a)
 				errClose := fh.Close()
 				if errClose != nil {
@@ -413,8 +417,7 @@ func SetMostRecentArticle(articlesPosts Articles) {
 func GetArticles() Articles {
 	// find all .mdwn files
 	articles := GetTargets(".").FilterOutDrafts()
-	// sort them by date
-	sort.Sort(articles)
+
 	fmt.Println(color.YellowString("GetTargets: found"), articles.Targets().Len(), color.YellowString("articles"))
 	return articles
 }
