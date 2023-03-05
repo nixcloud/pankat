@@ -147,6 +147,7 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 
 	switch name {
 	case "SpecialPage":
+	case "specialpage":
 		article.SpecialPage = true
 	case "meta":
 		re := regexp.MustCompile("[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+")
@@ -428,7 +429,9 @@ func UpdateBlog() {
 	fmt.Println(color.YellowString("Documents path: "), GetConfig().DocumentsPath)
 	articles := GetArticles()
 	RenderPosts(articles)
-	RenderTimeline(articles.Targets()) // FIXME maybe i can get rid of .Targets()
-	RenderFeed(articles.Targets())
-	SetMostRecentArticle(articles.Targets())
+
+	articles = articles.FilterOutSpecialPages().Targets()
+	RenderTimeline(articles)
+	RenderFeed(articles)
+	SetMostRecentArticle(articles)
 }

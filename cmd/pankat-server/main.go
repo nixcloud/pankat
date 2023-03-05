@@ -41,19 +41,8 @@ func main() {
 		websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
 	})
 
-	//var xhr = new XMLHttpRequest();
-	//xhr.onreadystatechange = function() {
-	//	if (xhr.readyState == XMLHttpRequest.DONE) {
-	//		alert(xhr.status);
-	//		console.log('DONE: ', xhr.status);
-	//
-	//	}
-	//}
-	//xhr.open('GET', "/pankat-server", false);
-	//xhr.send(null);
 	// used to check from webpage if this is served by pankat-server
 	router.Get("/pankat-server", func(rw web.ResponseWriter, req *web.Request) {
-		// write 200 OK
 		rw.WriteHeader(http.StatusOK)
 	})
 	router.Get("/draft", func(rw web.ResponseWriter, req *web.Request) {

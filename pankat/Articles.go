@@ -280,6 +280,16 @@ func (s Articles) FilterOutDrafts() Articles {
 	return _filtered
 }
 
+func (s Articles) FilterOutSpecialPages() Articles {
+	var _filtered Articles
+	for _, e := range s {
+		if e.SpecialPage == false {
+			_filtered = append(_filtered, e)
+		}
+	}
+	return _filtered
+}
+
 type MetaData struct {
 	ArticleCount int
 	Tags         map[string][]int

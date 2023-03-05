@@ -25,6 +25,19 @@ that is, if a document contains a [[!draft]] reference:
 * no html document will be generated thus published
 * the source code (mdwn) probably gets published, so be aware of that
 
+Use [[!draft]] to mark a page as draft.
+
+## special pages
+
+SpecialPages like about, roadmap, websocket should:
+
+* should contain left, right navigational keyboard commands
+* should not contain a navigation bar
+* not appear in the timeline
+* however, unlike drafts, they should render as normal page
+
+Use [[!SpecialPage]] to mark a page as special page.
+
 ### license
 
 see LICENSE file, AGPL v3
