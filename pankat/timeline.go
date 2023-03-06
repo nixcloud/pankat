@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 )
 
@@ -72,75 +73,64 @@ func RenderTimeline(articles Articles) {
     <br class="clear">
 `
 
-	var year string
+	// create a map of years
+	yearsMap := make(map[int]Articles)
+	for _, article := range articles {
+		yearsMap[article.ModificationDate.Year()] = append(yearsMap[article.ModificationDate.Year()], article)
+	}
 
-	for i, article := range articles {
-		if i == 0 {
-			v := article.ModificationDate.Add(1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
-			year = v.Format("2006")
-			pageContent += `
-	          <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-	            <dl class="timeline-series">
-                 <h2 class="timeline-time"><span>` + year + `</span></h2>`
-			year = article.ModificationDate.Format("2006")
-		}
+	keys := make([]int, 0, len(yearsMap))
+	for k := range yearsMap {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(a, b int) bool {
+		return keys[a] > keys[b]
+	})
+	var articleCount int
 
-		//     fmt.Println("----")
-		//     fmt.Println("  ", e.Title)
-		//     fmt.Println("  ", e.SrcDirectoryName)
-		//     fmt.Println("  ", inputPath)
+	genTimelineseries := func(articles Articles) string {
+		var ret string
 
-		if year != article.ModificationDate.Format("2006") {
-			pageContent += `
-         </dl><!-- /.timeline-series -->
-       </div><!-- /.timeline-wrapper -->
-       <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-    	<h2 class="timeline-time"><span>` + year + `</span></h2>
-			<dl class="timeline-series">`
-			year = article.ModificationDate.Format("2006")
-		}
+		for _, article := range articles {
+			// hack to make tagToLinkList(...) work with relative directory ./ vs. ../
+			var v Article
+			v = *article
+			v.SrcDirectoryName = ""
 
-		// a hacky but straight-forward way to make tagToLinkList(...) work by
-		// fooling a different base article
-		var v Article
-		v = *article
-		v.SrcDirectoryName = ""
-
-		//     <h3>` + e.ModificationDate.Format("2 Jan 2006") + `</h3>
-		//     <span class="glyphicon glyphicon-chevron-link" aria-hidden="true" title="article"></span>
-		pageContent += `
-          <dt class="timeline-event posting_` + strconv.Itoa(i) + `">` + article.Title + `</dt>
-          <dd class="timeline-event-content posting_` + strconv.Itoa(i) + `">
+			ret += `
+          <dt class="timeline-event posting_` + strconv.Itoa(articleCount) + `">` + article.Title + `</dt>
+          <dd class="timeline-event-content posting_` + strconv.Itoa(articleCount) + `">
             <div class="postingsEntry">
               <p class="summary">` + article.Summary + ` <a href="` + filepath.Clean(article.DstFileName) + `">open complete article</a></p>
               <p class="tag">` + tagToLinkList(&v) + `</p>
             </div>
             <br class="clear">
           </dd><!-- /.timeline-event-content -->`
-		if i == len(articles)-1 {
+			articleCount += 1
+		}
+		return ret
+	}
 
-			v := article.ModificationDate.Add(-1000 * 1000 * 1000 * 60 * 60 * 24 * 365) // add one year
-			year = v.Format("2006")
+	genYear := func(year int, articles Articles) string {
+		var ret string
+		ret += `<div class="timeline-wrapper pankat_year pankat_year_` + strconv.Itoa(year+1) + `">
+		<dl class="timeline-series">
+        <h2 class="timeline-time"><span>` + strconv.Itoa(year+1) + `</span></h2>`
+		ret += genTimelineseries(articles)
+		ret += `
+		</dl><!-- /.timeline-series -->
+		</div><!-- /.timeline-wrapper -->`
+		return ret
+	}
 
-			pageContent += `
-            <div class="timeline-wrapper pankat_year pankat_year_` + year + `">
-			<dl class="timeline-series">
-
-    	    <h2 class="timeline-time"><span>` + year + `</span></h2>
-			</dl><!-- /.timeline-series -->
-			</div><!-- /.timeline-wrapper -->
-			`
-
-			pageContent += `
-		    </dl><!-- /.timeline-series -->
-		  </div><!-- /.timeline-wrapper -->
-			`
+	for _, year := range keys {
+		pageContent += genYear(year, yearsMap[year])
+		if _, ok := yearsMap[year-1]; !ok {
+			pageContent += genYear(year-1, Articles{})
 		}
 	}
 
-	pageContent += `
-      </div>
-`
+	pageContent += `</div><!-- /.timeline-container -->`
 
 	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, pageContent)
 	standalonePageContent := GenerateStandalonePage(articles, article, navTitleArticleSource)

@@ -147,6 +147,7 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 
 	switch name {
 	case "SpecialPage":
+		article.SpecialPage = true
 	case "specialpage":
 		article.SpecialPage = true
 	case "meta":
