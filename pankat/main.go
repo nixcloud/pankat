@@ -20,22 +20,33 @@ import (
 type Pankat struct {
 }
 
+func tagToLinkListInTimeline(a *Article) string {
+	var tags []string
+	tags = a.Tags
+	var output string
+	for _, e := range tags {
+		// HACK should be moved to pankat-core
+		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
+		relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
+		output += `<a href="` + relativeSrcRootPath + `/timeline.html?filter=tag::` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
+	}
+	return output
+}
+
 func tagToLinkList(a *Article) string {
 	var tags []string
 	tags = a.Tags
 
 	var output string
 	for _, e := range tags {
-		//     fmt.Println("----------------")
-		//     fmt.Println(outputPath)
-		//     fmt.Println(a.SrcDirectoryName)
-
-		// HACK should be moved to pankat-core
-		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
-		relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
-
-		output += `<a href="` + relativeSrcRootPath + `/posts.html?filter=tag::` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
+		output += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e + `', 1)">` + e + `</a>`
 	}
+	return output
+}
+
+func seriesToLinkList(a *Article) string {
+	var output string
+	output += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + a.Series + `', 1)">` + a.Series + `</a>`
 	return output
 }
 
@@ -328,7 +339,7 @@ func GenerateNavTitleArticleSource(articles Articles, article Article, body stri
 	}
 
 	if len(article.Tags) > 0 {
-		meta += `<div id="tags"><p>` + tagToLinkList(&article) + `</p></div>`
+		meta += `<div id="tags"><p>` + tagToLinkListInTimeline(&article) + `</p></div>`
 	}
 
 	noItems := struct {
@@ -401,7 +412,7 @@ func SetMostRecentArticle(articlesPosts Articles) {
 	if len(articlesPosts) > 0 {
 		mostRecentArticle = filepath.Clean(articlesPosts[0].DstFileName)
 	} else {
-		mostRecentArticle = "posts.html"
+		mostRecentArticle = "timeline.html"
 	}
 	indexContent :=
 		`

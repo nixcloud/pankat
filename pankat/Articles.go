@@ -24,11 +24,11 @@ type Article struct {
 	SrcFileName       string // foo.mdwn
 	SrcDirectoryName  string // /home/user/documents (lacks foo.mdwn)
 	DstFileName       string // /home/user/documents/foo.html
-	SpecialPage       bool   // used for posts.html, about.html (not added to timeline if true, not added in list of articles)
+	SpecialPage       bool   // used for timeline.html, about.html (not added to timeline if true, not added in list of articles)
 	Draft             bool
 	Anchorjs          bool
 	Tocify            bool
-	Timeline          bool // generating posts.html uses this flag in RenderTimeline(..)
+	Timeline          bool // generating timeline.html uses this flag in RenderTimeline(..)
 	SourceReference   bool // switch for showing the document source mdwn at bottom
 	WebsocketSupport  bool // live update support via WS on/off
 }
@@ -205,7 +205,7 @@ func (s Articles) GetSeriesNAV(article *Article) string {
 		seriesNAV =
 			`
       <div id="seriesContainer">
-      <a href="` + relativeSrcRootPath + `/posts.html?filter=series::` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
+      <a href="` + relativeSrcRootPath + `/timeline.html?filter=series::` + article.Series + `" title="article series ` + article.Series + `" class="seriesbtn btn btn-primary">` +
 				article.Series + `</a>
         <header class="seriesHeader">
           <div id="seriesLeft">`

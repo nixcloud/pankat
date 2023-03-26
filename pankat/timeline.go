@@ -12,7 +12,7 @@ import (
 
 func RenderTimeline(articles Articles) {
 	defer timeElapsed("RenderTimeline")()
-	fmt.Println(color.YellowString("Rendering timeline in posts.html"))
+	fmt.Println(color.YellowString("Rendering timeline into timeline.html"))
 
 	var pageContent string
 	var article Article
@@ -102,7 +102,7 @@ func RenderTimeline(articles Articles) {
           <dd class="timeline-event-content posting_` + strconv.Itoa(articleCount) + `">
             <div class="postingsEntry">
               <p class="summary">` + article.Summary + ` <a href="` + filepath.Clean(article.DstFileName) + `">open complete article</a></p>
-              <p class="tag">` + tagToLinkList(&v) + `</p>
+              <p class="tag">` + tagToLinkList(&v) + seriesToLinkList(&v) + `</p>
             </div>
             <br class="clear">
           </dd><!-- /.timeline-event-content -->`
@@ -140,7 +140,7 @@ func RenderTimeline(articles Articles) {
 	if err != nil {
 		panic(err)
 	}
-	outName := outD + "posts.html"
+	outName := outD + "timeline.html"
 	err1 := os.WriteFile(outName, standalonePageContent, 0644)
 	if err1 != nil {
 		panic(err1)
