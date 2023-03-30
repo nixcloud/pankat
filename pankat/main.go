@@ -25,10 +25,7 @@ func tagToLinkListInTimeline(a *Article) string {
 	tags = a.Tags
 	var output string
 	for _, e := range tags {
-		// HACK should be moved to pankat-core
-		relativeSrcRootPath, _ := filepath.Rel(a.SrcDirectoryName, "")
-		relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
-		output += `<a href="` + relativeSrcRootPath + `/timeline.html?filter=tag::` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
+		output += `<a href="timeline.html?filter=tag::` + e + `" class="tagbtn btn btn-primary">` + e + `</a>`
 	}
 	return output
 }
@@ -193,12 +190,7 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 		//      fmt.Println("\n------------\n", article.SrcDirectoryName)
 		//      fmt.Println(f[1])
 
-		//HACK should be moved to pankat-core
-		relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, ".")
-		relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
-		//      fmt.Println(relativeSrcRootPath)
-
-		o := `<a href="` + relativeSrcRootPath + "/" + f[1] + `"><img src=` + relativeSrcRootPath + "/" + b + `></a>`
+		o := `<a href="` + f[1] + `"><img src=` + b + `></a>`
 		output = []byte(o)
 
 	case "summary":
@@ -281,12 +273,8 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		panic(err)
 	}
 
-	relativeSrcRootPath, _ := filepath.Rel(article.SrcDirectoryName, "")
-	relativeSrcRootPath = filepath.Clean(relativeSrcRootPath)
-
 	noItems := struct {
 		Title                 string
-		RelativeSrcRootPath   string
 		SiteURL               string
 		SiteBrandTitle        string
 		Anchorjs              bool
@@ -301,7 +289,6 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		SpecialPage           bool
 	}{
 		Title:                 article.Title,
-		RelativeSrcRootPath:   relativeSrcRootPath,
 		SiteURL:               GetConfig().SiteURL,
 		SiteBrandTitle:        GetConfig().SiteTitle,
 		Anchorjs:              article.Anchorjs,
