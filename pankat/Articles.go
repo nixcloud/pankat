@@ -72,7 +72,6 @@ func (a Article) Render() string {
 		articlesCache.Store = make(map[md5hash]string)
 		articlesCache.load()
 	}
-	var text string = ""
 	if articlesCache.Get(a) == "" {
 		if GetConfig().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
@@ -83,11 +82,11 @@ func (a Article) Render() string {
 			panic(err)
 		}
 		articlesCache.Set(a, text)
+		return text
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
-		text = articlesCache.Get(a)
+		return articlesCache.Get(a)
 	}
-	return text
 }
 
 func contains(slice []string, item string) bool {
