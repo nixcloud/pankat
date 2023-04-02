@@ -1,7 +1,7 @@
 # what
 **pankat** is a **blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
 
-pankat-static and pankat-server build a static blog.
+pankat-static and pankat-server both build are static blog builders.
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
 

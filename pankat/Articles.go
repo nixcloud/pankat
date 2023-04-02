@@ -32,37 +32,37 @@ type Article struct {
 	WebsocketSupport  bool // live update support via WS on/off
 }
 
-func PandocMarkdown2HTML(articleMarkdown []byte) string {
+func PandocMarkdown2HTML(articleMarkdown []byte) (string, error) {
 	pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
 	stdin, err := pandocProcess.StdinPipe()
 	if err != nil {
-		fmt.Println(err)
-		return "error rendering article"
+		fmt.Println("An error occurred: ", err)
+		return "", err
 	}
 	buff := bytes.NewBufferString("")
 	pandocProcess.Stdout = buff
 	pandocProcess.Stderr = os.Stderr
 	err1 := pandocProcess.Start()
 	if err1 != nil {
-		fmt.Println("An error occured: ", err1)
-		return "error rendering article"
+		fmt.Println("An error occurred: ", err1)
+		return "", err1
 	}
 	_, err2 := io.WriteString(stdin, string(articleMarkdown))
 	if err2 != nil {
-		fmt.Println("An error occured: ", err2)
-		return "error rendering article"
+		fmt.Println("An error occurred: ", err2)
+		return "", err2
 	}
 	err3 := stdin.Close()
 	if err3 != nil {
-		fmt.Println("An error occured: ", err3)
-		return "error rendering article"
+		fmt.Println("An error occurred: ", err3)
+		return "", err3
 	}
 	err4 := pandocProcess.Wait()
 	if err4 != nil {
-		fmt.Println("An error occured during pandocProess wait: ", err4)
-		return "error rendering article"
+		fmt.Println("An error occurred during pandocProess wait: ", err4)
+		fmt.Println("An error occurred: ", err4)
 	}
-	return string(buff.Bytes())
+	return string(buff.Bytes()), nil
 }
 
 func (a Article) Render() string {
@@ -77,7 +77,11 @@ func (a Article) Render() string {
 		if GetConfig().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
-		text = PandocMarkdown2HTML(a.ArticleMDWNSource)
+		text, err := PandocMarkdown2HTML(a.ArticleMDWNSource)
+		if err != nil {
+			fmt.Println("An error occurred during pandoc pipeline run: ", err)
+			panic(err)
+		}
 		articlesCache.Set(a, text)
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)

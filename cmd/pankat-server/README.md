@@ -1,17 +1,30 @@
 # pankat-server
 
+pankat-server is a static blog/wiki generator inspired by joey hess's ikiwiki but it features live-updates.
+
+# how to compile
+
+    git clone https://github.com/nixcloud/pankat
+
+afterwards use go to compile the binary
+
+    cd  cmd/pankat-server
+    go build pankat-server
+
+# how to use
+
 the **pankat-server** will first generate **static pages**. once this is done it will open a
 socket on localhost:8000 which needs to be visited with a browser. there one can experience
 the blog as if it were deployed on a webserver but the main difference is, that it offers a live
-preview of the pages.
+preview of the pages, draft editing and a roadmap.
 
 1. start the server
 
-    pankat-server --documents documents/blog.lastlog.de/ 
+       pankat-server --documents documents/blog.lastlog.de/ 
 
 2. afterwards open this in firefox/chromium 
 
-    localhost:8000
+       localhost:8000
 
 3. open the mdwn documents with any editor and one a change is saved it will update the article in the browser without reload
 
