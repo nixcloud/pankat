@@ -195,6 +195,8 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 
 	case "summary":
 		article.Summary = strings.Join(f[1:], " ")
+	case "title":
+		article.Title = strings.Join(f[1:], " ")
 	default:
 		fmt.Println(article.SrcFileName + ": plugin '" + name + "'" + color.RedString(" NOT supported"))
 	}
@@ -297,7 +299,7 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		NavTitleArticleSource: navTitleArticleSource,
 		SrcDirectoryName:      article.SrcDirectoryName,
 		ArticleSourceCodeFS:   article.SrcFileName,
-		ArticleSourceCodeURL:  filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName),
+		ArticleSourceCodeURL:  filepath.ToSlash(filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName)),
 		SourceReference:       article.SourceReference,
 		WebsocketSupport:      article.WebsocketSupport,
 		SpecialPage:           article.SpecialPage,
