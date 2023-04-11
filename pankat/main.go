@@ -152,12 +152,11 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 	}
 
 	//   fmt.Println("\n=========== ", name, " ===========")
-
-	switch name {
-	case "SpecialPage":
-		article.SpecialPage = true
+	switch strings.ToLower(name) {
 	case "specialpage":
 		article.SpecialPage = true
+	case "draft":
+		article.Draft = true
 	case "meta":
 		re := regexp.MustCompile("[0-9]+-[0-9]+-[0-9]+ [0-9]+:[0-9]+")
 		z := re.FindIndex(in)
@@ -183,8 +182,6 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 		if len(f) > 1 {
 			article.Tags = f[1:]
 		}
-	case "draft":
-		article.Draft = true
 	case "img":
 		b := strings.Join(f[1:], " ")
 		//      fmt.Println("\n------------\n", article.SrcDirectoryName)
