@@ -70,6 +70,7 @@ func main() {
 			for _, article := range articles {
 				if filepath.Join(article.SrcDirectoryName, article.SrcFileName) == filepath.FromSlash(articleQueryName) {
 					article.WebsocketSupport = true
+					article.SourceReference = true
 					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, *article, article.Render())
 					standalonePageContent := pankat.GenerateStandalonePage(articles, *article, navTitleArticleHTML)
 					rw.Write([]byte(standalonePageContent))
