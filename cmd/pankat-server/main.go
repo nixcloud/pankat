@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"pankat"
 	"pankat-server/ws"
+	"path"
 	"path/filepath"
 )
 
@@ -54,8 +55,8 @@ func main() {
 			draftList += "<ul>"
 			for _, article := range articles {
 				if article.Draft == true {
-					aname := filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName)
-					draftList += "<li><a href=\"/draft?article=" + aname + "\">" + aname + "</a></li>"
+					filePath := path.Join(article.SrcDirectoryName, article.SrcFileName)
+					draftList += "<li><a href=\"/draft?article=" + filePath + "\">" + filePath + "</a></li>"
 				}
 			}
 			draftList += "</ul>"
@@ -67,7 +68,7 @@ func main() {
 			rw.Write([]byte(standalonePageContent))
 		} else {
 			for _, article := range articles {
-				if filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) == articleQueryName {
+				if filepath.Join(article.SrcDirectoryName, article.SrcFileName) == filepath.FromSlash(articleQueryName) {
 					article.WebsocketSupport = true
 					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, *article, article.Render())
 					standalonePageContent := pankat.GenerateStandalonePage(articles, *article, navTitleArticleHTML)

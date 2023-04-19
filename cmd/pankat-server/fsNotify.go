@@ -12,15 +12,26 @@ import (
 	"time"
 )
 
-func getArticlesFilteredByDraftsExceptOne(eventRelFileName string) pankat.Articles {
+func getArticlesFilteredByDraftsExceptOne(eventRelFileName string) (pankat.Articles, error) {
 	var _filtered pankat.Articles
+	var found bool = false
 	for _, e := range pankat.GetTargets(".") {
-		if e.Draft == false || filepath.Clean(e.SrcDirectoryName+"/"+e.SrcFileName) == eventRelFileName {
+		if found == false {
+			if filepath.Join(e.SrcDirectoryName, e.SrcFileName) == filepath.FromSlash(eventRelFileName) {
+				found = true
+				_filtered = append(_filtered, e)
+			}
+		}
+		if e.Draft == false {
 			_filtered = append(_filtered, e)
 		}
 	}
+	if found == false {
+		return pankat.Articles{}, fmt.Errorf("File %s not found in targets", eventRelFileName)
+	}
+
 	sort.Sort(_filtered)
-	return _filtered
+	return _filtered, nil
 }
 
 func fsNotifyWatchDocumentsDirectory(directory string) {
@@ -42,9 +53,13 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 						}
 						if event.Op == watcher.Write || event.Op == watcher.Create {
 							fmt.Println("File write|create detected in ", eventRelFileName)
-							articles := getArticlesFilteredByDraftsExceptOne(eventRelFileName)
+							articles, err := getArticlesFilteredByDraftsExceptOne(eventRelFileName)
+							if err != nil {
+								fmt.Println(err)
+								continue
+							}
 							for _, article := range articles {
-								if filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName) == eventRelFileName {
+								if filepath.Join(article.SrcDirectoryName, article.SrcFileName) == filepath.FromSlash(eventRelFileName) {
 									fmt.Println("pankat.RenderPost(articles, article)")
 									article.SourceReference = true
 									article.WebsocketSupport = true

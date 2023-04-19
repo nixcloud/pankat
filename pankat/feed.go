@@ -108,7 +108,7 @@ func generateFeedXML(articles Articles, fileName string) {
   <updated>` + time.Now().Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 	for _, e := range articles {
-		url := GetConfig().SiteURL + filepath.Clean("/"+e.SrcDirectoryName+"/"+e.DstFileName)
+		url := filepath.Join(GetConfig().SiteURL, e.SrcDirectoryName, e.DstFileName)
 		z += `
   <entry>
     <id>` + url + `</id>
@@ -136,7 +136,7 @@ func generateFeedXML(articles Articles, fileName string) {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
-	feedName := filepath.Clean(GetConfig().DocumentsPath + "/feed/" + fileName + ".xml")
+	feedName := filepath.Join(GetConfig().DocumentsPath, "feed", fileName+".xml")
 	err2 := os.WriteFile(feedName, []byte(z), 0644)
 	if err2 != nil {
 		fmt.Println(err2)

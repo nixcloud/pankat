@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -246,16 +247,16 @@ func RenderPost(articles Articles, article *Article) {
 	}
 	navTitleArticleHTML := GenerateNavTitleArticleSource(articles, *article, article.Render())
 	standalonePageContent := GenerateStandalonePage(articles, *article, navTitleArticleHTML)
-	outD := filepath.Clean(GetConfig().DocumentsPath + "/")
-	sendLiveUpdateViaWS(filepath.Clean(article.SrcDirectoryName+"/"+article.SrcFileName), navTitleArticleHTML)
+	sendLiveUpdateViaWS(filepath.ToSlash(path.Join(article.SrcDirectoryName, article.SrcFileName)), navTitleArticleHTML)
 
+	outD := GetConfig().DocumentsPath
 	errMkdir := os.MkdirAll(outD, 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
 	// write to disk
-	outName := filepath.Clean(outD + "/" + article.DstFileName)
+	outName := filepath.Join(outD, article.DstFileName)
 	err5 := os.WriteFile(outName, standalonePageContent, 0644)
 	if err5 != nil {
 		fmt.Println(err5)
@@ -296,7 +297,7 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		NavTitleArticleSource: navTitleArticleSource,
 		SrcDirectoryName:      article.SrcDirectoryName,
 		ArticleSourceCodeFS:   article.SrcFileName,
-		ArticleSourceCodeURL:  filepath.ToSlash(filepath.Clean(article.SrcDirectoryName + "/" + article.SrcFileName)),
+		ArticleSourceCodeURL:  filepath.ToSlash(filepath.Join(article.SrcDirectoryName, article.SrcFileName)),
 		SourceReference:       article.SourceReference,
 		WebsocketSupport:      article.WebsocketSupport,
 		SpecialPage:           article.SpecialPage,
@@ -370,7 +371,7 @@ func Init() {
 	i1, err := filepath.Abs(input)
 	documentsPath := i1
 
-	myMd5HashMapJson_ := filepath.Clean(documentsPath + "/.ArticlesCache.json")
+	myMd5HashMapJson_ := filepath.Join(documentsPath, ".ArticlesCache.json")
 
 	if err != nil {
 		fmt.Println(err)
@@ -396,7 +397,7 @@ func Init() {
 func SetMostRecentArticle(articlesPosts Articles) {
 	mostRecentArticle := ""
 	if len(articlesPosts) > 0 {
-		mostRecentArticle = filepath.Clean(articlesPosts[0].DstFileName)
+		mostRecentArticle = filepath.ToSlash(articlesPosts[0].DstFileName)
 	} else {
 		mostRecentArticle = "timeline.html"
 	}
@@ -406,7 +407,7 @@ func SetMostRecentArticle(articlesPosts Articles) {
 <meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
 </html>
 `
-	outIndexName := filepath.Clean(GetConfig().DocumentsPath + "/" + "index.html")
+	outIndexName := filepath.Join(GetConfig().DocumentsPath, "index.html")
 	errn := os.WriteFile(outIndexName, []byte(indexContent), 0644)
 	if errn != nil {
 		panic(errn)

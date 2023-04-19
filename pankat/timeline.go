@@ -101,7 +101,7 @@ func RenderTimeline(articles Articles) {
           <dt class="timeline-event posting_` + strconv.Itoa(articleCount) + `">` + article.Title + `</dt>
           <dd class="timeline-event-content posting_` + strconv.Itoa(articleCount) + `">
             <div class="postingsEntry">
-              <p class="summary">` + article.Summary + ` <a href="` + filepath.Clean(article.DstFileName) + `">open complete article</a></p>
+              <p class="summary">` + article.Summary + ` <a href="` + filepath.ToSlash(article.DstFileName) + `">open complete article</a></p>
               <p class="tag">` + tagToLinkList(&v) + seriesToLinkList(&v) + `</p>
             </div>
             <br class="clear">
