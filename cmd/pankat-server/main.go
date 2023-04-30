@@ -32,12 +32,12 @@ func main() {
 
 	onArticleChangeFunction := onArticleChange(registry)
 	pankat.OnArticleChange(onArticleChangeFunction)
-	go fsNotifyWatchDocumentsDirectory(pankat.GetConfig().DocumentsPath)
+	go fsNotifyWatchDocumentsDirectory(pankat.Config().DocumentsPath)
 
 	router := web.New(Context{})
 	router.Middleware(web.LoggerMiddleware)
 	router.Middleware(web.ShowErrorsMiddleware)
-	router.Middleware(web.StaticMiddleware(pankat.GetConfig().DocumentsPath))
+	router.Middleware(web.StaticMiddleware(pankat.Config().DocumentsPath))
 	router.Get("/websocket", func(rw web.ResponseWriter, req *web.Request) {
 		websocket.Handler(server.OnConnected).ServeHTTP(rw, req.Request)
 	})
@@ -79,7 +79,7 @@ func main() {
 		}
 	})
 	router.Get("/", redirectTo("/index.html"))
-	http.ListenAndServe(pankat.GetConfig().ListenAndServe, router) // wait until ctrl+c
+	http.ListenAndServe(pankat.Config().ListenAndServe, router) // wait until ctrl+c
 }
 
 func redirectTo(to string) func(web.ResponseWriter, *web.Request) {

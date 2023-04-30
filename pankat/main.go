@@ -131,7 +131,7 @@ func ProcessPlugins(_article []byte, article *Article) []byte {
 		_articlePostprocessed = append(_articlePostprocessed, t...)
 		prevPos = n[1]
 	}
-	if GetConfig().Verbose > 1 {
+	if Config().Verbose > 1 {
 		fmt.Println(article.DstFileName, color.GreenString("plugins:"), foundPlugins)
 	}
 	return _articlePostprocessed
@@ -242,14 +242,14 @@ func RenderPosts(articlesAll Articles) {
 }
 
 func RenderPost(articles Articles, article *Article) {
-	if GetConfig().Verbose > 0 {
+	if Config().Verbose > 0 {
 		fmt.Println("Rendering article '" + article.Title + "'")
 	}
 	navTitleArticleHTML := GenerateNavTitleArticleSource(articles, *article, article.Render())
 	standalonePageContent := GenerateStandalonePage(articles, *article, navTitleArticleHTML)
 	sendLiveUpdateViaWS(filepath.ToSlash(path.Join(article.SrcDirectoryName, article.SrcFileName)), navTitleArticleHTML)
 
-	outD := GetConfig().DocumentsPath
+	outD := Config().DocumentsPath
 	errMkdir := os.MkdirAll(outD, 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
@@ -289,8 +289,8 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		SpecialPage           bool
 	}{
 		Title:                 article.Title,
-		SiteURL:               GetConfig().SiteURL,
-		SiteBrandTitle:        GetConfig().SiteTitle,
+		SiteURL:               Config().SiteURL,
+		SiteBrandTitle:        Config().SiteTitle,
 		Anchorjs:              article.Anchorjs,
 		Tocify:                article.Tocify,
 		Timeline:              article.Timeline, // FIXME maybe we can get rid of this attribute
@@ -384,14 +384,14 @@ func Init() {
 		os.Exit(1)
 	}
 
-	GetConfig().SiteURL = siteURL_
-	GetConfig().DocumentsPath = documentsPath
-	GetConfig().SiteURL = siteURL_
-	GetConfig().SiteTitle = siteTitle_
-	GetConfig().MyMd5HashMapJson = myMd5HashMapJson_
-	GetConfig().Verbose = viper.GetInt("verbose")
-	GetConfig().Force = viper.GetInt("force")
-	GetConfig().ListenAndServe = viper.GetString("ListenAndServe")
+	Config().SiteURL = siteURL_
+	Config().DocumentsPath = documentsPath
+	Config().SiteURL = siteURL_
+	Config().SiteTitle = siteTitle_
+	Config().MyMd5HashMapJson = myMd5HashMapJson_
+	Config().Verbose = viper.GetInt("verbose")
+	Config().Force = viper.GetInt("force")
+	Config().ListenAndServe = viper.GetString("ListenAndServe")
 }
 
 func SetMostRecentArticle(articlesPosts Articles) {
@@ -407,7 +407,7 @@ func SetMostRecentArticle(articlesPosts Articles) {
 <meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
 </html>
 `
-	outIndexName := filepath.Join(GetConfig().DocumentsPath, "index.html")
+	outIndexName := filepath.Join(Config().DocumentsPath, "index.html")
 	errn := os.WriteFile(outIndexName, []byte(indexContent), 0644)
 	if errn != nil {
 		panic(errn)
@@ -425,7 +425,7 @@ func GetArticles() Articles {
 func UpdateBlog() {
 	defer timeElapsed("UpdateBlog")()
 	fmt.Println(color.GreenString("pankat-static"), "starting!")
-	fmt.Println(color.YellowString("Documents path: "), GetConfig().DocumentsPath)
+	fmt.Println(color.YellowString("Documents path: "), Config().DocumentsPath)
 	articles := GetArticles()
 	RenderPosts(articles)
 

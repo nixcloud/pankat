@@ -42,7 +42,7 @@ func RenderTimeline(articles Articles) {
 
 	// sort the tags
 	tagsSlice := rankByWordCount(tagsMap)
-	if GetConfig().Verbose > 0 {
+	if Config().Verbose > 0 {
 		fmt.Println(color.GreenString("tagsSlice"), tagsSlice)
 	}
 
@@ -53,7 +53,7 @@ func RenderTimeline(articles Articles) {
 	pageContent += `</p>`
 
 	seriesSlice := rankByWordCount(seriesMap)
-	if GetConfig().Verbose > 0 {
+	if Config().Verbose > 0 {
 		fmt.Println(color.GreenString("seriesSlice"), seriesSlice)
 	}
 
@@ -135,7 +135,7 @@ func RenderTimeline(articles Articles) {
 	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, pageContent)
 	standalonePageContent := GenerateStandalonePage(articles, article, navTitleArticleSource)
 
-	outD := GetConfig().DocumentsPath + "/"
+	outD := Config().DocumentsPath + "/"
 	err = os.MkdirAll(outD, 0755)
 	if err != nil {
 		panic(err)

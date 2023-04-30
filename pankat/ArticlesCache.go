@@ -31,10 +31,10 @@ func (s ArticlesCache) computeHash(a Article) md5hash {
 // load hashes and articles via json from disk
 func (s ArticlesCache) load() {
 	var v = []ArticlesCacheList{}
-	if GetConfig().Force == 1 {
+	if Config().Force == 1 {
 		fmt.Println(color.MagentaString("Forcing reevaluation, ignoring ArticlesCache"))
 	} else {
-		b, errReadFile := os.ReadFile(GetConfig().MyMd5HashMapJson)
+		b, errReadFile := os.ReadFile(Config().MyMd5HashMapJson)
 		if errReadFile != nil {
 			fmt.Println(errReadFile)
 		} else {
@@ -68,7 +68,7 @@ func (s ArticlesCache) save() {
 		fmt.Println(errEnc)
 	}
 	//fmt.Println(string(jsonBuff.Bytes()))
-	errn := os.WriteFile(GetConfig().MyMd5HashMapJson, jsonBuff.Bytes(), 0644)
+	errn := os.WriteFile(Config().MyMd5HashMapJson, jsonBuff.Bytes(), 0644)
 	if errn != nil {
 		panic(errn)
 	}

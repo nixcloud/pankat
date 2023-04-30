@@ -82,7 +82,7 @@ func RenderFeed(articles Articles) {
 	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, history)
 	standalonePageContent := GenerateStandalonePage(articles, article, navTitleArticleSource)
 
-	outD := GetConfig().DocumentsPath + "/"
+	outD := Config().DocumentsPath + "/"
 	err := os.MkdirAll(outD, 0755)
 	if err != nil {
 		panic(err)
@@ -95,20 +95,20 @@ func RenderFeed(articles Articles) {
 }
 
 func generateFeedXML(articles Articles, fileName string) {
-	if GetConfig().Verbose > 0 {
+	if Config().Verbose > 0 {
 		fmt.Println("Generating feed: " + fileName)
 	}
-	feedUrl := GetConfig().SiteURL + "/feed/" + "feed.xml"
+	feedUrl := Config().SiteURL + "/feed/" + "feed.xml"
 	z := `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
-  <id>` + GetConfig().SiteURL + "/" + "index.html" + `</id>
+  <id>` + Config().SiteURL + "/" + "index.html" + `</id>
   <link type="text/html" rel="alternate" href="` + feedUrl + `"/>
   <link type="application/atom+xml" rel="self" href="` + feedUrl + `"/>
-  <title>` + GetConfig().SiteTitle + `</title>
+  <title>` + Config().SiteTitle + `</title>
   <updated>` + time.Now().Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 	for _, e := range articles {
-		url := filepath.Join(GetConfig().SiteURL, e.SrcDirectoryName, e.DstFileName)
+		url := filepath.Join(Config().SiteURL, e.SrcDirectoryName, e.DstFileName)
 		z += `
   <entry>
     <id>` + url + `</id>
@@ -119,7 +119,7 @@ func generateFeedXML(articles Articles, fileName string) {
     <updated>` + e.ModificationDate.Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 		for _, t := range e.Tags {
-			z += `<category scheme="` + GetConfig().SiteURL + `" term="` + t + `"/>`
+			z += `<category scheme="` + Config().SiteURL + `" term="` + t + `"/>`
 		}
 		//BUG: feed needs ./posts/media/ URLs instead of ./media/ URLs
 		z += `<author>
@@ -131,12 +131,12 @@ func generateFeedXML(articles Articles, fileName string) {
 	}
 
 	z += `</feed>`
-	errMkdir := os.MkdirAll(GetConfig().DocumentsPath+"/feed", 0755)
+	errMkdir := os.MkdirAll(Config().DocumentsPath+"/feed", 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
-	feedName := filepath.Join(GetConfig().DocumentsPath, "feed", fileName+".xml")
+	feedName := filepath.Join(Config().DocumentsPath, "feed", fileName+".xml")
 	err2 := os.WriteFile(feedName, []byte(z), 0644)
 	if err2 != nil {
 		fmt.Println(err2)

@@ -1,12 +1,8 @@
 package pankat
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/fatih/color"
-	"io"
-	"os"
-	"os/exec"
 	"strconv"
 	"time"
 )
@@ -32,39 +28,6 @@ type Article struct {
 	WebsocketSupport  bool // live update support via WS on/off
 }
 
-func PandocMarkdown2HTML(articleMarkdown []byte) (string, error) {
-	pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
-	stdin, err := pandocProcess.StdinPipe()
-	if err != nil {
-		fmt.Println("An error occurred: ", err)
-		return "", err
-	}
-	buff := bytes.NewBufferString("")
-	pandocProcess.Stdout = buff
-	pandocProcess.Stderr = os.Stderr
-	err1 := pandocProcess.Start()
-	if err1 != nil {
-		fmt.Println("An error occurred: ", err1)
-		return "", err1
-	}
-	_, err2 := io.WriteString(stdin, string(articleMarkdown))
-	if err2 != nil {
-		fmt.Println("An error occurred: ", err2)
-		return "", err2
-	}
-	err3 := stdin.Close()
-	if err3 != nil {
-		fmt.Println("An error occurred: ", err3)
-		return "", err3
-	}
-	err4 := pandocProcess.Wait()
-	if err4 != nil {
-		fmt.Println("An error occurred during pandocProess wait: ", err4)
-		fmt.Println("An error occurred: ", err4)
-	}
-	return string(buff.Bytes()), nil
-}
-
 func (a Article) Render() string {
 	// FIXME i would love to get rid of this initialization here and implement this 'constructor' like instead
 	if articlesCache.Store == nil {
@@ -73,7 +36,7 @@ func (a Article) Render() string {
 		articlesCache.load()
 	}
 	if articlesCache.Get(a) == "" {
-		if GetConfig().Verbose > 1 {
+		if Config().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
 		text, err := PandocMarkdown2HTML(a.ArticleMDWNSource)

@@ -12,6 +12,6 @@ type config struct {
 
 var instance config
 
-func GetConfig() *config {
+func Config() *config {
 	return &instance
 }
