@@ -20,8 +20,6 @@ func RenderTimeline(articles Articles) {
 	article.Title = "all posts timeline"
 	article.Timeline = true
 
-	article.SrcDirectoryName = ""
-
 	t, err := json.Marshal(articles.CreateJSMetadata())
 	if err != nil {
 		fmt.Println("json.Marshal error:", err)
@@ -95,7 +93,6 @@ func RenderTimeline(articles Articles) {
 			// hack to make tagToLinkList(...) work with relative directory ./ vs. ../
 			var v Article
 			v = *article
-			v.SrcDirectoryName = ""
 
 			ret += `
           <dt class="timeline-event posting_` + strconv.Itoa(articleCount) + `">` + article.Title + `</dt>

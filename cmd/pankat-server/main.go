@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"pankat"
 	"pankat-server/ws"
-	"path"
 	"path/filepath"
 )
 
@@ -16,7 +15,7 @@ type Context struct{}
 
 func onArticleChange(registry *ws.Registry) func(string, string) {
 	return func(srcFileName string, RenderedArticle string) {
-		fmt.Println(srcFileName)
+		fmt.Println("onArticleChange: ", srcFileName)
 		registry.OnArticleChange(srcFileName, RenderedArticle)
 	}
 }
@@ -55,8 +54,7 @@ func main() {
 			draftList += "<ul>"
 			for _, article := range articles {
 				if article.Draft == true {
-					filePath := path.Join(article.SrcDirectoryName, article.SrcFileName)
-					draftList += "<li><a href=\"/draft?article=" + filePath + "\">" + filePath + "</a></li>"
+					draftList += "<li><a href=\"/draft?article=" + article.SrcFileName + "\">" + article.SrcFileName + "</a></li>"
 				}
 			}
 			draftList += "</ul>"
@@ -68,7 +66,7 @@ func main() {
 			rw.Write([]byte(standalonePageContent))
 		} else {
 			for _, article := range articles {
-				if filepath.Join(article.SrcDirectoryName, article.SrcFileName) == filepath.FromSlash(articleQueryName) {
+				if article.SrcFileName == filepath.FromSlash(articleQueryName) {
 					article.WebsocketSupport = true
 					article.SourceReference = true
 					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, *article, article.Render())

@@ -18,8 +18,6 @@ func RenderFeed(articles Articles) {
 
 	article.Title = "feed"
 
-	article.SrcDirectoryName = ""
-
 	tagsMap := make(map[string]int)
 	seriesMap := make(map[string]int)
 
@@ -108,7 +106,7 @@ func generateFeedXML(articles Articles, fileName string) {
   <updated>` + time.Now().Format("2006-01-02T15:04:05-07:00") + `</updated>`
 
 	for _, e := range articles {
-		url := filepath.Join(Config().SiteURL, e.SrcDirectoryName, e.DstFileName)
+		url := filepath.Join(Config().SiteURL, filepath.ToSlash(filepath.Dir(e.SrcFileName)), e.DstFileName)
 		z += `
   <entry>
     <id>` + url + `</id>

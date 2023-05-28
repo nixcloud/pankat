@@ -16,8 +16,7 @@ type Article struct {
 	Summary           string
 	Tags              []string
 	Series            string
-	SrcFileName       string // foo.mdwn
-	SrcDirectoryName  string // /home/user/documents (lacks foo.mdwn)
+	SrcFileName       string // /home/user/documents/foo.mdwn
 	DstFileName       string // /home/user/documents/foo.html
 	SpecialPage       bool   // used for timeline.html, about.html (not added to timeline if true, not added in list of articles)
 	Draft             bool

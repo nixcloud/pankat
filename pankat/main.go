@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/viper"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -64,7 +63,7 @@ func getTargets_(path string) Articles {
 	var articles Articles
 	entries, _ := os.ReadDir(path)
 	for _, entry := range entries {
-		buf := path + "/" + entry.Name()
+		buf := filepath.Join(path, entry.Name())
 		//     fmt.Println("reading buf: ", buf)
 		if entry.IsDir() {
 			if entry.Name() == ".git" {
@@ -76,12 +75,11 @@ func getTargets_(path string) Articles {
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
 				var a Article
-				a.SrcFileName = entry.Name()
 				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
 				a.Title = strings.Replace(v, "_", " ", -1)     // add whitespaces
 				a.DstFileName = v + ".html"
-				a.SrcDirectoryName = path
-				fh, errOpen := os.Open(path + "/" + entry.Name())
+				a.SrcFileName = filepath.Join(path, entry.Name())
+				fh, errOpen := os.Open(a.SrcFileName)
 				if errOpen != nil {
 					fmt.Println(errOpen)
 					continue
@@ -247,7 +245,7 @@ func RenderPost(articles Articles, article *Article) {
 	}
 	navTitleArticleHTML := GenerateNavTitleArticleSource(articles, *article, article.Render())
 	standalonePageContent := GenerateStandalonePage(articles, *article, navTitleArticleHTML)
-	sendLiveUpdateViaWS(filepath.ToSlash(path.Join(article.SrcDirectoryName, article.SrcFileName)), navTitleArticleHTML)
+	sendLiveUpdateViaWS(filepath.ToSlash(article.SrcFileName), navTitleArticleHTML)
 
 	outD := Config().DocumentsPath
 	errMkdir := os.MkdirAll(outD, 0755)
@@ -281,7 +279,6 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		Tocify                bool
 		Timeline              bool
 		NavTitleArticleSource string
-		SrcDirectoryName      string
 		ArticleSourceCodeURL  string
 		ArticleSourceCodeFS   string
 		SourceReference       bool
@@ -293,11 +290,10 @@ func GenerateStandalonePage(articles Articles, article Article, navTitleArticleS
 		SiteBrandTitle:        Config().SiteTitle,
 		Anchorjs:              article.Anchorjs,
 		Tocify:                article.Tocify,
-		Timeline:              article.Timeline, // FIXME maybe we can get rid of this attribute
+		Timeline:              article.Timeline,
 		NavTitleArticleSource: navTitleArticleSource,
-		SrcDirectoryName:      article.SrcDirectoryName,
 		ArticleSourceCodeFS:   article.SrcFileName,
-		ArticleSourceCodeURL:  filepath.ToSlash(filepath.Join(article.SrcDirectoryName, article.SrcFileName)),
+		ArticleSourceCodeURL:  filepath.ToSlash(article.SrcFileName),
 		SourceReference:       article.SourceReference,
 		WebsocketSupport:      article.WebsocketSupport,
 		SpecialPage:           article.SpecialPage,
@@ -354,7 +350,7 @@ func GenerateNavTitleArticleSource(articles Articles, article Article, body stri
 }
 
 func Init() {
-	pflag.String("documents", "myblog/", "input directory ('documents'') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
+	pflag.String("documents", "myblog/", "input directory ('documents') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
 	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Int("verbose", 0, "verbosity level")
@@ -392,6 +388,7 @@ func Init() {
 	Config().Verbose = viper.GetInt("verbose")
 	Config().Force = viper.GetInt("force")
 	Config().ListenAndServe = viper.GetString("ListenAndServe")
+
 }
 
 func SetMostRecentArticle(articlesPosts Articles) {
@@ -404,6 +401,9 @@ func SetMostRecentArticle(articlesPosts Articles) {
 	indexContent :=
 		`
 <html>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <meta http-equiv="refresh" content="0; url=` + mostRecentArticle + `" />
 </html>
 `

@@ -17,7 +17,7 @@ func getArticlesFilteredByDraftsExceptOne(eventRelFileName string) (pankat.Artic
 	var found bool = false
 	for _, e := range pankat.GetTargets(".") {
 		if found == false {
-			if filepath.Join(e.SrcDirectoryName, e.SrcFileName) == filepath.FromSlash(eventRelFileName) {
+			if e.SrcFileName == filepath.FromSlash(eventRelFileName) {
 				found = true
 				_filtered = append(_filtered, e)
 			}
@@ -52,18 +52,19 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 							fmt.Println("file removed:", event.Name())
 						}
 						if event.Op == watcher.Write || event.Op == watcher.Create {
-							fmt.Println("File write|create detected in ", eventRelFileName)
+							fmt.Println("File write|create detected in: ", eventRelFileName)
 							articles, err := getArticlesFilteredByDraftsExceptOne(eventRelFileName)
 							if err != nil {
 								fmt.Println(err)
 								continue
 							}
 							for _, article := range articles {
-								if filepath.Join(article.SrcDirectoryName, article.SrcFileName) == filepath.FromSlash(eventRelFileName) {
-									fmt.Println("pankat.RenderPost(articles, article)")
+								if article.SrcFileName == eventRelFileName {
+									fmt.Println("pankat.RenderPost(articles, article): ", article.SrcFileName)
 									article.SourceReference = true
 									article.WebsocketSupport = true
 									pankat.RenderPost(articles, article)
+									break
 								}
 							}
 						}
