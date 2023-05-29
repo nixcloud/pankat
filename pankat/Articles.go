@@ -3,32 +3,11 @@ package pankat
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"strconv"
-	"time"
 )
 
 var articlesCache ArticlesCache
 
-type Article struct {
-	Title             string
-	ArticleMDWNSource []byte
-	ModificationDate  time.Time
-	Summary           string
-	Tags              []string
-	Series            string
-	SrcFileName       string // /home/user/documents/foo.mdwn
-	DstFileName       string // /home/user/documents/foo.html
-	SpecialPage       bool   // used for timeline.html, about.html (not added to timeline if true, not added in list of articles)
-	Draft             bool
-	Anchorjs          bool
-	Tocify            bool
-	Timeline          bool // generating timeline.html uses this flag in RenderTimeline(..)
-	SourceReference   bool // switch for showing the document source mdwn at bottom
-	WebsocketSupport  bool // live update support via WS on/off
-}
-
 func (a Article) Render() string {
-	// FIXME i would love to get rid of this initialization here and implement this 'constructor' like instead
 	if articlesCache.Store == nil {
 		//fmt.Println("Initializing hash map")
 		articlesCache.Store = make(map[md5hash]string)
@@ -180,6 +159,7 @@ func (s Articles) GetSeriesNAV(article *Article) string {
 	return seriesNAV
 }
 
+// FIXME refactor this Targets(), this should be done during Add(article)
 func (s Articles) Targets() Articles {
 	var _filtered Articles
 	for _, e := range s {
@@ -235,45 +215,4 @@ func (s Articles) FilterOutSpecialPages() Articles {
 		}
 	}
 	return _filtered
-}
-
-type MetaData struct {
-	ArticleCount int
-	Tags         map[string][]int
-	Series       map[string][]int
-	Years        map[int][]int
-}
-
-func (s Articles) CreateJSMetadata() MetaData {
-	tagsMap := make(map[string][]int)
-	seriesMap := make(map[string][]int)
-	yearsMap := make(map[int][]int)
-	for i, e := range s {
-		m := e.ModificationDate
-		year, err := strconv.Atoi(m.Format("2006"))
-		if err == nil {
-			if yearsMap[year] == nil {
-				yearsMap[year] = []int{i}
-			} else {
-				yearsMap[year] = append(yearsMap[year], i)
-			}
-		}
-
-		for _, t := range e.Tags {
-			if tagsMap[t] == nil {
-				tagsMap[t] = []int{i}
-			} else {
-				tagsMap[t] = append(tagsMap[t], i)
-			}
-		}
-		z := s[i].Series
-		if z != "" {
-			if seriesMap[z] == nil {
-				seriesMap[z] = []int{i}
-			} else {
-				seriesMap[z] = append(seriesMap[z], i)
-			}
-		}
-	}
-	return MetaData{len(s), tagsMap, seriesMap, yearsMap}
 }

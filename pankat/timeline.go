@@ -10,6 +10,47 @@ import (
 	"strconv"
 )
 
+type MetaData struct {
+	ArticleCount int
+	Tags         map[string][]int
+	Series       map[string][]int
+	Years        map[int][]int
+}
+
+func (s Articles) CreateJSMetadata() MetaData {
+	tagsMap := make(map[string][]int)
+	seriesMap := make(map[string][]int)
+	yearsMap := make(map[int][]int)
+	for i, e := range s {
+		m := e.ModificationDate
+		year, err := strconv.Atoi(m.Format("2006"))
+		if err == nil {
+			if yearsMap[year] == nil {
+				yearsMap[year] = []int{i}
+			} else {
+				yearsMap[year] = append(yearsMap[year], i)
+			}
+		}
+
+		for _, t := range e.Tags {
+			if tagsMap[t] == nil {
+				tagsMap[t] = []int{i}
+			} else {
+				tagsMap[t] = append(tagsMap[t], i)
+			}
+		}
+		z := s[i].Series
+		if z != "" {
+			if seriesMap[z] == nil {
+				seriesMap[z] = []int{i}
+			} else {
+				seriesMap[z] = append(seriesMap[z], i)
+			}
+		}
+	}
+	return MetaData{len(s), tagsMap, seriesMap, yearsMap}
+}
+
 func RenderTimeline(articles Articles) {
 	defer timeElapsed("RenderTimeline")()
 	fmt.Println(color.YellowString("Rendering timeline into timeline.html"))
