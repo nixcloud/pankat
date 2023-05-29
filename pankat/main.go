@@ -324,8 +324,8 @@ func UpdateBlog() {
 
 	RenderPosts(articles)
 
-	articles = articles.FilterOutSpecialPages().Targets()
-	RenderTimeline(articles)
-	RenderFeed(articles)
-	SetMostRecentArticle(articles)
+	filteredArticles := articles.FilterOutSpecialPages().Targets()
+	RenderTimeline(filteredArticles)
+	RenderFeed(filteredArticles)
+	SetMostRecentArticle(filteredArticles)
 }
