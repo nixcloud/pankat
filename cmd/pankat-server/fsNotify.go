@@ -15,7 +15,7 @@ import (
 func getArticlesFilteredByDraftsExceptOne(eventRelFileName string) (pankat.Articles, error) {
 	var _filtered pankat.Articles
 	var found bool = false
-	for _, e := range pankat.GetTargets(".") {
+	for _, e := range pankat.GetArticles(".") {
 		if found == false {
 			if e.SrcFileName == filepath.FromSlash(eventRelFileName) {
 				found = true

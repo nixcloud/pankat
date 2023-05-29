@@ -46,11 +46,10 @@ func seriesToLinkList(a *Article) string {
 	return output
 }
 
-func GetTargets(path string) Articles {
-	defer timeElapsed("GetTargets")()
-	fmt.Println(color.YellowString("GetTargets: searching and parsing articles with *.mdwn"))
-	targets := findArticlesOnDisk(path)
-	return targets
+func GetArticles(path string) Articles {
+	defer timeElapsed("GetArticles")()
+	fmt.Println(color.YellowString("GetArticles: searching and parsing articles with *.mdwn"))
+	return findArticlesOnDisk(path)
 }
 
 // scan the directory for .mdwn files recursively
@@ -234,8 +233,8 @@ func GenerateNavTitleArticleSource(articles Articles, article Article, body stri
 		SpecialPage bool
 	}{
 		Title:       article.Title,
-		TitleNAV:    articles.GetTitleNAV(&article),
-		SeriesNAV:   articles.GetSeriesNAV(&article),
+		TitleNAV:    articles.GenerateArticleNavigation(&article),
+		SeriesNAV:   articles.GenerateArticleSeriesNavigation(&article),
 		Meta:        meta,
 		Body:        body,
 		SpecialPage: article.SpecialPage,
@@ -319,8 +318,8 @@ func UpdateBlog() {
 	fmt.Println(color.GreenString("pankat-static"), "starting!")
 	fmt.Println(color.YellowString("Documents path: "), Config().DocumentsPath)
 
-	articles := GetTargets(".").FilterOutDrafts()
-	fmt.Println(color.YellowString("GetTargets: found"), articles.Targets().Len(), color.YellowString("articles"))
+	articles := GetArticles(".").FilterOutDrafts()
+	fmt.Println(color.YellowString("GetArticles: found"), articles.Targets().Len(), color.YellowString("articles"))
 
 	RenderPosts(articles)
 

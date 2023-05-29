@@ -46,7 +46,7 @@ func main() {
 		rw.WriteHeader(http.StatusOK)
 	})
 	router.Get("/draft", func(rw web.ResponseWriter, req *web.Request) {
-		articles := pankat.GetTargets(".")
+		articles := pankat.GetArticles(".")
 		articleQueryName := req.URL.Query().Get("article")
 		if articleQueryName == "" {
 			var draftList string

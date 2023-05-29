@@ -58,7 +58,7 @@ func RenderTimeline(articles Articles) {
 	var pageContent string
 	var article Article
 
-	article.Title = "all posts timeline"
+	article.Title = "timeline"
 	article.Timeline = true
 
 	t, err := json.Marshal(articles.CreateJSMetadata())
@@ -84,6 +84,8 @@ func RenderTimeline(articles Articles) {
 	if Config().Verbose > 0 {
 		fmt.Println(color.GreenString("tagsSlice"), tagsSlice)
 	}
+
+	pageContent += `timeline is a list of all posts, sorted by date, with the most recent posts at the top.`
 
 	pageContent += `<p id="tagCloud">`
 	for _, e := range tagsSlice {

@@ -1,34 +1,6 @@
 package pankat
 
-import (
-	"fmt"
-	"github.com/fatih/color"
-)
-
 var articlesCache ArticlesCache
-
-func (a Article) Render() string {
-	if articlesCache.Store == nil {
-		//fmt.Println("Initializing hash map")
-		articlesCache.Store = make(map[md5hash]string)
-		articlesCache.load()
-	}
-	if articlesCache.Get(a) == "" {
-		if Config().Verbose > 1 {
-			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
-		}
-		text, err := PandocMarkdown2HTML(a.ArticleMDWNSource)
-		if err != nil {
-			fmt.Println("An error occurred during pandoc pipeline run: ", err)
-			panic(err)
-		}
-		articlesCache.Set(a, text)
-		return text
-	} else {
-		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
-		return articlesCache.Get(a)
-	}
-}
 
 func contains(slice []string, item string) bool {
 	set := make(map[string]struct{}, len(slice))
@@ -54,7 +26,7 @@ func (s Articles) Less(i, j int) bool {
 
 func (s Articles) NextArticle(a *Article) *Article {
 	for i, elem := range s {
-		if elem.Title == a.Title { // HACK
+		if elem.SrcFileName == a.SrcFileName {
 			if i-1 >= 0 {
 				return s[i-1]
 			}
@@ -65,7 +37,7 @@ func (s Articles) NextArticle(a *Article) *Article {
 
 func (s Articles) PrevArticle(a *Article) *Article {
 	for i, elem := range s {
-		if elem.Title == a.Title { // HACK
+		if elem.SrcFileName == a.SrcFileName {
 			if i+1 < len(s) {
 				return s[i+1]
 			}
@@ -75,7 +47,7 @@ func (s Articles) PrevArticle(a *Article) *Article {
 }
 
 func (s Articles) PrevArticleInSeries(a *Article) *Article {
-	q := s.FilterBySeries(a.Series)
+	q := s.FindArticleWithSeries(a.Series)
 	if len(q) == 0 {
 		return nil
 	}
@@ -84,7 +56,7 @@ func (s Articles) PrevArticleInSeries(a *Article) *Article {
 }
 
 func (s Articles) NextArticleInSeries(a *Article) *Article {
-	q := s.FilterBySeries(a.Series)
+	q := s.FindArticleWithSeries(a.Series)
 	if len(q) == 0 {
 		return nil
 	}
@@ -92,7 +64,7 @@ func (s Articles) NextArticleInSeries(a *Article) *Article {
 	return z
 }
 
-func (s Articles) GetTitleNAV(article *Article) string {
+func (s Articles) GenerateArticleNavigation(article *Article) string {
 	articles := s
 	//   fmt.Println("---------------")
 	titleNAV := ""
@@ -117,7 +89,7 @@ func (s Articles) GetTitleNAV(article *Article) string {
 	return titleNAV
 }
 
-func (s Articles) GetSeriesNAV(article *Article) string {
+func (s Articles) GenerateArticleSeriesNavigation(article *Article) string {
 	articles := s
 	seriesNAV := ""
 	var sPrev string
@@ -177,7 +149,7 @@ func (s Articles) Targets() Articles {
 	return _filtered
 }
 
-func (s Articles) FilterBySeries(t string) Articles {
+func (s Articles) FindArticleWithSeries(t string) Articles {
 	var _filtered Articles
 	for _, e := range s {
 		if e.Series == t {
@@ -187,7 +159,7 @@ func (s Articles) FilterBySeries(t string) Articles {
 	return _filtered
 }
 
-func (s Articles) FilterByTag(t string) Articles {
+func (s Articles) FindArticlesWithTag(t string) Articles {
 	var _filtered Articles
 	for _, e := range s {
 		if contains(e.Tags, t) {

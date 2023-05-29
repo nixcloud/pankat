@@ -37,11 +37,11 @@ func RenderFeed(articles Articles) {
     </p>
     `
 	for k := range tagsMap {
-		generateFeedXML(articles.FilterByTag(k), "tag_"+k)
+		generateFeedXML(articles.FindArticlesWithTag(k), "tag_"+k)
 	}
 
 	for k := range seriesMap {
-		generateFeedXML(articles.FilterBySeries(k), "series_"+k)
+		generateFeedXML(articles.FindArticleWithSeries(k), "series_"+k)
 	}
 
 	generateFeedXML(articles, "feed")
