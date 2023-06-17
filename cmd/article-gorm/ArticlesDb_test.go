@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -229,6 +230,19 @@ func (a *ArticlesDb) SpecialPages() ([]Article, error) {
 	return articles, nil
 }
 
+func compareTagNames(a []Tag, b []Tag) error {
+	if len(a) != len(b) {
+		return errors.New("length of tags is not equal")
+	}
+	for i, v := range a {
+		if v.Name != b[i].Name {
+			s := fmt.Sprintf("tag names are not equal: %s != %s", v.Name, b[i].Name)
+			return errors.New(s)
+		}
+	}
+	return nil
+}
+
 func TestArticlesDatabase(t *testing.T) {
 	articlesDb := NewArticlesDb()
 
@@ -300,8 +314,8 @@ func TestArticlesDatabase(t *testing.T) {
 	queryBySrcFileName, err := articlesDb.QueryRawBySrcFileName("/home/user/documents/bar.mdwn")
 	assert.True(t, err == nil)
 	assert.Equal(t, queryBySrcFileName.Title, "bar")
-	assert.Equal(t, queryBySrcFileName.Tags[0].Name, "SteamDeck")
-	assert.Equal(t, queryBySrcFileName.Tags[1].Name, "Gorilla")
+	err = compareTagNames(queryBySrcFileName.Tags, []Tag{{Name: "SteamDeck"}, {Name: "Gorilla"}})
+	assert.NoError(t, err)
 
 	mostRecentArticle, err := articlesDb.MostRecentArticle()
 	assert.True(t, err == nil)
@@ -322,7 +336,9 @@ func TestArticlesDatabase(t *testing.T) {
 	taggedArticles, err := articlesDb.ArticlesByTag(tagName)
 	assert.Nil(t, err)
 	assert.Equal(t, len(taggedArticles), 1)
-	assert.Equal(t, taggedArticles[0].Tags[0].Name, "SteamDeck")
+	assert.Equal(t, len(taggedArticles[0].Tags), 2)
+	err = compareTagNames(taggedArticles[0].Tags, []Tag{{Name: "SteamDeck"}, {Name: "Gorilla"}})
+	assert.NoError(t, err)
 
 	tagName = "UniqueTag"
 	taggedArticles, err = articlesDb.ArticlesByTag(tagName)
