@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"os"
+	"pankat/db"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -17,11 +18,33 @@ type MetaData struct {
 	Years        map[int][]int
 }
 
-func (s Articles) CreateJSMetadata() MetaData {
+func seriesToLinkList(series string) string {
+	var output string
+	output += `<a class="seriesbtn btn btn-primary" onClick="setFilter('series::` + series + `', 1)">` + series + `</a>`
+	return output
+}
+
+func tagToLinkListInTimeline(a *db.Article) string {
+	var output string
+	for _, e := range a.Tags {
+		output += `<a href="timeline.html?filter=tag::` + e.Name + `" class="tagbtn btn btn-primary">` + e.Name + `</a>`
+	}
+	return output
+}
+
+func tagToLinkList(a *db.Article) string {
+	var output string
+	for _, e := range a.Tags {
+		output += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e.Name + `', 1)">` + e.Name + `</a>`
+	}
+	return output
+}
+
+func CreateJSMetadata(articles []db.Article) MetaData {
 	tagsMap := make(map[string][]int)
 	seriesMap := make(map[string][]int)
 	yearsMap := make(map[int][]int)
-	for i, e := range s {
+	for i, e := range articles {
 		m := e.ModificationDate
 		year, err := strconv.Atoi(m.Format("2006"))
 		if err == nil {
@@ -32,14 +55,15 @@ func (s Articles) CreateJSMetadata() MetaData {
 			}
 		}
 
-		for _, t := range e.Tags {
+		for _, q := range e.Tags {
+			t := q.Name
 			if tagsMap[t] == nil {
 				tagsMap[t] = []int{i}
 			} else {
 				tagsMap[t] = append(tagsMap[t], i)
 			}
 		}
-		z := s[i].Series
+		z := articles[i].Series
 		if z != "" {
 			if seriesMap[z] == nil {
 				seriesMap[z] = []int{i}
@@ -48,20 +72,23 @@ func (s Articles) CreateJSMetadata() MetaData {
 			}
 		}
 	}
-	return MetaData{len(s), tagsMap, seriesMap, yearsMap}
+	return MetaData{len(articles), tagsMap, seriesMap, yearsMap}
 }
 
-func RenderTimeline(articles Articles) {
+func RenderTimeline() {
 	defer timeElapsed("RenderTimeline")()
 	fmt.Println(color.YellowString("Rendering timeline into timeline.html"))
 
+	articles, _ := db.Instance().Articles()
+
 	var pageContent string
-	var article Article
+	var article db.Article
 
 	article.Title = "timeline"
 	article.Timeline = true
+	article.SpecialPage = true
 
-	t, err := json.Marshal(articles.CreateJSMetadata())
+	t, err := json.Marshal(CreateJSMetadata(articles))
 	if err != nil {
 		fmt.Println("json.Marshal error:", err)
 	}
@@ -74,7 +101,8 @@ func RenderTimeline(articles Articles) {
 		if article.Series != "" {
 			seriesMap[article.Series]++
 		}
-		for _, t := range article.Tags {
+		for _, q := range article.Tags {
+			t := q.Name
 			tagsMap[t]++
 		}
 	}
@@ -115,7 +143,7 @@ func RenderTimeline(articles Articles) {
 `
 
 	// create a map of years
-	yearsMap := make(map[int]Articles)
+	yearsMap := make(map[int][]db.Article)
 	for _, article := range articles {
 		yearsMap[article.ModificationDate.Year()] = append(yearsMap[article.ModificationDate.Year()], article)
 	}
@@ -129,20 +157,18 @@ func RenderTimeline(articles Articles) {
 	})
 	var articleCount int
 
-	genTimelineseries := func(articles Articles) string {
+	genTimelineseries := func(articles []db.Article) string {
 		var ret string
-
 		for _, article := range articles {
 			// hack to make tagToLinkList(...) work with relative directory ./ vs. ../
-			var v Article
-			v = *article
+			var v db.Article = article
 
 			ret += `
           <dt class="timeline-event posting_` + strconv.Itoa(articleCount) + `">` + article.Title + `</dt>
           <dd class="timeline-event-content posting_` + strconv.Itoa(articleCount) + `">
             <div class="postingsEntry">
               <p class="summary">` + article.Summary + ` <a href="` + filepath.ToSlash(article.DstFileName) + `">open complete article</a></p>
-              <p class="tag">` + tagToLinkList(&v) + seriesToLinkList(&v) + `</p>
+              <p class="tag">` + tagToLinkList(&v) + seriesToLinkList(v.Series) + `</p>
             </div>
             <br class="clear">
           </dd><!-- /.timeline-event-content -->`
@@ -151,7 +177,7 @@ func RenderTimeline(articles Articles) {
 		return ret
 	}
 
-	genYear := func(year int, articles Articles) string {
+	genYear := func(year int, articles []db.Article) string {
 		var ret string
 		ret += `<div class="timeline-wrapper pankat_year pankat_year_` + strconv.Itoa(year+1) + `">
 		<dl class="timeline-series">
@@ -166,14 +192,14 @@ func RenderTimeline(articles Articles) {
 	for _, year := range keys {
 		pageContent += genYear(year, yearsMap[year])
 		if _, ok := yearsMap[year-1]; !ok {
-			pageContent += genYear(year-1, Articles{})
+			pageContent += genYear(year-1, []db.Article{})
 		}
 	}
 
 	pageContent += `</div><!-- /.timeline-container -->`
 
-	navTitleArticleSource := GenerateNavTitleArticleSource(articles, article, pageContent)
-	standalonePageContent := GenerateStandalonePage(articles, article, navTitleArticleSource)
+	navTitleArticleSource := GenerateNavTitleArticleSource(article, pageContent)
+	standalonePageContent := GenerateStandalonePage(article, navTitleArticleSource)
 
 	outD := Config().DocumentsPath + "/"
 	err = os.MkdirAll(outD, 0755)

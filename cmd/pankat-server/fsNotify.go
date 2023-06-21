@@ -6,33 +6,11 @@ import (
 	"log"
 	"os"
 	"pankat"
+	"pankat/db"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 )
-
-func getArticlesFilteredByDraftsExceptOne(eventRelFileName string) (pankat.Articles, error) {
-	var _filtered pankat.Articles
-	var found bool = false
-	for _, e := range pankat.GetArticles(".") {
-		if found == false {
-			if e.SrcFileName == filepath.FromSlash(eventRelFileName) {
-				found = true
-				_filtered = append(_filtered, e)
-			}
-		}
-		if e.Draft == false {
-			_filtered = append(_filtered, e)
-		}
-	}
-	if found == false {
-		return pankat.Articles{}, fmt.Errorf("File %s not found in targets", eventRelFileName)
-	}
-
-	sort.Sort(_filtered)
-	return _filtered, nil
-}
 
 func fsNotifyWatchDocumentsDirectory(directory string) {
 	w := watcher.New()
@@ -53,17 +31,15 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 						}
 						if event.Op == watcher.Write || event.Op == watcher.Create {
 							fmt.Println("File write|create detected in: ", eventRelFileName)
-							articles, err := getArticlesFilteredByDraftsExceptOne(eventRelFileName)
-							if err != nil {
-								fmt.Println(err)
-								continue
-							}
+							articles, _ := db.Instance().QueryAll()
 							for _, article := range articles {
 								if article.SrcFileName == eventRelFileName {
 									fmt.Println("pankat.RenderPost(articles, article): ", article.SrcFileName)
-									article.SourceReference = true
-									article.WebsocketSupport = true
-									pankat.RenderPost(articles, article)
+									article.ShowSourceLink = true
+									article.LiveUpdates = true
+									pankat.ReadRAWMDWNAndProcessPlugins(&article)
+									db.Instance().Add(&article)
+									pankat.RenderPost(&article)
 									break
 								}
 							}

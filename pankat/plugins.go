@@ -3,12 +3,13 @@ package pankat
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"pankat/db"
 	"regexp"
 	"strings"
 	"time"
 )
 
-func ProcessPlugins(_article []byte, article *Article) []byte {
+func ProcessPlugins(_article []byte, article *db.Article) []byte {
 	var _articlePostprocessed []byte
 
 	re := regexp.MustCompile("\\[\\[!(.*?)\\]\\]")
@@ -40,7 +41,7 @@ func ProcessPlugins(_article []byte, article *Article) []byte {
 	return _articlePostprocessed
 }
 
-func callPlugin(in []byte, article *Article) ([]byte, string) {
+func callPlugin(in []byte, article *db.Article) ([]byte, string) {
 	a := len(in) - 2
 	p := string(in[3:a])
 	//   fmt.Println(p)
@@ -84,7 +85,12 @@ func callPlugin(in []byte, article *Article) ([]byte, string) {
 		}
 	case "tag":
 		if len(f) > 1 {
-			article.Tags = f[1:]
+			//FIXME might be incorrect
+			for _, e := range f[1:] {
+				article.Tags = append(article.Tags, db.Tag{Name: e})
+			}
+			//f[1:]
+			//article.AllTagsInDB = []db.Tag{}
 		}
 	case "img":
 		b := strings.Join(f[1:], " ")

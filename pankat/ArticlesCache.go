@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"os"
+	"pankat/db"
 )
+
+var articlesCache ArticlesCache
 
 type md5hash [md5.Size]byte
 
@@ -20,7 +23,7 @@ type ArticlesCache struct {
 	Store map[md5hash]string
 }
 
-func (s ArticlesCache) computeHash(a Article) md5hash {
+func (s ArticlesCache) computeHash(a db.Article) md5hash {
 	bytes, err := json.Marshal(a)
 	if err != nil {
 		fmt.Println(err)
@@ -75,15 +78,14 @@ func (s ArticlesCache) save() {
 }
 
 // query the local cache for the article
-func (s ArticlesCache) Get(a Article) string {
+func (s ArticlesCache) Get(a db.Article) string {
 	// FIXME add error handling!
 	hash := s.computeHash(a)
 	return s.Store[hash]
 }
 
 // update the local cache for a given article
-func (s ArticlesCache) Set(a Article, text string) {
-
+func (s ArticlesCache) Set(a db.Article, text string) {
 	hash := s.computeHash(a)
 	s.Store[hash] = text
 	s.save()

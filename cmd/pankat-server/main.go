@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"pankat"
 	"pankat-server/ws"
+	"pankat/db"
 	"path/filepath"
 )
 
@@ -46,7 +47,7 @@ func main() {
 		rw.WriteHeader(http.StatusOK)
 	})
 	router.Get("/draft", func(rw web.ResponseWriter, req *web.Request) {
-		articles := pankat.GetArticles(".")
+		articles, _ := db.Instance().Drafts()
 		articleQueryName := req.URL.Query().Get("article")
 		if articleQueryName == "" {
 			var draftList string
@@ -58,19 +59,20 @@ func main() {
 				}
 			}
 			draftList += "</ul>"
-			var article pankat.Article
+			var article db.Article
 			article.Title = "drafts"
 			article.SpecialPage = true
-			navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, article, draftList)
-			standalonePageContent := pankat.GenerateStandalonePage(articles, article, navTitleArticleHTML)
+			navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(article, draftList)
+			standalonePageContent := pankat.GenerateStandalonePage(article, navTitleArticleHTML)
 			rw.Write([]byte(standalonePageContent))
 		} else {
 			for _, article := range articles {
 				if article.SrcFileName == filepath.FromSlash(articleQueryName) {
-					article.WebsocketSupport = true
-					article.SourceReference = true
-					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(articles, *article, article.Render())
-					standalonePageContent := pankat.GenerateStandalonePage(articles, *article, navTitleArticleHTML)
+					article.LiveUpdates = true
+					article.ShowSourceLink = true
+					body := pankat.Render(article)
+					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(article, body)
+					standalonePageContent := pankat.GenerateStandalonePage(article, navTitleArticleHTML)
 					rw.Write([]byte(standalonePageContent))
 				}
 			}
