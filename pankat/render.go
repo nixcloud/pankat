@@ -23,9 +23,12 @@ func RenderPost(article *db.Article) {
 	if Config().Verbose > 0 {
 		fmt.Println("Rendering article '" + article.Title + "'")
 	}
+	//s := string((*article).ArticleMDWNSource)
+	//fmt.Println("s: " + s)
 	body := Render(*article)
 	navTitleArticleHTML := GenerateNavTitleArticleSource(*article, body)
 	standalonePageContent := GenerateStandalonePage(*article, navTitleArticleHTML)
+
 	sendLiveUpdateViaWS(filepath.ToSlash(article.SrcFileName), navTitleArticleHTML)
 
 	outD := Config().DocumentsPath
@@ -136,7 +139,8 @@ func Render(a db.Article) string {
 		articlesCache.Store = make(map[md5hash]string)
 		articlesCache.load()
 	}
-	if articlesCache.Get(a) == "" {
+	ac := articlesCache.Get(a)
+	if ac == "" {
 		if Config().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
@@ -149,7 +153,7 @@ func Render(a db.Article) string {
 		return text
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
-		return articlesCache.Get(a)
+		return ac
 	}
 }
 
@@ -182,7 +186,7 @@ func GenerateArticleSeriesNavigation(article *db.Article) string {
 	var sPrev string
 	var sNext string
 
-	if article.Series != "" {
+	if article.Series != "" && article.SpecialPage == false {
 		seriesNAV =
 			`
       <div id="seriesContainer">
@@ -191,7 +195,7 @@ func GenerateArticleSeriesNavigation(article *db.Article) string {
         <header class="seriesHeader">
           <div id="seriesLeft">`
 		sp, sperr := db.Instance().PrevArticleInSeries(*article)
-		if article.SpecialPage == false && sperr == nil {
+		if sperr == nil {
 			sPrev = sp.DstFileName
 			seriesNAV += `<a href="` + sPrev + `">` +
 				`<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
@@ -200,7 +204,7 @@ func GenerateArticleSeriesNavigation(article *db.Article) string {
 		seriesNAV += `  </div>
           <div id="seriesRight">`
 		sn, snerr := db.Instance().NextArticleInSeries(*article)
-		if article.SpecialPage == false && snerr == nil {
+		if snerr == nil {
 			sNext = sn.DstFileName
 			seriesNAV += `   <a href="` + sNext + `">
               <span class="glyphiconLinkSeries glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article in series"></span>

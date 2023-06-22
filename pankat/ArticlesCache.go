@@ -24,11 +24,15 @@ type ArticlesCache struct {
 }
 
 func (s ArticlesCache) computeHash(a db.Article) md5hash {
-	bytes, err := json.Marshal(a)
+	bytes, err := a.MarshalJSON()
 	if err != nil {
 		fmt.Println(err)
 	}
-	return md5.Sum(bytes)
+	concatenated := append(bytes, a.ArticleMDWNSource...)
+	//fmt.Println(len(bytes))
+	//fmt.Println(len(a.ArticleMDWNSource))
+	//fmt.Println(len(concatenated))
+	return md5.Sum(concatenated)
 }
 
 // load hashes and articles via json from disk
@@ -79,14 +83,13 @@ func (s ArticlesCache) save() {
 
 // query the local cache for the article
 func (s ArticlesCache) Get(a db.Article) string {
-	// FIXME add error handling!
 	hash := s.computeHash(a)
 	return s.Store[hash]
 }
 
 // update the local cache for a given article
-func (s ArticlesCache) Set(a db.Article, text string) {
+func (s ArticlesCache) Set(a db.Article, renderedArticle string) {
 	hash := s.computeHash(a)
-	s.Store[hash] = text
+	s.Store[hash] = renderedArticle
 	s.save()
 }

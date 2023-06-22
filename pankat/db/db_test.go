@@ -21,8 +21,21 @@ func compareTagNames(a []Tag, b []Tag) error {
 	return nil
 }
 
+func TestArticleMarshalling(t *testing.T) {
+	const longForm = "2006-01-02 15:04"
+	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
+	article := Article{Title: "foo", ModificationDate: time1, Summary: "foo summary", Tags: []Tag{{Name: "Linux"}, {Name: "Go"}},
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+	articleJson, err := article.MarshalJSON()
+	assert.NoError(t, err)
+	article2 := Article{}
+	err = article2.UnmarshalJSON(articleJson)
+	assert.NoError(t, err)
+	assert.Equal(t, article, article2)
+}
+
 func TestArticlesDatabase(t *testing.T) {
-	articlesDb := NewArticlesDb()
+	articlesDb := Instance()
 
 	const longForm = "2006-01-02 15:04"
 	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
@@ -129,7 +142,7 @@ func TestArticlesDatabase(t *testing.T) {
 	assert.Equal(t, len(taggedArticles), 2)
 
 	// Query all tags ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	tags, err := articlesDb.Tags()
+	tags, err := articlesDb.AllTagsInDB()
 	assert.Nil(t, err)
 	assert.Equal(t, len(tags), 5)
 	assert.Equal(t, tags, []string{"Linux", "Go", "SteamDeck", "Gorilla", "UniqueTag"})
@@ -160,7 +173,7 @@ func TestArticlesDatabase(t *testing.T) {
 	assert.Error(t, err, "no prev article in series found")
 
 	// Query all series /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	series, err := articlesDb.Series()
+	series, err := articlesDb.AllSeriesInDB()
 	assert.Nil(t, err)
 	assert.Equal(t, len(series), 1)
 	assert.Equal(t, series, []string{"Linuxseries"})

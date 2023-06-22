@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"gorm.io/driver/sqlite"
@@ -35,6 +36,130 @@ type Tag struct {
 	Name  string
 }
 
+func toTags(tags []string) []Tag {
+	var t []Tag
+	for _, tag := range tags {
+		t = append(t, Tag{Name: tag})
+	}
+	return t
+}
+
+func fromTags(tags []Tag) []string {
+	var t []string
+	for _, tag := range tags {
+		t = append(t, tag.Name)
+	}
+	return t
+}
+
+func (a Article) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		SrcFileName       string
+		DstFileName       string
+		ArticleMDWNSource []byte
+		Title             string
+		Summary           string
+		Tags              []string
+		Series            string
+		SpecialPage       bool
+		Draft             bool
+		Anchorjs          bool
+		Tocify            bool
+		Timeline          bool
+		ShowSourceLink    bool
+		LiveUpdates       bool
+		Evaluated         bool
+		ModificationDate  string
+	}{
+		SrcFileName:       a.SrcFileName,
+		DstFileName:       a.DstFileName,
+		ArticleMDWNSource: a.ArticleMDWNSource,
+		Title:             a.Title,
+		Summary:           a.Summary,
+		Tags:              fromTags(a.Tags),
+		Series:            a.Series,
+		SpecialPage:       a.SpecialPage,
+		Draft:             a.Draft,
+		Anchorjs:          a.Anchorjs,
+		Tocify:            a.Tocify,
+		Timeline:          a.Timeline,
+		ShowSourceLink:    a.ShowSourceLink,
+		LiveUpdates:       a.LiveUpdates,
+		Evaluated:         a.Evaluated,
+		ModificationDate:  a.ModificationDate.Format(time.RFC3339),
+	})
+}
+
+func (a *Article) UnmarshalJSON(data []byte) error {
+	aux := &struct {
+		SrcFileName       string
+		DstFileName       string
+		ArticleMDWNSource []byte
+		Title             string
+		Summary           string
+		Tags              []string
+		Series            string
+		SpecialPage       bool
+		Draft             bool
+		Anchorjs          bool
+		Tocify            bool
+		Timeline          bool
+		ShowSourceLink    bool
+		LiveUpdates       bool
+		Evaluated         bool
+		ModificationDate  string
+	}{
+		SrcFileName:       a.SrcFileName,
+		DstFileName:       a.DstFileName,
+		ArticleMDWNSource: a.ArticleMDWNSource,
+		Title:             a.Title,
+		Summary:           a.Summary,
+		Tags:              fromTags(a.Tags),
+		Series:            a.Series,
+		SpecialPage:       a.SpecialPage,
+		Draft:             a.Draft,
+		Anchorjs:          a.Anchorjs,
+		Tocify:            a.Tocify,
+		Timeline:          a.Timeline,
+		ShowSourceLink:    a.ShowSourceLink,
+		LiveUpdates:       a.LiveUpdates,
+		Evaluated:         a.Evaluated,
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	var err error
+	a.ModificationDate, err = time.Parse(time.RFC3339, aux.ModificationDate)
+	return err
+}
+
+//func (a Article) MarshalJSON() ([]byte, error) {
+//	type Alias Article
+//	return json.Marshal(&struct {
+//		Alias
+//		ModificationDate string
+//	}{
+//		Alias:            (Alias)(a),
+//		ModificationDate: a.ModificationDate.Format(time.RFC3339),
+//	})
+//}
+//
+//func (a *Article) UnmarshalJSON(data []byte) error {
+//	type Alias Article
+//	aux := &struct {
+//		*Alias
+//		ModificationDate string
+//	}{
+//		Alias: (*Alias)(a),
+//	}
+//	if err := json.Unmarshal(data, &aux); err != nil {
+//		return err
+//	}
+//	var err error
+//	a.ModificationDate, err = time.Parse(time.RFC3339, aux.ModificationDate)
+//	return err
+//}
+
 var lock = &sync.Mutex{}
 
 type ArticlesDb struct {
@@ -66,11 +191,42 @@ func Instance() *ArticlesDb {
 	return dbInstance
 }
 
+//func (a *ArticlesDb) Add(article *Article) error {
+//	result := a.db.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).FirstOrCreate(&article)
+//	if result.Error != nil {
+//		return result.Error
+//	}
+//	if result.RowsAffected == 0 {
+//		// return no error
+//		fmt.Println("article was not updated")
+//	}
+//
+//	return nil
+//}
+
 func (a *ArticlesDb) Add(article *Article) error {
-	result := a.db.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).FirstOrCreate(&article)
+	var existingArticle Article
+	result := a.db.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&existingArticle)
+
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return result.Error
+	}
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		result = a.db.Create(article)
+	} else {
+		a.Del(article.SrcFileName)
+		result = a.db.Save(&existingArticle)
+	}
+
 	if result.Error != nil {
 		return result.Error
 	}
+
+	if result.RowsAffected == 0 {
+		fmt.Println("article was not updated")
+	}
+
 	return nil
 }
 

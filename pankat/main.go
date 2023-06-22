@@ -2,6 +2,7 @@ package pankat
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/pflag"
@@ -41,24 +42,26 @@ func findArticlesOnDisk(path string) {
 	}
 }
 
-func ReadRAWMDWNAndProcessPlugins(article *db.Article) []byte {
+func ReadRAWMDWNAndProcessPlugins(article *db.Article) error {
 	fh, errOpen := os.Open(article.SrcFileName)
 	if errOpen != nil {
 		fmt.Println(errOpen)
-		return []byte{}
+		return errors.New("ReadRAWMDWNAndProcessPlugins: " + errOpen.Error())
 	}
 	f := bufio.NewReader(fh)
 	rawMDWNSourceArticle, errRead := io.ReadAll(f)
 	if errRead != nil {
 		fmt.Println(errRead)
-		return []byte{}
+		return errors.New("ReadRAWMDWNAndProcessPlugins: " + errRead.Error())
 	}
 	errClose := fh.Close()
 	if errClose != nil {
 		fmt.Println(errClose)
-		return []byte{}
+		return errors.New("ReadRAWMDWNAndProcessPlugins: " + errClose.Error())
 	}
-	return ProcessPlugins(rawMDWNSourceArticle, article)
+	article.ArticleMDWNSource = ProcessPlugins(rawMDWNSourceArticle, article)
+	//fmt.Println(len(article.ArticleMDWNSource))
+	return nil
 }
 
 func rankByWordCount(wordFrequencies map[string]int) TagsSlice {
