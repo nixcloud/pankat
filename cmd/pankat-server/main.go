@@ -68,14 +68,15 @@ func main() {
 		} else {
 			for _, article := range articles {
 				if article.SrcFileName == filepath.FromSlash(articleQueryName) {
-					article.LiveUpdates = true
-					article.ShowSourceLink = true
-					body := pankat.Render(article)
-					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(article, body)
-					standalonePageContent := pankat.GenerateStandalonePage(article, navTitleArticleHTML)
+					newArticle, _ := pankat.ReadRAWMDWNAndProcessPlugins(article.SrcFileName, article.DstFileName)
+					db.Instance().Add(newArticle)
+					body := pankat.Render(*newArticle)
+					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(*newArticle, body)
+					standalonePageContent := pankat.GenerateStandalonePage(*newArticle, navTitleArticleHTML)
 					rw.Write([]byte(standalonePageContent))
 				}
 			}
+			http.Redirect(rw, req.Request, "/draft", http.StatusFound)
 		}
 	})
 	router.Get("/", redirectTo("/index.html"))

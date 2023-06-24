@@ -133,33 +133,6 @@ func (a *Article) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-//func (a Article) MarshalJSON() ([]byte, error) {
-//	type Alias Article
-//	return json.Marshal(&struct {
-//		Alias
-//		ModificationDate string
-//	}{
-//		Alias:            (Alias)(a),
-//		ModificationDate: a.ModificationDate.Format(time.RFC3339),
-//	})
-//}
-//
-//func (a *Article) UnmarshalJSON(data []byte) error {
-//	type Alias Article
-//	aux := &struct {
-//		*Alias
-//		ModificationDate string
-//	}{
-//		Alias: (*Alias)(a),
-//	}
-//	if err := json.Unmarshal(data, &aux); err != nil {
-//		return err
-//	}
-//	var err error
-//	a.ModificationDate, err = time.Parse(time.RFC3339, aux.ModificationDate)
-//	return err
-//}
-
 var lock = &sync.Mutex{}
 
 type ArticlesDb struct {
@@ -191,47 +164,48 @@ func Instance() *ArticlesDb {
 	return dbInstance
 }
 
-//func (a *ArticlesDb) Add(article *Article) error {
-//	result := a.db.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).FirstOrCreate(&article)
-//	if result.Error != nil {
-//		return result.Error
-//	}
-//	if result.RowsAffected == 0 {
-//		// return no error
-//		fmt.Println("article was not updated")
-//	}
-//
-//	return nil
-//}
-
 func (a *ArticlesDb) Add(article *Article) error {
-	var existingArticle Article
-	result := a.db.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&existingArticle)
+	// a hack to update properties, since won't work with article
+	update := make(map[string]interface{})
+	update["src_file_name"] = article.SrcFileName
+	update["dst_file_name"] = article.DstFileName
+	update["article_mdwn_source"] = article.ArticleMDWNSource
+	update["modification_date"] = article.ModificationDate
+	update["summary"] = article.Summary
+	update["series"] = article.Series
+	update["special_page"] = article.SpecialPage
+	update["draft"] = article.Draft
+	update["anchorjs"] = article.Anchorjs
+	update["tocify"] = article.Tocify
+	update["timeline"] = article.Timeline
+	update["show_source_link"] = article.ShowSourceLink
+	update["live_updates"] = article.LiveUpdates
+	update["evaluated"] = article.Evaluated
 
-	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return result.Error
-	}
-
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		result = a.db.Create(article)
-	} else {
-		a.Del(article.SrcFileName)
-		result = a.db.Save(&existingArticle)
-	}
-
+	result := a.db.Preload("Tags").Session(&gorm.Session{FullSaveAssociations: true}).Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Updates(update)
 	if result.Error != nil {
+		//fmt.Println("Article update error: ", result.Error)
 		return result.Error
 	}
-
-	if result.RowsAffected == 0 {
-		fmt.Println("article was not updated")
+	if result.RowsAffected == 1 {
+		// FIXME update relations
+		//ff := []Tag{{Name: "test"}}
+		//a.db.Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Association("Tags").Clear()
+		//a.db.Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Association("Tags").Replace(ff)
+		//fmt.Println("Article got updated!")
+		//fmt.Println("Article draft: ", article.Draft)
+		return nil
 	}
-
+	if result.RowsAffected == 0 {
+		a.db.Create(article)
+	}
 	return nil
 }
 
 func (a *ArticlesDb) Del(SrcFileName string) error {
-	result := a.db.Where("src_file_name = ?", SrcFileName).Delete(&Article{})
+	result := a.db.Preload("Tags").Where("src_file_name = ?", SrcFileName).Unscoped().Delete(&Article{})
+	//DB.Model(&Article{}).Association("Tags").Clear()
+	// FIXME ensure deletion of relations
 	if result.Error != nil {
 		return result.Error
 	}
@@ -312,7 +286,7 @@ func (a *ArticlesDb) AllTagsInDB() ([]string, error) {
 	var tags []string
 	result := a.db.Model(&Article{}).Where("draft = ? AND special_page = ?", false, false).Joins("INNER JOIN tags a ON a.tag_id = articles.id").Pluck("DISTINCT a.name", &tags)
 	if result.Error != nil {
-		panic(result.Error)
+		return nil, result.Error
 	}
 	return tags, nil
 }
@@ -331,7 +305,7 @@ func (a *ArticlesDb) AllSeriesInDB() ([]string, error) {
 	var seriesList []string
 	result := a.db.Model(&Article{}).Where("draft = ? AND special_page = ? AND series IS NOT NULL AND series != ''", false, false).Pluck("DISTINCT series", &seriesList)
 	if result.Error != nil {
-		panic(result.Error)
+		return nil, result.Error
 	}
 	return seriesList, nil
 }
@@ -382,7 +356,7 @@ func (a *ArticlesDb) Drafts() ([]Article, error) {
 	var articles []Article
 	result := a.db.Preload("Tags").Order("modification_date DESC").Where("draft = ?", true).Find(&articles)
 	if result.Error != nil {
-		panic(result.Error)
+		return nil, result.Error
 	}
 	return articles, nil
 }
@@ -391,7 +365,7 @@ func (a *ArticlesDb) SpecialPages() ([]Article, error) {
 	var articles []Article
 	result := a.db.Preload("Tags").Order("modification_date DESC").Where("special_page = ?", true).Find(&articles)
 	if result.Error != nil {
-		panic(result.Error)
+		return nil, result.Error
 	}
 	return articles, nil
 }

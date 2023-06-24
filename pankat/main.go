@@ -29,39 +29,47 @@ func findArticlesOnDisk(path string) {
 			findArticlesOnDisk(newDir)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
-				var article db.Article
-				v := strings.TrimSuffix(entry.Name(), ".mdwn")   // remove .mdwn
-				article.Title = strings.Replace(v, "_", " ", -1) // add whitespaces
-				article.DstFileName = v + ".html"
+				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
+				DstFileName := v + ".html"
 				p, _ := filepath.Rel(Config().DocumentsPath, filepath.Join(path, entry.Name()))
-				article.SrcFileName = p
-				ReadRAWMDWNAndProcessPlugins(&article)
-				db.Instance().Add(&article)
+				SrcFileName := p
+				newArticle, _ := ReadRAWMDWNAndProcessPlugins(SrcFileName, DstFileName)
+				db.Instance().Add(newArticle)
 			}
 		}
 	}
 }
 
-func ReadRAWMDWNAndProcessPlugins(article *db.Article) error {
-	fh, errOpen := os.Open(article.SrcFileName)
+func ReadRAWMDWNAndProcessPlugins(SrcFileName string, DstFileName string) (*db.Article, error) {
+	fh, errOpen := os.Open(SrcFileName)
 	if errOpen != nil {
 		fmt.Println(errOpen)
-		return errors.New("ReadRAWMDWNAndProcessPlugins: " + errOpen.Error())
+		return nil, errors.New("ReadRAWMDWNAndProcessPlugins: " + errOpen.Error())
 	}
 	f := bufio.NewReader(fh)
 	rawMDWNSourceArticle, errRead := io.ReadAll(f)
 	if errRead != nil {
 		fmt.Println(errRead)
-		return errors.New("ReadRAWMDWNAndProcessPlugins: " + errRead.Error())
+		return nil, errors.New("ReadRAWMDWNAndProcessPlugins: " + errRead.Error())
 	}
 	errClose := fh.Close()
 	if errClose != nil {
 		fmt.Println(errClose)
-		return errors.New("ReadRAWMDWNAndProcessPlugins: " + errClose.Error())
+		return nil, errors.New("ReadRAWMDWNAndProcessPlugins: " + errClose.Error())
 	}
-	article.ArticleMDWNSource = ProcessPlugins(rawMDWNSourceArticle, article)
-	//fmt.Println(len(article.ArticleMDWNSource))
-	return nil
+	var newArticle db.Article
+	newArticle.SrcFileName = SrcFileName
+	newArticle.DstFileName = DstFileName
+	filename := filepath.Base(SrcFileName)
+	v := strings.TrimSuffix(filename, ".mdwn")          // remove .mdwn
+	newArticle.Title = strings.Replace(v, "_", " ", -1) // add whitespaces
+	newArticle.ArticleMDWNSource = ProcessPlugins(rawMDWNSourceArticle, &newArticle)
+	newArticle.LiveUpdates = true
+	newArticle.ShowSourceLink = true
+	//fmt.Println("Article after ProcessPlugins. article.LiveUpdates:", newArticle.LiveUpdates)
+	//fmt.Println("Article after ProcessPlugins. article.Draft:", newArticle.Draft)
+	//fmt.Println("Article after ProcessPlugins. article.SpecialPage:", newArticle.SpecialPage)
+	return &newArticle, nil
 }
 
 func rankByWordCount(wordFrequencies map[string]int) TagsSlice {
@@ -98,7 +106,6 @@ func OnArticleChange(f func(string, string)) {
 
 func Init() {
 	pflag.String("documents", "myblog/", "input directory ('documents') in this directory it is expected to find about.mdwn and posts/ among other top level *.mdwn files")
-	pflag.String("siteURL", "https://lastlog.de/blog", "The URL of the blog, for example: 'https://example.com/blog'")
 	pflag.String("siteTitle", "lastlog.de/blog", "Title which is inserted top left, for example: 'lastlog.de/blog'")
 	pflag.Int("verbose", 0, "verbosity level")
 	pflag.Int("force", 0, "forced complete rebuild, not using cache")
@@ -108,7 +115,6 @@ func Init() {
 	_ = viper.BindPFlags(pflag.CommandLine)
 
 	input := viper.GetString("documents")
-	siteURL_ := viper.GetString("siteURL")
 	siteTitle_ := viper.GetString("siteTitle")
 
 	i1, err := filepath.Abs(input)
@@ -128,7 +134,6 @@ func Init() {
 	}
 
 	Config().DocumentsPath = documentsPath
-	Config().SiteURL = siteURL_
 	Config().SiteTitle = siteTitle_
 	Config().MyMd5HashMapJson = myMd5HashMapJson_
 	Config().Verbose = viper.GetInt("verbose")

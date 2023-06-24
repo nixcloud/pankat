@@ -4,3 +4,4 @@ documents/blog.lastlog.de/.ArticlesCache.json*
 documents/blog.lastlog.de/feed
 src/github.com/nixcloud/pankat/pankat*
 **.html
+**.pankat-sqlite3.db

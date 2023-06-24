@@ -35,11 +35,9 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 							for _, article := range articles {
 								if article.SrcFileName == eventRelFileName {
 									fmt.Println("pankat.RenderPost(articles, article): ", article.SrcFileName)
-									article.ShowSourceLink = true
-									article.LiveUpdates = true
-									pankat.ReadRAWMDWNAndProcessPlugins(&article)
-									db.Instance().Add(&article)
-									pankat.RenderPost(&article)
+									newArticle, _ := pankat.ReadRAWMDWNAndProcessPlugins(article.SrcFileName, article.DstFileName)
+									db.Instance().Add(newArticle)
+									pankat.RenderPost(newArticle)
 									break
 								}
 							}

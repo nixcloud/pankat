@@ -23,14 +23,15 @@ func RenderPost(article *db.Article) {
 	if Config().Verbose > 0 {
 		fmt.Println("Rendering article '" + article.Title + "'")
 	}
-	//s := string((*article).ArticleMDWNSource)
-	//fmt.Println("s: " + s)
 	body := Render(*article)
 	navTitleArticleHTML := GenerateNavTitleArticleSource(*article, body)
 	standalonePageContent := GenerateStandalonePage(*article, navTitleArticleHTML)
 
 	sendLiveUpdateViaWS(filepath.ToSlash(article.SrcFileName), navTitleArticleHTML)
 
+	if (*article).Draft == true {
+		return
+	}
 	outD := Config().DocumentsPath
 	errMkdir := os.MkdirAll(outD, 0755)
 	if errMkdir != nil {
@@ -57,20 +58,18 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 
 	noItems := struct {
 		Title                 string
-		SiteURL               string
 		SiteBrandTitle        string
 		Anchorjs              bool
 		Tocify                bool
 		Timeline              bool
 		NavTitleArticleSource string
-		ArticleSourceCodeURL  string // URL of the mdwn source code seen from the web
-		ArticleSourceCodeFS   string // FS of the mdwn on disk (win/linux/...)
-		SourceReference       bool
+		ArticleSourceCodeURL  string // file location from the web
+		ArticleSourceCodeFS   string // file location on disk (win/linux/...) where pankat-server runs
+		ShowSourceLink        bool
 		WebsocketSupport      bool
 		SpecialPage           bool
 	}{
 		Title:                 article.Title,
-		SiteURL:               Config().SiteURL,
 		SiteBrandTitle:        Config().SiteTitle,
 		Anchorjs:              article.Anchorjs,
 		Tocify:                article.Tocify,
@@ -78,7 +77,7 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 		NavTitleArticleSource: navTitleArticleSource,
 		ArticleSourceCodeFS:   article.SrcFileName,
 		ArticleSourceCodeURL:  filepath.ToSlash(article.SrcFileName),
-		SourceReference:       article.ShowSourceLink,
+		ShowSourceLink:        article.ShowSourceLink,
 		WebsocketSupport:      article.LiveUpdates,
 		SpecialPage:           article.SpecialPage,
 	}
@@ -158,35 +157,34 @@ func Render(a db.Article) string {
 }
 
 func GenerateArticleNavigation(article *db.Article) string {
-	//   fmt.Println("---------------")
+	if article.SpecialPage == false {
+		return ""
+	}
 	titleNAV := ""
-	//   fmt.Println(article.Title)
 	p, err := db.Instance().PrevArticle(*article)
-	if article.SpecialPage == false && err == nil {
-		// link is active
+	if err == nil {
 		titleNAV +=
 			`<span id="articleNavLeft"> <a href="` + p.DstFileName + `"> 
       <span class="glyphiconLink glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article"> </span> prev. article
     </a> </span>`
 	}
 	n, err := db.Instance().NextArticle(*article)
-	if article.SpecialPage == false && err == nil {
-		// link is active
+	if err == nil {
 		titleNAV +=
 			`<span id="articleNavRight"><a href="` + n.DstFileName + `"> 
         next article <span class="glyphiconLink glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article"></span>
     </a> </span>`
 	}
-
 	return titleNAV
 }
 
 func GenerateArticleSeriesNavigation(article *db.Article) string {
+	if article.SpecialPage == false {
+		return ""
+	}
 	seriesNAV := ""
-	var sPrev string
-	var sNext string
 
-	if article.Series != "" && article.SpecialPage == false {
+	if article.Series != "" {
 		seriesNAV =
 			`
       <div id="seriesContainer">
@@ -196,8 +194,7 @@ func GenerateArticleSeriesNavigation(article *db.Article) string {
           <div id="seriesLeft">`
 		sp, sperr := db.Instance().PrevArticleInSeries(*article)
 		if sperr == nil {
-			sPrev = sp.DstFileName
-			seriesNAV += `<a href="` + sPrev + `">` +
+			seriesNAV += `<a href="` + sp.DstFileName + `">` +
 				`<span class="glyphiconLinkSeries glyphicon glyphicon-chevron-left" aria-hidden="true" title="previous article in series"></span>
             </a> `
 		}
@@ -205,8 +202,7 @@ func GenerateArticleSeriesNavigation(article *db.Article) string {
           <div id="seriesRight">`
 		sn, snerr := db.Instance().NextArticleInSeries(*article)
 		if snerr == nil {
-			sNext = sn.DstFileName
-			seriesNAV += `   <a href="` + sNext + `">
+			seriesNAV += `   <a href="` + sn.DstFileName + `">
               <span class="glyphiconLinkSeries glyphicon glyphicon-chevron-right" aria-hidden="true" title="next article in series"></span>
             </a>`
 		}

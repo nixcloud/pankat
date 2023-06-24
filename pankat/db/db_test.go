@@ -36,6 +36,11 @@ func TestArticleMarshalling(t *testing.T) {
 
 func TestArticlesDatabase(t *testing.T) {
 	articlesDb := Instance()
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{})
+	if errMigrator != nil {
+		panic(errMigrator)
+	}
 
 	const longForm = "2006-01-02 15:04"
 	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
@@ -51,7 +56,7 @@ func TestArticlesDatabase(t *testing.T) {
 	article4 := Article{Draft: true, Title: "draft", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "Go"}, {Name: "Linux"}},
 		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
 	time5, _ := time.Parse(longForm, "2024-01-01 00:00")
-	article5 := Article{SpecialPage: true, Title: "draft", ModificationDate: time5,
+	article5 := Article{SpecialPage: true, Title: "About", ModificationDate: time5,
 		SrcFileName: "/home/user/documents/about.mdwn", DstFileName: "/home/user/documents/about.html"}
 
 	// Insert the article into the database
@@ -178,6 +183,40 @@ func TestArticlesDatabase(t *testing.T) {
 	assert.Equal(t, len(series), 1)
 	assert.Equal(t, series, []string{"Linuxseries"})
 
+	// update item //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	drafts, errDrafts := articlesDb.Drafts()
+	if errDrafts != nil {
+		panic(errDrafts)
+	}
+
+	assert.Equal(t, len(drafts), 1)
+
+	article4undraft := Article{Draft: false, Title: "no more draft", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "Go"}, {Name: "Linux"}},
+		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
+	err = articlesDb.Add(&article4undraft)
+	if err != nil {
+		panic(err)
+	}
+
+	drafts, errDrafts = articlesDb.Drafts()
+	if errDrafts != nil {
+		panic(errDrafts)
+	}
+	assert.Equal(t, len(drafts), 0)
+	article4redraft := Article{Draft: true, Title: "draft again", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "draftLinux"}},
+		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
+	err = articlesDb.Add(&article4redraft)
+	if err != nil {
+		panic(err)
+	}
+
+	drafts, errDrafts = articlesDb.Drafts()
+	if errDrafts != nil {
+		panic(errDrafts)
+	}
+	assert.Equal(t, len(drafts), 1)
+	assert.Equal(t, drafts[0].Tags[0].Name, "draftLinux")
+
 	// delete item //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	err = articlesDb.Del("/home/user/documents/mydraft.mdwn")
 	if err != nil {
@@ -186,4 +225,5 @@ func TestArticlesDatabase(t *testing.T) {
 	all2, err := articlesDb.QueryAll()
 	assert.True(t, err == nil)
 	assert.Equal(t, len(all2), 4)
+
 }
