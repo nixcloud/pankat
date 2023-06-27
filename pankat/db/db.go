@@ -151,9 +151,6 @@ func Instance() *ArticlesDb {
 		if err != nil {
 			panic(err)
 		}
-		// remove old entries
-		//db.Migrator().DropTable(&Article{}, &Tag{})
-
 		// Auto-migrate the table
 		err = db.AutoMigrate(&Article{}, &Tag{})
 		if err != nil {
@@ -164,9 +161,10 @@ func Instance() *ArticlesDb {
 	return dbInstance
 }
 
-func (a *ArticlesDb) Add(article *Article) error {
+func (a *ArticlesDb) Set(article *Article) error {
 	// a hack to update properties, since won't work with article
 	update := make(map[string]interface{})
+	update["title"] = article.Title
 	update["src_file_name"] = article.SrcFileName
 	update["dst_file_name"] = article.DstFileName
 	update["article_mdwn_source"] = article.ArticleMDWNSource
@@ -182,33 +180,74 @@ func (a *ArticlesDb) Add(article *Article) error {
 	update["live_updates"] = article.LiveUpdates
 	update["evaluated"] = article.Evaluated
 
-	result := a.db.Preload("Tags").Session(&gorm.Session{FullSaveAssociations: true}).Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Updates(update)
-	if result.Error != nil {
-		//fmt.Println("Article update error: ", result.Error)
-		return result.Error
-	}
-	if result.RowsAffected == 1 {
-		// FIXME update relations
-		//ff := []Tag{{Name: "test"}}
-		//a.db.Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Association("Tags").Clear()
-		//a.db.Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Association("Tags").Replace(ff)
-		//fmt.Println("Article got updated!")
-		//fmt.Println("Article draft: ", article.Draft)
+	a.db.Transaction(func(tx *gorm.DB) error {
+		result := tx.Preload("Tags").Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Updates(update)
+		if result.Error != nil {
+			tx.Rollback()
+			return result.Error
+		}
+		if result.RowsAffected == 1 {
+			//fmt.Println("Article got updated! Now the tags will be updated.")
+			tmparticle := Article{}
+			ret := tx.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&tmparticle)
+			if ret.Error != nil {
+				tx.Rollback()
+				return ret.Error
+			}
+			if ret.RowsAffected == 0 || ret.RowsAffected > 1 {
+				tx.Rollback()
+				return errors.New("coudn't find article to delete")
+			}
+			err := tx.Model(&tmparticle).Unscoped().Association("Tags").Unscoped().Clear()
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			err = tx.Preload("Tags").Model(&tmparticle).Association("Tags").Replace(article.Tags)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			return nil
+		}
+		if result.RowsAffected == 0 {
+			ret := tx.Create(article)
+			if ret.Error != nil {
+				tx.Rollback()
+				return ret.Error
+			}
+			if ret.RowsAffected == 0 || ret.RowsAffected > 1 {
+				tx.Rollback()
+				return errors.New("couldn't create article")
+			}
+		}
 		return nil
-	}
-	if result.RowsAffected == 0 {
-		a.db.Create(article)
-	}
+	})
 	return nil
 }
 
 func (a *ArticlesDb) Del(SrcFileName string) error {
-	result := a.db.Preload("Tags").Where("src_file_name = ?", SrcFileName).Unscoped().Delete(&Article{})
-	//DB.Model(&Article{}).Association("Tags").Clear()
-	// FIXME ensure deletion of relations
-	if result.Error != nil {
-		return result.Error
+	article := Article{}
+	ret := a.db.Preload("Tags").Where("src_file_name = ?", SrcFileName).First(&article)
+	if ret.Error != nil {
+		return ret.Error
 	}
+	if ret.RowsAffected == 0 || ret.RowsAffected > 1 {
+		return errors.New("Coudn't find article to delete")
+	}
+
+	a.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&article).Unscoped().Association("Tags").Unscoped().Clear()
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		if err := tx.Unscoped().Delete(&article).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+		return nil
+	})
 	return nil
 }
 

@@ -60,29 +60,29 @@ func TestArticlesDatabase(t *testing.T) {
 		SrcFileName: "/home/user/documents/about.mdwn", DstFileName: "/home/user/documents/about.html"}
 
 	// Insert the article into the database
-	err := articlesDb.Add(&article1)
+	err := articlesDb.Set(&article1)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Add(&article2)
+	err = articlesDb.Set(&article2)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Add(&article3)
+	err = articlesDb.Set(&article3)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Add(&article4)
+	err = articlesDb.Set(&article4)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Add(&article5)
+	err = articlesDb.Set(&article5)
 	if err != nil {
 		panic(err)
 	}
 
 	// update item ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	err = articlesDb.Add(&article5)
+	err = articlesDb.Set(&article5)
 	if err != nil {
 		panic(err)
 	}
@@ -193,7 +193,7 @@ func TestArticlesDatabase(t *testing.T) {
 
 	article4undraft := Article{Draft: false, Title: "no more draft", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "Go"}, {Name: "Linux"}},
 		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
-	err = articlesDb.Add(&article4undraft)
+	err = articlesDb.Set(&article4undraft)
 	if err != nil {
 		panic(err)
 	}
@@ -205,7 +205,7 @@ func TestArticlesDatabase(t *testing.T) {
 	assert.Equal(t, len(drafts), 0)
 	article4redraft := Article{Draft: true, Title: "draft again", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "draftLinux"}},
 		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
-	err = articlesDb.Add(&article4redraft)
+	err = articlesDb.Set(&article4redraft)
 	if err != nil {
 		panic(err)
 	}
@@ -216,14 +216,114 @@ func TestArticlesDatabase(t *testing.T) {
 	}
 	assert.Equal(t, len(drafts), 1)
 	assert.Equal(t, drafts[0].Tags[0].Name, "draftLinux")
+}
 
+func TestArticleDelete(t *testing.T) {
+	articlesDb := Instance()
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{})
+	if errMigrator != nil {
+		panic(errMigrator)
+	}
+
+	const longForm = "2006-01-02 15:04"
+	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
+	article1 := Article{Title: "foo", ModificationDate: time1, Summary: "foo summary", Tags: []Tag{{Name: "Linux"}, {Name: "Go"}},
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+	time2, _ := time.Parse(longForm, "2022-01-01 00:00")
+	article2 := Article{Title: "bar", ModificationDate: time2, Series: "Linuxseries", Summary: "bar summary", Tags: []Tag{{Name: "SteamDeck"}, {Name: "Gorilla"}},
+		SrcFileName: "/home/user/documents/bar.mdwn", DstFileName: "/home/user/documents/bar.html"}
+	time3, _ := time.Parse(longForm, "2010-01-01 00:00")
+	article3 := Article{Title: "batz", ModificationDate: time3, Series: "Linuxseries", Summary: "batz summary", Tags: []Tag{{Name: "Linux"}, {Name: "Go"}, {Name: "UniqueTag"}},
+		SrcFileName: "/home/user/documents/batz.mdwn", DstFileName: "/home/user/documents/batz.html"}
+
+	// Insert the article into the database
+	err := articlesDb.Set(&article1)
+	if err != nil {
+		panic(err)
+	}
+	err = articlesDb.Set(&article2)
+	if err != nil {
+		panic(err)
+	}
+	err = articlesDb.Set(&article3)
+	if err != nil {
+		panic(err)
+	}
+	all1, err := articlesDb.QueryAll()
+	assert.True(t, err == nil)
+	assert.Equal(t, len(all1), 3)
+	var tags []Tag
+	articlesDb.db.Find(&tags)
+	assert.Equal(t, len(tags), 7)
 	// delete item //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	err = articlesDb.Del("/home/user/documents/mydraft.mdwn")
+	err = articlesDb.Del("/home/user/documents/bar.mdwn")
 	if err != nil {
 		panic(err)
 	}
 	all2, err := articlesDb.QueryAll()
 	assert.True(t, err == nil)
-	assert.Equal(t, len(all2), 4)
+	assert.Equal(t, len(all2), 2)
+	var tags2 []Tag
+	articlesDb.db.Find(&tags2)
+	assert.Equal(t, len(tags2), 5)
+}
 
+func TestArticleUpdatesWithSet(t *testing.T) {
+	articlesDb := Instance()
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{})
+	if errMigrator != nil {
+		panic(errMigrator)
+	}
+
+	const longForm = "2006-01-02 15:04"
+	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
+	article1 := Article{Title: "foo", ModificationDate: time1, Summary: "foo summary", Tags: []Tag{{Name: "Linux"}, {Name: "Go"}}, LiveUpdates: false,
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+	article1_ := Article{Title: "foo1", ModificationDate: time1, Summary: "foo summary1", Tags: []Tag{{Name: "ItWorks"}}, LiveUpdates: true,
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+
+	// Insert the article into the database
+	err := articlesDb.Set(&article1)
+	if err != nil {
+		panic(err)
+	}
+
+	var tags []Tag
+	articlesDb.db.Find(&tags)
+	assert.Equal(t, len(tags), 2)
+
+	all1, err := articlesDb.QueryAll()
+	assert.True(t, err == nil)
+	assert.Equal(t, len(all1), 1)
+
+	assert.Equal(t, all1[0].SrcFileName, "/home/user/documents/foo.mdwn")
+	assert.Equal(t, all1[0].Title, "foo")
+	assert.Equal(t, all1[0].Summary, "foo summary")
+	assert.Equal(t, all1[0].LiveUpdates, false)
+	assert.Equal(t, all1[0].Tags[0].Name, "Linux")
+
+	err = articlesDb.Set(&article1_)
+	if err != nil {
+		panic(err)
+	}
+
+	all1, err = articlesDb.QueryAll()
+	assert.True(t, err == nil)
+	assert.Equal(t, len(all1), 1)
+
+	assert.Equal(t, all1[0].SrcFileName, "/home/user/documents/foo.mdwn")
+	assert.Equal(t, all1[0].Title, "foo1")
+	assert.Equal(t, all1[0].Summary, "foo summary1")
+	assert.Equal(t, all1[0].LiveUpdates, true)
+	assert.Equal(t, all1[0].Tags[0].Name, "ItWorks")
+
+	all2, err := articlesDb.QueryAll()
+	assert.True(t, err == nil)
+	assert.Equal(t, len(all2), 1)
+
+	var tags2 []Tag
+	articlesDb.db.Find(&tags2)
+	assert.Equal(t, len(tags2), 1)
 }

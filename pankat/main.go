@@ -20,42 +20,39 @@ func findArticlesOnDisk(path string) {
 	entries, _ := os.ReadDir(path)
 	for _, entry := range entries {
 		newDir := filepath.Join(path, entry.Name())
-		//     fmt.Println("reading newDir: ", newDir)
 		if entry.IsDir() {
 			if entry.Name() == ".git" {
 				continue
 			}
-			//       fmt.Println(newDir)
 			findArticlesOnDisk(newDir)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
 				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
 				DstFileName := v + ".html"
-				p, _ := filepath.Rel(Config().DocumentsPath, filepath.Join(path, entry.Name()))
-				SrcFileName := p
-				newArticle, _ := ReadRAWMDWNAndProcessPlugins(SrcFileName, DstFileName)
-				db.Instance().Add(newArticle)
+				SrcFileName, _ := filepath.Rel(Config().DocumentsPath, filepath.Join(path, entry.Name()))
+				newArticle, _ := CreateArticleFromFilesystemMarkdown(SrcFileName, DstFileName)
+				db.Instance().Set(newArticle)
 			}
 		}
 	}
 }
 
-func ReadRAWMDWNAndProcessPlugins(SrcFileName string, DstFileName string) (*db.Article, error) {
+func CreateArticleFromFilesystemMarkdown(SrcFileName string, DstFileName string) (*db.Article, error) {
 	fh, errOpen := os.Open(SrcFileName)
 	if errOpen != nil {
 		fmt.Println(errOpen)
-		return nil, errors.New("ReadRAWMDWNAndProcessPlugins: " + errOpen.Error())
+		return nil, errors.New("CreateArticleFromFilesystemMarkdown: " + errOpen.Error())
 	}
 	f := bufio.NewReader(fh)
 	rawMDWNSourceArticle, errRead := io.ReadAll(f)
 	if errRead != nil {
 		fmt.Println(errRead)
-		return nil, errors.New("ReadRAWMDWNAndProcessPlugins: " + errRead.Error())
+		return nil, errors.New("CreateArticleFromFilesystemMarkdown: " + errRead.Error())
 	}
 	errClose := fh.Close()
 	if errClose != nil {
 		fmt.Println(errClose)
-		return nil, errors.New("ReadRAWMDWNAndProcessPlugins: " + errClose.Error())
+		return nil, errors.New("CreateArticleFromFilesystemMarkdown: " + errClose.Error())
 	}
 	var newArticle db.Article
 	newArticle.SrcFileName = SrcFileName
@@ -66,9 +63,6 @@ func ReadRAWMDWNAndProcessPlugins(SrcFileName string, DstFileName string) (*db.A
 	newArticle.ArticleMDWNSource = ProcessPlugins(rawMDWNSourceArticle, &newArticle)
 	newArticle.LiveUpdates = true
 	newArticle.ShowSourceLink = true
-	//fmt.Println("Article after ProcessPlugins. article.LiveUpdates:", newArticle.LiveUpdates)
-	//fmt.Println("Article after ProcessPlugins. article.Draft:", newArticle.Draft)
-	//fmt.Println("Article after ProcessPlugins. article.SpecialPage:", newArticle.SpecialPage)
 	return &newArticle, nil
 }
 
@@ -96,9 +90,7 @@ func (p TagsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 var sendLiveUpdateViaWS func(string, string) = emtpyFunc
 
-func emtpyFunc(string, string) {
-
-}
+func emtpyFunc(string, string) {}
 
 func OnArticleChange(f func(string, string)) {
 	sendLiveUpdateViaWS = f

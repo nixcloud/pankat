@@ -68,11 +68,13 @@ func main() {
 		} else {
 			for _, article := range articles {
 				if article.SrcFileName == filepath.FromSlash(articleQueryName) {
-					newArticle, _ := pankat.ReadRAWMDWNAndProcessPlugins(article.SrcFileName, article.DstFileName)
-					db.Instance().Add(newArticle)
-					body := pankat.Render(*newArticle)
-					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(*newArticle, body)
-					standalonePageContent := pankat.GenerateStandalonePage(*newArticle, navTitleArticleHTML)
+					newArticle, _ := pankat.CreateArticleFromFilesystemMarkdown(article.SrcFileName, article.DstFileName)
+					db.Instance().Set(newArticle)
+					// FIXME we have to query again since Set(newArticle) does not update the ID, need to do this later and then we can use newArticle instead of dbArticle below
+					dbArticle, _ := db.Instance().QueryRawBySrcFileName(newArticle.SrcFileName)
+					body := pankat.Render(*dbArticle)
+					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(*dbArticle, body)
+					standalonePageContent := pankat.GenerateStandalonePage(*dbArticle, navTitleArticleHTML)
 					rw.Write([]byte(standalonePageContent))
 				}
 			}

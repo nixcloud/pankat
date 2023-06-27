@@ -89,6 +89,7 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 	return buff.Bytes()
 }
 
+// FIXME ModificationDate, Tags, Titile, SpecialPage, prev.destfilename, next.destfilename, series, PrevArticleInSeries.destfilename, nextArticleInSeries.destfilename
 func GenerateNavTitleArticleSource(article db.Article, body string) string {
 	t, err := template.New("navTitleArticleSource.tmpl").
 		ParseFiles("templates/navTitleArticleSource.tmpl")
@@ -157,7 +158,7 @@ func Render(a db.Article) string {
 }
 
 func GenerateArticleNavigation(article *db.Article) string {
-	if article.SpecialPage == false {
+	if article.SpecialPage == true {
 		return ""
 	}
 	titleNAV := ""
@@ -179,7 +180,7 @@ func GenerateArticleNavigation(article *db.Article) string {
 }
 
 func GenerateArticleSeriesNavigation(article *db.Article) string {
-	if article.SpecialPage == false {
+	if article.SpecialPage == true {
 		return ""
 	}
 	seriesNAV := ""
