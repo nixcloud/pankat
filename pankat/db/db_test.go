@@ -21,6 +21,20 @@ func compareTagNames(a []Tag, b []Tag) error {
 	return nil
 }
 
+func TestArticleMarshallingNoTag(t *testing.T) {
+	const longForm = "2006-01-02 15:04"
+	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
+	article := Article{Title: "foo", ModificationDate: time1, Summary: "foo summary",
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+	articleJson, err := article.MarshalJSON()
+	assert.NoError(t, err)
+	assert.Contains(t, string(articleJson), "/home/user/documents/foo.mdwn")
+	article2 := Article{}
+	err = article2.UnmarshalJSON(articleJson)
+	assert.NoError(t, err)
+	assert.Equal(t, article, article2)
+}
+
 func TestArticleMarshalling(t *testing.T) {
 	const longForm = "2006-01-02 15:04"
 	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
@@ -28,6 +42,8 @@ func TestArticleMarshalling(t *testing.T) {
 		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
 	articleJson, err := article.MarshalJSON()
 	assert.NoError(t, err)
+	assert.Contains(t, string(articleJson), "/home/user/documents/foo.mdwn")
+	assert.Contains(t, string(articleJson), "Linux")
 	article2 := Article{}
 	err = article2.UnmarshalJSON(articleJson)
 	assert.NoError(t, err)

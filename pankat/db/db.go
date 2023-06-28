@@ -11,7 +11,7 @@ import (
 )
 
 type Article struct {
-	gorm.Model
+	ID                uint   `gorm:"primarykey"`
 	SrcFileName       string `gorm:"uniqueIndex"`
 	DstFileName       string
 	ArticleMDWNSource []byte
@@ -31,25 +31,9 @@ type Article struct {
 }
 
 type Tag struct {
-	gorm.Model
+	ID    uint `gorm:"primarykey"`
 	TagId uint
 	Name  string
-}
-
-func toTags(tags []string) []Tag {
-	var t []Tag
-	for _, tag := range tags {
-		t = append(t, Tag{Name: tag})
-	}
-	return t
-}
-
-func fromTags(tags []Tag) []string {
-	var t []string
-	for _, tag := range tags {
-		t = append(t, tag.Name)
-	}
-	return t
 }
 
 func (a Article) MarshalJSON() ([]byte, error) {
@@ -59,7 +43,7 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		ArticleMDWNSource []byte
 		Title             string
 		Summary           string
-		Tags              []string
+		Tags              []Tag
 		Series            string
 		SpecialPage       bool
 		Draft             bool
@@ -76,7 +60,7 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		ArticleMDWNSource: a.ArticleMDWNSource,
 		Title:             a.Title,
 		Summary:           a.Summary,
-		Tags:              fromTags(a.Tags),
+		Tags:              a.Tags,
 		Series:            a.Series,
 		SpecialPage:       a.SpecialPage,
 		Draft:             a.Draft,
@@ -91,46 +75,37 @@ func (a Article) MarshalJSON() ([]byte, error) {
 }
 
 func (a *Article) UnmarshalJSON(data []byte) error {
+	type Alias Article
 	aux := &struct {
-		SrcFileName       string
-		DstFileName       string
-		ArticleMDWNSource []byte
-		Title             string
-		Summary           string
-		Tags              []string
-		Series            string
-		SpecialPage       bool
-		Draft             bool
-		Anchorjs          bool
-		Tocify            bool
-		Timeline          bool
-		ShowSourceLink    bool
-		LiveUpdates       bool
-		Evaluated         bool
-		ModificationDate  string
+		*Alias
 	}{
-		SrcFileName:       a.SrcFileName,
-		DstFileName:       a.DstFileName,
-		ArticleMDWNSource: a.ArticleMDWNSource,
-		Title:             a.Title,
-		Summary:           a.Summary,
-		Tags:              fromTags(a.Tags),
-		Series:            a.Series,
-		SpecialPage:       a.SpecialPage,
-		Draft:             a.Draft,
-		Anchorjs:          a.Anchorjs,
-		Tocify:            a.Tocify,
-		Timeline:          a.Timeline,
-		ShowSourceLink:    a.ShowSourceLink,
-		LiveUpdates:       a.LiveUpdates,
-		Evaluated:         a.Evaluated,
+		Alias: (*Alias)(a),
 	}
 	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
-	var err error
-	a.ModificationDate, err = time.Parse(time.RFC3339, aux.ModificationDate)
-	return err
+	return nil
+}
+
+func (a Tag) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Name string
+	}{
+		Name: a.Name,
+	})
+}
+
+func (a *Tag) UnmarshalJSON(data []byte) error {
+	type Alias Tag
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	return nil
 }
 
 var lock = &sync.Mutex{}
