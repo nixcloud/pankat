@@ -28,6 +28,7 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 						eventRelFileName, _ := filepath.Rel(documentsPath, event.Path)
 						if event.Op == watcher.Remove {
 							fmt.Println("file removed:", event.Name())
+							// FIXME: remove from db & update
 						}
 						if event.Op == watcher.Write || event.Op == watcher.Create {
 							fmt.Println("File write|create detected in: ", eventRelFileName)
@@ -36,10 +37,11 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 								if article.SrcFileName == eventRelFileName {
 									fmt.Println("pankat.RenderPost(articles, article): ", article.SrcFileName)
 									newArticle, _ := pankat.CreateArticleFromFilesystemMarkdown(article.SrcFileName, article.DstFileName)
-									db.Instance().Set(newArticle)
-									// FIXME we have to query again since Set(newArticle) does not update the ID, need to do this later and then we can use newArticle instead of dbArticle below
-									dbArticle, _ := db.Instance().QueryRawBySrcFileName(newArticle.SrcFileName)
-									pankat.RenderPost(dbArticle)
+									dbArticle, affectedArticles, err := db.Instance().Set(newArticle)
+									if err != nil {
+										pankat.RenderPost(dbArticle)
+										pankat.RenderPostsBySrcFileName(affectedArticles)
+									}
 									break
 								}
 							}

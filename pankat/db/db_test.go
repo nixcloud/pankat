@@ -76,29 +76,34 @@ func TestArticlesDatabase(t *testing.T) {
 		SrcFileName: "/home/user/documents/about.mdwn", DstFileName: "/home/user/documents/about.html"}
 
 	// Insert the article into the database
-	err := articlesDb.Set(&article1)
+	_, _, err := articlesDb.Set(&article1)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Set(&article2)
+	_, _, err = articlesDb.Set(&article2)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Set(&article3)
+	_, relatedArticles1, err := articlesDb.Set(&article3)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Set(&article4)
+	assert.Equal(t, len(relatedArticles1), 2)
+	assert.Equal(t, relatedArticles1[0], "/home/user/documents/foo.mdwn")
+	assert.Equal(t, relatedArticles1[1], "/home/user/documents/bar.mdwn")
+
+	_, relatedArticles2, err := articlesDb.Set(&article4)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Set(&article5)
+	assert.Equal(t, len(relatedArticles2), 0)
+	_, _, err = articlesDb.Set(&article5)
 	if err != nil {
 		panic(err)
 	}
 
 	// update item ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	err = articlesDb.Set(&article5)
+	_, _, err = articlesDb.Set(&article5)
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +214,7 @@ func TestArticlesDatabase(t *testing.T) {
 
 	article4undraft := Article{Draft: false, Title: "no more draft", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "Go"}, {Name: "Linux"}},
 		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
-	err = articlesDb.Set(&article4undraft)
+	_, _, err = articlesDb.Set(&article4undraft)
 	if err != nil {
 		panic(err)
 	}
@@ -221,7 +226,7 @@ func TestArticlesDatabase(t *testing.T) {
 	assert.Equal(t, len(drafts), 0)
 	article4redraft := Article{Draft: true, Title: "draft again", ModificationDate: time4, Summary: "draft summary", Tags: []Tag{{Name: "draftLinux"}},
 		SrcFileName: "/home/user/documents/mydraft.mdwn", DstFileName: "/home/user/documents/mydraft.html"}
-	err = articlesDb.Set(&article4redraft)
+	_, _, err = articlesDb.Set(&article4redraft)
 	if err != nil {
 		panic(err)
 	}
@@ -254,15 +259,15 @@ func TestArticleDelete(t *testing.T) {
 		SrcFileName: "/home/user/documents/batz.mdwn", DstFileName: "/home/user/documents/batz.html"}
 
 	// Insert the article into the database
-	err := articlesDb.Set(&article1)
+	_, _, err := articlesDb.Set(&article1)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Set(&article2)
+	_, _, err = articlesDb.Set(&article2)
 	if err != nil {
 		panic(err)
 	}
-	err = articlesDb.Set(&article3)
+	_, _, err = articlesDb.Set(&article3)
 	if err != nil {
 		panic(err)
 	}
@@ -273,7 +278,7 @@ func TestArticleDelete(t *testing.T) {
 	articlesDb.db.Find(&tags)
 	assert.Equal(t, len(tags), 7)
 	// delete item //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	err = articlesDb.Del("/home/user/documents/bar.mdwn")
+	_, err = articlesDb.Del("/home/user/documents/bar.mdwn")
 	if err != nil {
 		panic(err)
 	}
@@ -301,7 +306,7 @@ func TestArticleUpdatesWithSet(t *testing.T) {
 		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
 
 	// Insert the article into the database
-	err := articlesDb.Set(&article1)
+	_, _, err := articlesDb.Set(&article1)
 	if err != nil {
 		panic(err)
 	}
@@ -320,7 +325,7 @@ func TestArticleUpdatesWithSet(t *testing.T) {
 	assert.Equal(t, all1[0].LiveUpdates, false)
 	assert.Equal(t, all1[0].Tags[0].Name, "Linux")
 
-	err = articlesDb.Set(&article1_)
+	_, _, err = articlesDb.Set(&article1_)
 	if err != nil {
 		panic(err)
 	}

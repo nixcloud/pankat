@@ -136,7 +136,35 @@ func Instance() *ArticlesDb {
 	return dbInstance
 }
 
-func (a *ArticlesDb) Set(article *Article) error {
+func mergeMaps(map1, map2 map[string]bool) map[string]bool {
+	mergedMap := make(map[string]bool)
+
+	// Add key-value pairs from map1
+	for key, value := range map1 {
+		mergedMap[key] = value
+	}
+
+	// Add key-value pairs from map2
+	for key, value := range map2 {
+		mergedMap[key] = value
+	}
+
+	return mergedMap
+}
+
+func getKeysFromMap(mergedMap map[string]bool) []string {
+	keys := make([]string, 0, len(mergedMap))
+
+	for key := range mergedMap {
+		keys = append(keys, key)
+	}
+
+	return keys
+}
+
+func (a *ArticlesDb) Set(article *Article) (*Article, []string, error) {
+	var affectedArticles = make(map[string]bool)
+	newArticle := Article{}
 	// a hack to update properties, since won't work with article
 	update := make(map[string]interface{})
 	update["title"] = article.Title
@@ -155,63 +183,78 @@ func (a *ArticlesDb) Set(article *Article) error {
 	update["live_updates"] = article.LiveUpdates
 	update["evaluated"] = article.Evaluated
 
-	a.db.Transaction(func(tx *gorm.DB) error {
-		result := tx.Preload("Tags").Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Updates(update)
-		if result.Error != nil {
+	err := a.db.Transaction(func(tx *gorm.DB) error {
+		oldArticle := Article{}
+		ret := tx.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).Limit(1).Find(&oldArticle)
+		if ret.Error != nil && !errors.Is(ret.Error, gorm.ErrRecordNotFound) {
 			tx.Rollback()
-			return result.Error
+			return ret.Error
 		}
-		if result.RowsAffected == 1 {
-			//fmt.Println("Article got updated! Now the tags will be updated.")
-			tmparticle := Article{}
-			ret := tx.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&tmparticle)
+		if ret.RowsAffected == 1 {
+			affectedArticles = mergeMaps(affectedArticles, a.GetRelatedArticles(oldArticle))
+			result := tx.Preload("Tags").Model(&Article{}).Where("src_file_name = ?", article.SrcFileName).Updates(update)
+			if result.Error != nil {
+				tx.Rollback()
+				return result.Error
+			}
+			updatedArticle := Article{}
+			ret := tx.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&updatedArticle)
 			if ret.Error != nil {
 				tx.Rollback()
 				return ret.Error
 			}
-			if ret.RowsAffected == 0 || ret.RowsAffected > 1 {
+			if ret.RowsAffected != 1 {
 				tx.Rollback()
-				return errors.New("coudn't find article to delete")
+				return errors.New("coudn't find article to delete tags for")
 			}
-			err := tx.Model(&tmparticle).Unscoped().Association("Tags").Unscoped().Clear()
+			affectedArticles = mergeMaps(affectedArticles, a.GetRelatedArticles(updatedArticle))
+			err := tx.Model(&updatedArticle).Unscoped().Association("Tags").Unscoped().Clear()
 			if err != nil {
 				tx.Rollback()
 				return err
 			}
-			err = tx.Preload("Tags").Model(&tmparticle).Association("Tags").Replace(article.Tags)
+			err = tx.Preload("Tags").Model(&updatedArticle).Association("Tags").Replace(article.Tags)
 			if err != nil {
 				tx.Rollback()
 				return err
 			}
 			return nil
 		}
-		if result.RowsAffected == 0 {
-			ret := tx.Create(article)
-			if ret.Error != nil {
-				tx.Rollback()
-				return ret.Error
-			}
-			if ret.RowsAffected == 0 || ret.RowsAffected > 1 {
-				tx.Rollback()
-				return errors.New("couldn't create article")
-			}
+		// create new article
+		ret = tx.Create(article)
+		if ret.Error != nil {
+			tx.Rollback()
+			return ret.Error
 		}
+		if ret.RowsAffected != 1 {
+			tx.Rollback()
+			return errors.New("couldn't create article")
+		}
+		ret = tx.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&newArticle)
+		if ret.Error != nil {
+			return ret.Error
+		}
+		affectedArticles = mergeMaps(affectedArticles, a.GetRelatedArticles(newArticle))
 		return nil
 	})
-	return nil
+	if err != nil {
+		return nil, []string{}, err
+	}
+	return &newArticle, getKeysFromMap(affectedArticles), nil
 }
 
-func (a *ArticlesDb) Del(SrcFileName string) error {
+func (a *ArticlesDb) Del(SrcFileName string) ([]string, error) {
+	var affectedArticles = make(map[string]bool)
 	article := Article{}
 	ret := a.db.Preload("Tags").Where("src_file_name = ?", SrcFileName).First(&article)
 	if ret.Error != nil {
-		return ret.Error
+		return []string{}, ret.Error
 	}
 	if ret.RowsAffected == 0 || ret.RowsAffected > 1 {
-		return errors.New("Coudn't find article to delete")
+		return []string{}, errors.New("Coudn't find article to delete")
 	}
-
-	a.db.Transaction(func(tx *gorm.DB) error {
+	affectedArticles = mergeMaps(affectedArticles, a.GetRelatedArticles(article))
+	err := a.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&article).Unscoped().Association("Tags").Unscoped().Clear()
 		if err != nil {
 			tx.Rollback()
@@ -223,7 +266,34 @@ func (a *ArticlesDb) Del(SrcFileName string) error {
 		}
 		return nil
 	})
-	return nil
+	if err != nil {
+		return []string{}, err
+	}
+	return getKeysFromMap(affectedArticles), nil
+}
+
+func (a *ArticlesDb) GetRelatedArticles(article Article) map[string]bool {
+	var affectedArticles = make(map[string]bool)
+	if article.Draft || article.SpecialPage {
+		return affectedArticles
+	}
+	next, err := a.NextArticle(article)
+	if err == nil {
+		affectedArticles[next.SrcFileName] = true
+	}
+	prev, err := a.PrevArticle(article)
+	if err == nil {
+		affectedArticles[prev.SrcFileName] = true
+	}
+	nextSeries, err := a.NextArticleInSeries(article)
+	if err == nil {
+		affectedArticles[nextSeries.SrcFileName] = true
+	}
+	prevSeries, err := a.PrevArticleInSeries(article)
+	if err == nil {
+		affectedArticles[prevSeries.SrcFileName] = true
+	}
+	return affectedArticles
 }
 
 func (a *ArticlesDb) QueryAll() ([]Article, error) {

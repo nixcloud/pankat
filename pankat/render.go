@@ -11,6 +11,15 @@ import (
 	"time"
 )
 
+func RenderPostsBySrcFileName(articlesAll []string) {
+	for _, srcFileName := range articlesAll {
+		article, err := db.Instance().QueryRawBySrcFileName(srcFileName)
+		if err != nil {
+			RenderPost(article)
+		}
+	}
+}
+
 func RenderPosts(articlesAll []db.Article) {
 	defer timeElapsed("RenderPosts")()
 	fmt.Println(color.YellowString("Rendering posts"))
