@@ -162,6 +162,30 @@ func getKeysFromMap(mergedMap map[string]bool) []string {
 	return keys
 }
 
+func (a *ArticlesDb) GetRelatedArticles(article Article) map[string]bool {
+	var affectedArticles = make(map[string]bool)
+	if article.Draft || article.SpecialPage {
+		return affectedArticles
+	}
+	next, err := a.NextArticle(article)
+	if err == nil {
+		affectedArticles[next.SrcFileName] = true
+	}
+	prev, err := a.PrevArticle(article)
+	if err == nil {
+		affectedArticles[prev.SrcFileName] = true
+	}
+	nextSeries, err := a.NextArticleInSeries(article)
+	if err == nil {
+		affectedArticles[nextSeries.SrcFileName] = true
+	}
+	prevSeries, err := a.PrevArticleInSeries(article)
+	if err == nil {
+		affectedArticles[prevSeries.SrcFileName] = true
+	}
+	return affectedArticles
+}
+
 func (a *ArticlesDb) Set(article *Article) (*Article, []string, error) {
 	var affectedArticles = make(map[string]bool)
 	newArticle := Article{}
@@ -218,6 +242,10 @@ func (a *ArticlesDb) Set(article *Article) (*Article, []string, error) {
 				tx.Rollback()
 				return err
 			}
+			ret = tx.Preload("Tags").Where("src_file_name = ?", article.SrcFileName).First(&newArticle)
+			if ret.Error != nil {
+				return ret.Error
+			}
 			return nil
 		}
 		// create new article
@@ -270,30 +298,6 @@ func (a *ArticlesDb) Del(SrcFileName string) ([]string, error) {
 		return []string{}, err
 	}
 	return getKeysFromMap(affectedArticles), nil
-}
-
-func (a *ArticlesDb) GetRelatedArticles(article Article) map[string]bool {
-	var affectedArticles = make(map[string]bool)
-	if article.Draft || article.SpecialPage {
-		return affectedArticles
-	}
-	next, err := a.NextArticle(article)
-	if err == nil {
-		affectedArticles[next.SrcFileName] = true
-	}
-	prev, err := a.PrevArticle(article)
-	if err == nil {
-		affectedArticles[prev.SrcFileName] = true
-	}
-	nextSeries, err := a.NextArticleInSeries(article)
-	if err == nil {
-		affectedArticles[nextSeries.SrcFileName] = true
-	}
-	prevSeries, err := a.PrevArticleInSeries(article)
-	if err == nil {
-		affectedArticles[prevSeries.SrcFileName] = true
-	}
-	return affectedArticles
 }
 
 func (a *ArticlesDb) QueryAll() ([]Article, error) {

@@ -7,7 +7,7 @@ require pankat v0.0.0
 require (
 	github.com/fatih/color v1.13.0
 	github.com/gocraft/web v0.0.0-20190207150652-9707327fb69b
-	github.com/radovskyb/watcher v1.0.7
+	github.com/qknight/watcher v0.0.0-20230712200419-5f1c168bf55b
 	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b
 )
 

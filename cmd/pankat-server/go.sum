@@ -160,8 +160,12 @@ github.com/pkg/sftp v1.13.1/go.mod h1:3HaPG6Dq1ILlpPZRO0HVMrsydcdLt6HRDccSgb87qR
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
-github.com/radovskyb/watcher v1.0.7 h1:AYePLih6dpmS32vlHfhCeli8127LzkIgwJGcwwe8tUE=
-github.com/radovskyb/watcher v1.0.7/go.mod h1:78okwvY5wPdzcb1UYnip1pvrZNIVEIh/Cm+ZuvsUYIg=
+github.com/qknight/watcher v0.0.0-20190817010844-f5989f8deca2 h1:A7uU6tKHCSQaZCOsEnQNoiuSTrL4qK+7fNwDHEDpIDg=
+github.com/qknight/watcher v0.0.0-20190817010844-f5989f8deca2/go.mod h1:DmsW95o2WhPMKyoBaZfimdlAdgsVdkIo8v4Oo9uim18=
+github.com/qknight/watcher v0.0.0-20230712195551-e2cde19e763f h1:wG+BZgMj9EEwsvysDimE+/ZRVqUIZNkRGLvQZ/cXfik=
+github.com/qknight/watcher v0.0.0-20230712195551-e2cde19e763f/go.mod h1:DmsW95o2WhPMKyoBaZfimdlAdgsVdkIo8v4Oo9uim18=
+github.com/qknight/watcher v0.0.0-20230712200419-5f1c168bf55b h1:8dEwvb9sX8qTATkFzpvg30o39bUnTOti6Qjz7yG47N8=
+github.com/qknight/watcher v0.0.0-20230712200419-5f1c168bf55b/go.mod h1:DmsW95o2WhPMKyoBaZfimdlAdgsVdkIo8v4Oo9uim18=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.6.1 h1:/FiVV8dS/e+YqF2JvO3yXRFbBLTIuSDkuC7aBOAvL+k=
 github.com/spf13/afero v1.9.2 h1:j49Hj62F0n+DaZ1dDCvhABaPNSGNkt32oRFxI33IEMw=

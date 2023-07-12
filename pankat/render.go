@@ -11,11 +11,16 @@ import (
 	"time"
 )
 
-func RenderPostsBySrcFileName(articlesAll []string) {
-	for _, srcFileName := range articlesAll {
+func RenderPostsBySrcFileNames(articles []string) {
+	//fmt.Println("affectedArticles: ", articles)
+	for _, srcFileName := range articles {
+		fmt.Println("article: ", srcFileName)
 		article, err := db.Instance().QueryRawBySrcFileName(srcFileName)
-		if err != nil {
+		if err == nil {
+			fmt.Println(color.YellowString("Rendering post: "), srcFileName)
 			RenderPost(article)
+		} else {
+			fmt.Println(color.RedString("Error rendering post: "), srcFileName, err)
 		}
 	}
 }
@@ -39,21 +44,30 @@ func RenderPost(article *db.Article) {
 	sendLiveUpdateViaWS(filepath.ToSlash(article.SrcFileName), navTitleArticleHTML)
 
 	if (*article).Draft == true {
+		fmt.Println("Article is a draft, not writing to disk: '" + article.DstFileName + "'")
+		outName := filepath.Join(Config().DocumentsPath, article.DstFileName)
+		if _, err := os.Stat(outName); err == nil {
+			err := os.Remove(outName)
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			}
+		}
 		return
 	}
-	outD := Config().DocumentsPath
-	errMkdir := os.MkdirAll(outD, 0755)
+	errMkdir := os.MkdirAll(Config().DocumentsPath, 0755)
 	if errMkdir != nil {
 		fmt.Println(errMkdir)
 		panic(errMkdir)
 	}
 	// write to disk
-	outName := filepath.Join(outD, article.DstFileName)
+	outName := filepath.Join(Config().DocumentsPath, article.DstFileName)
 	err5 := os.WriteFile(outName, standalonePageContent, 0644)
 	if err5 != nil {
 		fmt.Println(err5)
 		panic(article)
 	}
+	fmt.Println("Article on disk updated: '" + article.DstFileName + "'")
 }
 
 func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []byte {

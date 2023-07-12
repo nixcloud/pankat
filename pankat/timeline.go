@@ -87,6 +87,7 @@ func RenderTimeline() {
 	article.Title = "timeline"
 	article.Timeline = true
 	article.SpecialPage = true
+	article.LiveUpdates = true
 
 	t, err := json.Marshal(CreateJSMetadata(articles))
 	if err != nil {
@@ -115,6 +116,14 @@ func RenderTimeline() {
 
 	pageContent += `timeline is a list of all posts, sorted by date, with the most recent posts at the top.`
 
+	pageContent += `<div id="Control">
+    <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
+
+    <p class="lead">filter the posts (click tag/series) above:</p>
+	</div>`
+
+	pageContent += `<div id="TagAndSeries">`
+
 	pageContent += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
 		pageContent += `<a class="tagbtn btn btn-primary" onClick="setFilter('tag::` + e.Key + `', 1)">` + e.Key + `</a>`
@@ -134,10 +143,8 @@ func RenderTimeline() {
 
 	pageContent += ` 
 
-    <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
 
-    <p class="lead">filter the posts (click tag/series) above:</p>
-    
+    </div>
     <div id="timeline" class="timeline-container">
     <br class="clear">
 `

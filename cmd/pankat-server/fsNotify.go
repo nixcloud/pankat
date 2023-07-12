@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/radovskyb/watcher"
+	"github.com/qknight/watcher"
 	"log"
 	"os"
 	"pankat"
@@ -12,9 +12,20 @@ import (
 	"time"
 )
 
+func fsRemoveMDWN(eventRelFileName string) {
+	fmt.Println("File removed:", eventRelFileName)
+	affectedArticles, err := db.Instance().Del(eventRelFileName)
+	if err == nil {
+		pankat.RenderPostsBySrcFileNames(affectedArticles)
+		pankat.RenderTimeline()
+		pankat.SetMostRecentArticle()
+	} else {
+		fmt.Println("File removal error: ", err)
+	}
+}
+
 func fsNotifyWatchDocumentsDirectory(directory string) {
 	w := watcher.New()
-
 	go func() {
 		for {
 			select {
@@ -27,24 +38,33 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 						}
 						eventRelFileName, _ := filepath.Rel(documentsPath, event.Path)
 						if event.Op == watcher.Remove {
-							fmt.Println("file removed:", event.Name())
-							// FIXME: remove from db & update
+							fsRemoveMDWN(eventRelFileName)
 						}
-						if event.Op == watcher.Write || event.Op == watcher.Create {
-							fmt.Println("File write|create detected in: ", eventRelFileName)
-							articles, _ := db.Instance().QueryAll()
-							for _, article := range articles {
-								if article.SrcFileName == eventRelFileName {
-									fmt.Println("pankat.RenderPost(articles, article): ", article.SrcFileName)
-									newArticle, _ := pankat.CreateArticleFromFilesystemMarkdown(article.SrcFileName, article.DstFileName)
-									dbArticle, affectedArticles, err := db.Instance().Set(newArticle)
-									if err != nil {
-										pankat.RenderPost(dbArticle)
-										pankat.RenderPostsBySrcFileName(affectedArticles)
-									}
+						if event.Op == watcher.Rename {
+							eventOldRelFileName, _ := filepath.Rel(documentsPath, event.OldPath)
+							fsRemoveMDWN(eventOldRelFileName)
+						}
+						if event.Op == watcher.Write || event.Op == watcher.Create || event.Op == watcher.Rename {
+							fmt.Println("File write|create|rename detected in: ", eventRelFileName)
+							newArticle, err := pankat.CreateArticleFromFilesystemMarkdown(eventRelFileName)
+							if err != nil {
+								fmt.Println(err)
+								break
+							}
+							dbArticle, affectedArticles, errNew := db.Instance().Set(newArticle)
+							if errNew != nil {
+								fmt.Println(errNew)
+							} else {
+								if dbArticle == nil {
+									fmt.Println("error: dbArticle is nil")
 									break
 								}
+								pankat.RenderPost(dbArticle)
+								pankat.RenderPostsBySrcFileNames(affectedArticles)
+								pankat.RenderTimeline()
+								pankat.SetMostRecentArticle()
 							}
+							break
 						}
 					}
 				}
@@ -69,7 +89,7 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 
 	walkFunc := watchDir(w)
 	if err := filepath.Walk(directory, walkFunc); err != nil {
-		fmt.Println("ERROR", err)
+		log.Fatalln(err)
 	}
 
 	// Start the watching process - it'll check for changes every 100ms.

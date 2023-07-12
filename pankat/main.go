@@ -27,17 +27,20 @@ func findArticlesOnDisk(path string) {
 			findArticlesOnDisk(newDir)
 		} else {
 			if strings.HasSuffix(entry.Name(), ".mdwn") {
-				v := strings.TrimSuffix(entry.Name(), ".mdwn") // remove .mdwn
-				DstFileName := v + ".html"
 				SrcFileName, _ := filepath.Rel(Config().DocumentsPath, filepath.Join(path, entry.Name()))
-				newArticle, _ := CreateArticleFromFilesystemMarkdown(SrcFileName, DstFileName)
+				newArticle, err := CreateArticleFromFilesystemMarkdown(SrcFileName)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				// ignoring related articles updates (they all get rendered anyway)
 				db.Instance().Set(newArticle)
 			}
 		}
 	}
 }
 
-func CreateArticleFromFilesystemMarkdown(SrcFileName string, DstFileName string) (*db.Article, error) {
+func CreateArticleFromFilesystemMarkdown(SrcFileName string) (*db.Article, error) {
 	fh, errOpen := os.Open(SrcFileName)
 	if errOpen != nil {
 		fmt.Println(errOpen)
@@ -56,10 +59,12 @@ func CreateArticleFromFilesystemMarkdown(SrcFileName string, DstFileName string)
 	}
 	var newArticle db.Article
 	newArticle.SrcFileName = SrcFileName
-	newArticle.DstFileName = DstFileName
-	filename := filepath.Base(SrcFileName)
-	v := strings.TrimSuffix(filename, ".mdwn")          // remove .mdwn
-	newArticle.Title = strings.Replace(v, "_", " ", -1) // add whitespaces
+
+	filenameMDWN := filepath.Base(SrcFileName)
+	filename := strings.TrimSuffix(filenameMDWN, ".mdwn")
+	newArticle.DstFileName = filename + ".html"
+
+	newArticle.Title = strings.Replace(filename, "_", " ", -1) // add whitespaces
 	newArticle.ArticleMDWNSource = ProcessPlugins(rawMDWNSourceArticle, &newArticle)
 	newArticle.LiveUpdates = true
 	newArticle.ShowSourceLink = true
@@ -161,6 +166,17 @@ func UpdateBlog() {
 	defer timeElapsed("UpdateBlog")()
 	fmt.Println(color.GreenString("pankat-static"), "starting!")
 	fmt.Println(color.YellowString("Documents path: "), Config().DocumentsPath)
+
+	dbArticles, errQuerryAll := db.Instance().QueryAll()
+	if errQuerryAll == nil {
+		for _, article := range dbArticles {
+			_, err := os.Stat(article.SrcFileName)
+			if err != nil {
+				fmt.Println(color.YellowString("Article: "), article.SrcFileName, color.RedString("does not exist anymore, deleting from database"))
+				db.Instance().Del(article.SrcFileName)
+			}
+		}
+	}
 
 	findArticlesOnDisk(Config().DocumentsPath)
 

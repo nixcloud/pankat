@@ -47,13 +47,13 @@ func main() {
 		rw.WriteHeader(http.StatusOK)
 	})
 	router.Get("/draft", func(rw web.ResponseWriter, req *web.Request) {
-		articles, _ := db.Instance().Drafts()
+		drafts, _ := db.Instance().Drafts()
 		articleQueryName := req.URL.Query().Get("article")
 		if articleQueryName == "" {
 			var draftList string
 			draftList += "<p>this is a list of all drafts. Click on one to edit!</p>"
 			draftList += "<ul>"
-			for _, article := range articles {
+			for _, article := range drafts {
 				if article.Draft == true {
 					draftList += "<li><a href=\"/draft?article=" + article.SrcFileName + "\">" + article.SrcFileName + "</a></li>"
 				}
@@ -66,16 +66,24 @@ func main() {
 			standalonePageContent := pankat.GenerateStandalonePage(article, navTitleArticleHTML)
 			rw.Write([]byte(standalonePageContent))
 		} else {
-			for _, article := range articles {
-				if article.SrcFileName == filepath.FromSlash(articleQueryName) {
-					newArticle, _ := pankat.CreateArticleFromFilesystemMarkdown(article.SrcFileName, article.DstFileName)
-					db.Instance().Set(newArticle)
-					// FIXME we have to query again since Set(newArticle) does not update the ID, need to do this later and then we can use newArticle instead of dbArticle below
-					dbArticle, _ := db.Instance().QueryRawBySrcFileName(newArticle.SrcFileName)
+			for _, draft := range drafts {
+				if draft.SrcFileName == filepath.FromSlash(articleQueryName) {
+					newArticle, errCreate := pankat.CreateArticleFromFilesystemMarkdown(draft.SrcFileName)
+					if errCreate != nil {
+						fmt.Println(errCreate)
+						db.Instance().Del(draft.SrcFileName)
+						break
+					}
+					dbArticle, _, errSet := db.Instance().Set(newArticle)
+					if errSet != nil {
+						fmt.Println(errSet)
+						break
+					}
 					body := pankat.Render(*dbArticle)
 					navTitleArticleHTML := pankat.GenerateNavTitleArticleSource(*dbArticle, body)
 					standalonePageContent := pankat.GenerateStandalonePage(*dbArticle, navTitleArticleHTML)
 					rw.Write([]byte(standalonePageContent))
+					return
 				}
 			}
 			http.Redirect(rw, req.Request, "/draft", http.StatusFound)
