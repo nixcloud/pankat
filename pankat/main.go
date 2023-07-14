@@ -11,6 +11,7 @@ import (
 	"os"
 	"pankat/db"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -136,6 +137,19 @@ func Init() {
 	Config().Verbose = viper.GetInt("verbose")
 	Config().Force = viper.GetInt("force")
 	Config().ListenAndServe = viper.GetString("ListenAndServe")
+
+	mdwnSource := "# hello"
+	text, err := PandocMarkdown2HTML([]byte(mdwnSource))
+	if err != nil {
+		fmt.Println("An error occurred during pandoc pipeline run: ", err)
+		panic(err)
+	}
+	//text will be: <h1 id="hello">hello</h1>
+	match, _ := regexp.MatchString(".*h1.*hello.*h1.*", text)
+	if match != true {
+		fmt.Println("An error occurred during pandoc pipeline run result match: ", err)
+		panic(err)
+	}
 }
 
 func SetMostRecentArticle() {

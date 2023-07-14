@@ -38,6 +38,7 @@ func ProcessPlugins(_article []byte, article *db.Article) []byte {
 	if Config().Verbose > 1 {
 		fmt.Println(article.DstFileName, color.GreenString("plugins:"), foundPlugins)
 	}
+	//fmt.Println(article.ModificationDate, article.DstFileName, color.GreenString("plugins:"), foundPlugins)
 	return _articlePostprocessed
 }
 

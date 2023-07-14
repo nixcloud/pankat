@@ -87,7 +87,6 @@ func RenderTimeline() {
 	article.Title = "timeline"
 	article.Timeline = true
 	article.SpecialPage = true
-	article.LiveUpdates = true
 
 	t, err := json.Marshal(CreateJSMetadata(articles))
 	if err != nil {

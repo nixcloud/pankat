@@ -13,7 +13,7 @@ import (
 type Article struct {
 	ID                uint   `gorm:"primarykey"`
 	SrcFileName       string `gorm:"uniqueIndex"`
-	DstFileName       string
+	DstFileName       string `gorm:"uniqueIndex"`
 	ArticleMDWNSource []byte
 	Title             string
 	ModificationDate  time.Time
@@ -120,7 +120,7 @@ func Instance() *ArticlesDb {
 	lock.Lock()
 	defer lock.Unlock()
 	if dbInstance == nil {
-		fmt.Println("Creating DB instance now.")
+		fmt.Println("Loading DB instance")
 		// Open a new SQLite database connection or create one if it doesn't exist
 		db, err := gorm.Open(sqlite.Open("pankat-sqlite3.db"), &gorm.Config{})
 		if err != nil {
