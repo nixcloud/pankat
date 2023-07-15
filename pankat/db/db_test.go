@@ -1,7 +1,6 @@
 package db
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -357,21 +356,36 @@ func TestArticleCache(t *testing.T) {
 	if errMigrator != nil {
 		panic(errMigrator)
 	}
-	article := "foobar"
-	articleBytes := []byte(article)
-	var articleHash [md5.Size]byte
-	articleHash = md5.Sum(articleBytes)
 
-	var s = string(articleBytes)
-	assert.Equal(t, s, article)
+	const longForm = "2006-01-02 15:04"
+	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
+	article1 := Article{Title: "foo", ModificationDate: time1, Summary: "foo summary", Tags: []Tag{{Name: "Linux"}, {Name: "Go"}},
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+	time2, _ := time.Parse(longForm, "2022-01-01 00:00")
+	article2 := Article{Title: "bar", ModificationDate: time2, Series: "Linuxseries", Summary: "bar summary", Tags: []Tag{{Name: "SteamDeck"}, {Name: "Gorilla"}},
+		SrcFileName: "/home/user/documents/bar.mdwn", DstFileName: "/home/user/documents/bar.html"}
 
-	errSet := articlesDb.SetCache(articleHash, article)
-	assert.Nil(t, errSet)
+	a1, _, err1 := articlesDb.Set(&article1)
+	if err1 != nil {
+		panic(err1)
+	}
+	a2, _, err2 := articlesDb.Set(&article2)
+	if err2 != nil {
+		panic(err2)
+	}
 
-	b, errGet := articlesDb.GetCache(articleHash)
-	assert.Nil(t, errGet)
-	assert.Equal(t, b, article)
+	article1HTML := "# foo"
+	article2HTML := "# bar"
 
-	errDel := articlesDb.DelCache(articleHash)
-	assert.Nil(t, errDel)
+	errSet1 := articlesDb.SetCache(*a1, article1HTML)
+	assert.Nil(t, errSet1)
+	b1, errGet1 := articlesDb.GetCache(*a1)
+	assert.Nil(t, errGet1)
+	assert.Equal(t, b1, article1HTML)
+
+	errSet2 := articlesDb.SetCache(*a2, article2HTML)
+	assert.Nil(t, errSet2)
+	b2, errGet2 := articlesDb.GetCache(*a2)
+	assert.Nil(t, errGet2)
+	assert.Equal(t, b2, article2HTML)
 }

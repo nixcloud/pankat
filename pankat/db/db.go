@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/json"
 	"errors"
@@ -19,7 +20,8 @@ type Article struct {
 	Title             string
 	ModificationDate  time.Time
 	Summary           string
-	Tags              []Tag `gorm:"ForeignKey:TagId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Tags              []Tag        `gorm:"ForeignKey:TagId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ArticleCache      ArticleCache `gorm:"ForeignKey:ArticleCacheId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Series            string
 	SpecialPage       bool
 	Draft             bool
@@ -38,9 +40,10 @@ type Tag struct {
 }
 
 type ArticleCache struct {
-	ID      uint   `gorm:"primarykey"`
-	Hash    []byte `gorm:"uniqueIndex"`
-	Article string
+	ID             uint `gorm:"primarykey"`
+	ArticleCacheId uint
+	Hash           []byte
+	GeneratedHTML  string
 }
 
 func (a Article) MarshalJSON() ([]byte, error) {
@@ -295,6 +298,11 @@ func (a *ArticlesDb) Del(SrcFileName string) ([]string, error) {
 			tx.Rollback()
 			return err
 		}
+		err = tx.Model(&article).Unscoped().Association("ArticleCache").Unscoped().Clear()
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 		if err := tx.Unscoped().Delete(&article).Error; err != nil {
 			tx.Rollback()
 			return err
@@ -465,55 +473,67 @@ func (a *ArticlesDb) SpecialPages() ([]Article, error) {
 	return articles, nil
 }
 
-func (a *ArticlesDb) SetCache(hash [md5.Size]byte, article string) error {
-	var h []byte = hash[:]
-	var articleCache ArticleCache
-	ac := ArticleCache{Hash: h, Article: article}
+// this hash does not include the ArticleCache relation
+func computeHash(a Article) [md5.Size]byte {
+	bytes, err := a.MarshalJSON()
+	if err != nil {
+		fmt.Println(err)
+	}
+	concatenated := append(bytes, a.ArticleMDWNSource...)
+	return md5.Sum(concatenated)
+}
 
-	ret := a.db.Where("hash = ?", h).Limit(1).Find(&articleCache)
-	if ret.Error != nil {
-		if ret.Error == gorm.ErrRecordNotFound {
-			ret = a.db.Create(&ac)
-			if ret.Error != nil {
-				return ret.Error
+func (a *ArticlesDb) SetCache(article Article, generatedHTML string) error {
+	articleHash := computeHash(article)
+	update := ArticleCache{Hash: articleHash[:], GeneratedHTML: generatedHTML}
+
+	err := a.db.Transaction(func(tx *gorm.DB) error {
+		dbArticle := Article{}
+		ret := tx.Preload("ArticleCache").Where("src_file_name = ?", article.SrcFileName).Limit(1).Find(&dbArticle)
+		if ret.Error != nil && !errors.Is(ret.Error, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			return ret.Error
+		}
+		if ret.RowsAffected == 1 {
+			err := tx.Model(&dbArticle).Unscoped().Association("ArticleCache").Unscoped().Clear()
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+			err = tx.Preload("ArticleCache").Model(&dbArticle).Association("ArticleCache").Replace(&update)
+			if err != nil {
+				tx.Rollback()
+				return err
 			}
 			return nil
 		}
-		return ret.Error
-	}
-	ret = a.db.Save(&ac)
-	if ret.Error != nil {
-		return ret.Error
-	}
-	return nil
+		return nil
+	})
+	return err
 }
 
-func (a *ArticlesDb) DelCache(hash [md5.Size]byte) error {
-	var h []byte = hash[:]
-	var articleCache ArticleCache
-	result := a.db.Where("hash = ?", h).First(&articleCache)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 || result.RowsAffected > 1 {
-		return errors.New("Coudn't find articleCache to delete")
-	}
-	result = a.db.Unscoped().Delete(&articleCache)
-	if result.Error != nil {
-		return result.Error
-	}
-	return nil
-}
+func (a *ArticlesDb) GetCache(article Article) (string, error) {
+	articleHash := computeHash(article)
+	var generatedHTML string
 
-func (a *ArticlesDb) GetCache(hash [md5.Size]byte) (string, error) {
-	var h []byte = hash[:]
-	var articleCache ArticleCache
-	result := a.db.Where("hash = ?", h).Limit(1).Find(&articleCache)
-	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return "", result.Error
+	err := a.db.Transaction(func(tx *gorm.DB) error {
+		dbArticle := Article{}
+		ret := tx.Preload("ArticleCache").Where("src_file_name = ?", article.SrcFileName).Limit(1).Find(&dbArticle)
+		if ret.Error != nil && !errors.Is(ret.Error, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			return ret.Error
+		}
+		if ret.RowsAffected == 1 {
+			if bytes.Equal(dbArticle.ArticleCache.Hash, articleHash[:]) {
+				generatedHTML = dbArticle.ArticleCache.GeneratedHTML
+				return nil
+			}
+			return errors.New("hash mismatch")
+		}
+		return errors.New("article related to hash not found")
+	})
+	if err != nil {
+		return "", err
 	}
-	if result.RowsAffected != 1 {
-		return "", errors.New("Coudn't find articleCache entry for hash")
-	}
-	return articleCache.Article, nil
+	return generatedHTML, nil
 }
