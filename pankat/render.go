@@ -2,6 +2,7 @@ package pankat
 
 import (
 	"bytes"
+	"crypto/md5"
 	"fmt"
 	"github.com/fatih/color"
 	"os"
@@ -156,24 +157,32 @@ func GenerateNavTitleArticleSource(article db.Article, body string) string {
 	return generatedHTMLbuff.String()
 }
 
-func Render(a db.Article) string {
-	if articlesCache.Store == nil {
-		//fmt.Println("Initializing hash map")
-		articlesCache.Store = make(map[md5hash]string)
-		articlesCache.load()
+func computeHash(a db.Article) [md5.Size]byte {
+	bytes, err := a.MarshalJSON()
+	if err != nil {
+		fmt.Println(err)
 	}
-	ac := articlesCache.Get(a)
-	if ac == "" {
+	concatenated := append(bytes, a.ArticleMDWNSource...)
+	return md5.Sum(concatenated)
+}
+
+func Render(a db.Article) string {
+	articleHash := computeHash(a)
+	ac, err := db.Instance().GetCache(articleHash)
+	if err != nil {
 		if Config().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}
-		text, err := PandocMarkdown2HTML(a.ArticleMDWNSource)
+		generatedHTML, err := PandocMarkdown2HTML(a.ArticleMDWNSource)
 		if err != nil {
 			fmt.Println("An error occurred during pandoc pipeline run: ", err)
 			panic(err)
 		}
-		articlesCache.Set(a, text)
-		return text
+		errSet := db.Instance().SetCache(articleHash, generatedHTML)
+		if errSet != nil {
+			fmt.Println(errSet)
+		}
+		return generatedHTML
 	} else {
 		fmt.Println(color.YellowString("cache hit, no pandoc run for article"), a.DstFileName)
 		return ac

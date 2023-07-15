@@ -1,6 +1,7 @@
 package db
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -52,8 +53,8 @@ func TestArticleMarshalling(t *testing.T) {
 
 func TestArticlesDatabase(t *testing.T) {
 	articlesDb := Instance()
-	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{})
-	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{})
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{}, &ArticleCache{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{}, &ArticleCache{})
 	if errMigrator != nil {
 		panic(errMigrator)
 	}
@@ -241,8 +242,8 @@ func TestArticlesDatabase(t *testing.T) {
 
 func TestArticleDelete(t *testing.T) {
 	articlesDb := Instance()
-	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{})
-	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{})
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{}, &ArticleCache{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{}, &ArticleCache{})
 	if errMigrator != nil {
 		panic(errMigrator)
 	}
@@ -292,8 +293,8 @@ func TestArticleDelete(t *testing.T) {
 
 func TestArticleUpdatesWithSet(t *testing.T) {
 	articlesDb := Instance()
-	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{})
-	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{})
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{}, &ArticleCache{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{}, &ArticleCache{})
 	if errMigrator != nil {
 		panic(errMigrator)
 	}
@@ -347,4 +348,30 @@ func TestArticleUpdatesWithSet(t *testing.T) {
 	var tags2 []Tag
 	articlesDb.db.Find(&tags2)
 	assert.Equal(t, len(tags2), 1)
+}
+
+func TestArticleCache(t *testing.T) {
+	articlesDb := Instance()
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{}, &ArticleCache{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{}, &ArticleCache{})
+	if errMigrator != nil {
+		panic(errMigrator)
+	}
+	article := "foobar"
+	articleBytes := []byte(article)
+	var articleHash [md5.Size]byte
+	articleHash = md5.Sum(articleBytes)
+
+	var s = string(articleBytes)
+	assert.Equal(t, s, article)
+
+	errSet := articlesDb.SetCache(articleHash, article)
+	assert.Nil(t, errSet)
+
+	b, errGet := articlesDb.GetCache(articleHash)
+	assert.Nil(t, errGet)
+	assert.Equal(t, b, article)
+
+	errDel := articlesDb.DelCache(articleHash)
+	assert.Nil(t, errDel)
 }

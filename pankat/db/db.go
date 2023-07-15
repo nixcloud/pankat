@@ -1,6 +1,7 @@
 package db
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,6 +35,12 @@ type Tag struct {
 	ID    uint `gorm:"primarykey"`
 	TagId uint
 	Name  string
+}
+
+type ArticleCache struct {
+	ID      uint   `gorm:"primarykey"`
+	Hash    []byte `gorm:"uniqueIndex"`
+	Article string
 }
 
 func (a Article) MarshalJSON() ([]byte, error) {
@@ -127,7 +134,7 @@ func Instance() *ArticlesDb {
 			panic(err)
 		}
 		// Auto-migrate the table
-		err = db.AutoMigrate(&Article{}, &Tag{})
+		err = db.AutoMigrate(&Article{}, &Tag{}, &ArticleCache{})
 		if err != nil {
 			panic(err)
 		}
@@ -456,4 +463,57 @@ func (a *ArticlesDb) SpecialPages() ([]Article, error) {
 		return nil, result.Error
 	}
 	return articles, nil
+}
+
+func (a *ArticlesDb) SetCache(hash [md5.Size]byte, article string) error {
+	var h []byte = hash[:]
+	var articleCache ArticleCache
+	ac := ArticleCache{Hash: h, Article: article}
+
+	ret := a.db.Where("hash = ?", h).Limit(1).Find(&articleCache)
+	if ret.Error != nil {
+		if ret.Error == gorm.ErrRecordNotFound {
+			ret = a.db.Create(&ac)
+			if ret.Error != nil {
+				return ret.Error
+			}
+			return nil
+		}
+		return ret.Error
+	}
+	ret = a.db.Save(&ac)
+	if ret.Error != nil {
+		return ret.Error
+	}
+	return nil
+}
+
+func (a *ArticlesDb) DelCache(hash [md5.Size]byte) error {
+	var h []byte = hash[:]
+	var articleCache ArticleCache
+	result := a.db.Where("hash = ?", h).First(&articleCache)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 || result.RowsAffected > 1 {
+		return errors.New("Coudn't find articleCache to delete")
+	}
+	result = a.db.Unscoped().Delete(&articleCache)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (a *ArticlesDb) GetCache(hash [md5.Size]byte) (string, error) {
+	var h []byte = hash[:]
+	var articleCache ArticleCache
+	result := a.db.Where("hash = ?", h).Limit(1).Find(&articleCache)
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return "", result.Error
+	}
+	if result.RowsAffected != 1 {
+		return "", errors.New("Coudn't find articleCache entry for hash")
+	}
+	return articleCache.Article, nil
 }
