@@ -1,12 +1,11 @@
 package pankat
 
 type config struct {
-	DocumentsPath    string
-	SiteTitle        string
-	MyMd5HashMapJson string
-	Verbose          int
-	Force            int
-	ListenAndServe   string
+	DocumentsPath  string
+	SiteTitle      string
+	Verbose        int
+	Force          int
+	ListenAndServe string
 }
 
 var instance config

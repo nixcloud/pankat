@@ -537,3 +537,18 @@ func (a *ArticlesDb) GetCache(article Article) (string, error) {
 	}
 	return generatedHTML, nil
 }
+
+func (a *ArticlesDb) Contains(DstFileName string) (bool, error) {
+	var res Article
+	result := a.db.
+		Where("draft = ? AND dst_file_name == ?", false, DstFileName).
+		Limit(1).
+		Find(&res)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	if result.RowsAffected == 1 {
+		return true, nil
+	}
+	return false, errors.New("no article found")
+}

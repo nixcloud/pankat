@@ -118,8 +118,6 @@ func Init() {
 	i1, err := filepath.Abs(input)
 	documentsPath := i1
 
-	myMd5HashMapJson_ := filepath.Join(documentsPath, ".ArticlesCache.json")
-
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -133,7 +131,6 @@ func Init() {
 
 	Config().DocumentsPath = documentsPath
 	Config().SiteTitle = siteTitle_
-	Config().MyMd5HashMapJson = myMd5HashMapJson_
 	Config().Verbose = viper.GetInt("verbose")
 	Config().Force = viper.GetInt("force")
 	Config().ListenAndServe = viper.GetString("ListenAndServe")
@@ -194,6 +191,8 @@ func UpdateBlog() {
 
 	findArticlesOnDisk(Config().DocumentsPath)
 
+	GarbageCollectDocuments()
+
 	articles, err := db.Instance().Articles()
 	if err != nil {
 		fmt.Errorf("Error: %s", err)
@@ -211,4 +210,40 @@ func UpdateBlog() {
 		RenderPosts(specialPages)
 	}
 	SetMostRecentArticle()
+}
+
+func GarbageCollectDocuments() {
+	fmt.Println(color.YellowString("Running the garbage collector"))
+
+	var htmlDocuments []string
+	err := filepath.Walk(Config().DocumentsPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".html") {
+			base := filepath.Base(path)
+			htmlDocuments = append(htmlDocuments, base)
+		}
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	for _, htmlDocument := range htmlDocuments {
+		if htmlDocument == "index.html" {
+			continue
+		}
+		if htmlDocument == "timeline.html" {
+			continue
+		}
+		_, err := db.Instance().Contains(htmlDocument)
+		if err != nil {
+			fmt.Println(color.YellowString("Deleting: "), htmlDocument)
+			err := os.Remove(filepath.Join(Config().DocumentsPath, htmlDocument))
+			if err != nil {
+				fmt.Println(color.RedString("Error while running the garbage collector: "), err)
+				panic(err)
+			}
+		}
+	}
 }

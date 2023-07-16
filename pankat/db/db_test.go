@@ -389,3 +389,38 @@ func TestArticleCache(t *testing.T) {
 	assert.Nil(t, errGet2)
 	assert.Equal(t, b2, article2HTML)
 }
+
+func TestContains(t *testing.T) {
+	articlesDb := Instance()
+	articlesDb.db.Migrator().DropTable(&Article{}, &Tag{}, &ArticleCache{})
+	errMigrator := articlesDb.db.AutoMigrate(&Article{}, &Tag{}, &ArticleCache{})
+	if errMigrator != nil {
+		panic(errMigrator)
+	}
+
+	const longForm = "2006-01-02 15:04"
+	time1, _ := time.Parse(longForm, "2019-01-01 00:00")
+	article1 := Article{Title: "foo", ModificationDate: time1, Summary: "foo summary", Tags: []Tag{{Name: "Linux"}, {Name: "Go"}},
+		SrcFileName: "/home/user/documents/foo.mdwn", DstFileName: "/home/user/documents/foo.html"}
+	time2, _ := time.Parse(longForm, "2022-01-01 00:00")
+	article2 := Article{Title: "bar", ModificationDate: time2, Series: "Linuxseries", Summary: "bar summary", Tags: []Tag{{Name: "SteamDeck"}, {Name: "Gorilla"}},
+		SrcFileName: "/home/user/documents/bar.mdwn", DstFileName: "/home/user/documents/bar.html"}
+
+	_, _, err := articlesDb.Set(&article1)
+	if err != nil {
+		panic(err)
+	}
+	_, _, err = articlesDb.Set(&article2)
+	if err != nil {
+		panic(err)
+	}
+	b1, err := articlesDb.Contains("/home/user/documents/foo.html")
+	assert.Nil(t, err)
+	assert.True(t, b1)
+	b2, err := articlesDb.Contains("/home/user/documents/bar.html")
+	assert.Nil(t, err)
+	assert.True(t, b2)
+
+	_, err = articlesDb.Contains("xxx")
+	assert.Error(t, err)
+}
