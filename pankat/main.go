@@ -35,7 +35,11 @@ func findArticlesOnDisk(path string) {
 					continue
 				}
 				// ignoring related articles updates (they all get rendered anyway)
-				db.Instance().Set(newArticle)
+				_, _, err = db.Instance().Set(newArticle)
+				if err != nil {
+					fmt.Println(err)
+					panic(err)
+				}
 			}
 		}
 	}
@@ -184,7 +188,7 @@ func UpdateBlog() {
 			_, err := os.Stat(article.SrcFileName)
 			if err != nil {
 				fmt.Println(color.YellowString("Article: "), article.SrcFileName, color.RedString("does not exist anymore, deleting from database"))
-				db.Instance().Del(article.SrcFileName)
+				_, _ = db.Instance().Del(article.SrcFileName)
 			}
 		}
 	}
@@ -195,7 +199,7 @@ func UpdateBlog() {
 
 	articles, err := db.Instance().Articles()
 	if err != nil {
-		fmt.Errorf("Error: %s", err)
+		fmt.Println("Error: %s", err)
 	} else {
 		fmt.Println(color.YellowString("Articles: "), len(articles), color.YellowString("articles"))
 		RenderPosts(articles)
@@ -204,7 +208,7 @@ func UpdateBlog() {
 
 	specialPages, err := db.Instance().SpecialPages()
 	if err != nil {
-		fmt.Errorf("Error: %s", err)
+		fmt.Println("Error: %s", err)
 	} else {
 		fmt.Println(color.YellowString("SpecialPages: "), len(specialPages), color.YellowString("SpecialPages"))
 		RenderPosts(specialPages)
@@ -230,10 +234,9 @@ func GarbageCollectDocuments() {
 		panic(err)
 	}
 	for _, htmlDocument := range htmlDocuments {
-		if htmlDocument == "index.html" {
-			continue
-		}
-		if htmlDocument == "timeline.html" {
+		switch htmlDocument {
+		case "index.html":
+		case "timeline.html":
 			continue
 		}
 		_, err := db.Instance().Contains(htmlDocument)
