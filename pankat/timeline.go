@@ -113,15 +113,26 @@ func RenderTimeline() {
 		fmt.Println(color.GreenString("tagsSlice"), tagsSlice)
 	}
 
-	pageContent += `timeline is a list of all posts, sorted by date, with the most recent posts at the top.`
+	pageContent += `a list of all posts, sorted by date, with the most recent posts at the top.`
 
-	pageContent += `<div id="Control">
-    <a class="btn btn-primary" onClick="setFilter('', 1)">show all (clear filters)</a>
+	pageContent += `
+    <div id="FilterControl">
+      <div id="FilterControlIcon">
+        <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+      </div>
+      <div id="FilterControlElements">
+		<div id="FilterPreSelection">
+		  <a class="btn btn-primary" onClick="toSelectionView()">show tag/series filters</a>
+		</div>
+		<div id="FilterPostSelection">
+          <div id="FilterSelectionContent">
+		    <a class="btn btn-primary" onClick="toClearSelectionView()"><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span> clear filter</a>
+		    <div id="FilterSelectionText"></div>
+          </div>
+		</div>
+	`
 
-    <p class="lead">filter the posts (click tag/series) above:</p>
-	</div>`
-
-	pageContent += `<div id="TagAndSeries">`
+	pageContent += `<div id="FilterSelection"><p class="lead">select on tag or series element below:</p><div id="TagAndSeries">`
 
 	pageContent += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
@@ -142,8 +153,7 @@ func RenderTimeline() {
 
 	pageContent += ` 
 
-
-    </div>
+    </div></div></div></div>
     <div id="timeline" class="timeline-container">
     <br class="clear">
 `

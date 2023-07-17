@@ -30,7 +30,6 @@ type Article struct {
 	Timeline          bool
 	ShowSourceLink    bool
 	LiveUpdates       bool
-	Evaluated         bool
 }
 
 type Tag struct {
@@ -62,7 +61,6 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		Timeline          bool
 		ShowSourceLink    bool
 		LiveUpdates       bool
-		Evaluated         bool
 		ModificationDate  string
 	}{
 		SrcFileName:       a.SrcFileName,
@@ -79,7 +77,6 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		Timeline:          a.Timeline,
 		ShowSourceLink:    a.ShowSourceLink,
 		LiveUpdates:       a.LiveUpdates,
-		Evaluated:         a.Evaluated,
 		ModificationDate:  a.ModificationDate.Format(time.RFC3339),
 	})
 }
@@ -215,7 +212,6 @@ func (a *ArticlesDb) Set(article *Article) (*Article, []string, error) {
 	update["timeline"] = article.Timeline
 	update["show_source_link"] = article.ShowSourceLink
 	update["live_updates"] = article.LiveUpdates
-	update["evaluated"] = article.Evaluated
 
 	err := a.db.Transaction(func(tx *gorm.DB) error {
 		oldArticle := Article{}
