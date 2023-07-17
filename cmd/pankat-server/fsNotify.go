@@ -37,11 +37,14 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 							log.Println(err)
 						}
 						eventRelFileName, _ := filepath.Rel(documentsPath, event.Path)
+						// note: remove/rename is not trigged by a drag'n'drop of a file in the explorer -> no clue
 						if event.Op == watcher.Remove {
+							fmt.Println("File remove detected in: ", eventRelFileName)
 							fsRemoveMDWN(eventRelFileName)
 						}
 						if event.Op == watcher.Rename {
 							eventOldRelFileName, _ := filepath.Rel(documentsPath, event.OldPath)
+							fmt.Println("File rename detected in: ", eventOldRelFileName)
 							fsRemoveMDWN(eventOldRelFileName)
 						}
 						if event.Op == watcher.Write || event.Op == watcher.Create || event.Op == watcher.Rename {

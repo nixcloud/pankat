@@ -34,8 +34,8 @@ func (r *Registry) Del(client *Client) {
 	}
 }
 
-func (r *Registry) OnArticleChange(srcFileName string, RenderedArticle string) {
-	for _, c := range r.relations[srcFileName] {
+func (r *Registry) OnArticleChange(dstFileName string, RenderedArticle string) {
+	for _, c := range r.relations[dstFileName] {
 		c.Write(&RenderedArticle) // sends the string via the websocket to related clients
 	}
 }

@@ -15,9 +15,9 @@ import (
 type Context struct{}
 
 func onArticleChange(registry *ws.Registry) func(string, string) {
-	return func(srcFileName string, RenderedArticle string) {
-		fmt.Println("onArticleChange: ", srcFileName)
-		registry.OnArticleChange(srcFileName, RenderedArticle)
+	return func(dstFileName string, RenderedArticle string) {
+		fmt.Println("onArticleChange: ", dstFileName)
+		registry.OnArticleChange(dstFileName, RenderedArticle)
 	}
 }
 

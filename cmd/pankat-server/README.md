@@ -51,6 +51,13 @@ SpecialPages like about, roadmap, websocket should:
 
 Use [[!SpecialPage]] to mark a page as special page.
 
+## file/filename changes
+
+if a file about.mdwn is
+
+* moved to a different folder, you need to restart pankat-server as watcher can't detect this on windows
+* renamed, you need to change to the new url in the browser manually 
+
 ### license
 
 see LICENSE file, AGPL v3

@@ -41,7 +41,7 @@ func RenderPost(article *db.Article) {
 	navTitleArticleHTML := GenerateNavTitleArticleSource(*article, body)
 	standalonePageContent := GenerateStandalonePage(*article, navTitleArticleHTML)
 
-	sendLiveUpdateViaWS(filepath.ToSlash(article.SrcFileName), navTitleArticleHTML)
+	sendLiveUpdateViaWS(article.DstFileName, navTitleArticleHTML)
 
 	if (*article).Draft == true {
 		fmt.Println("Article is a draft, not writing to disk: '" + article.DstFileName + "'")
@@ -88,6 +88,7 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 		NavTitleArticleSource string
 		ArticleSourceCodeURL  string // file location from the web
 		ArticleSourceCodeFS   string // file location on disk (win/linux/...) where pankat-server runs
+		ArticleDstFileName    string // roadmap.html
 		ShowSourceLink        bool
 		WebsocketSupport      bool
 		SpecialPage           bool
@@ -100,6 +101,7 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 		NavTitleArticleSource: navTitleArticleSource,
 		ArticleSourceCodeFS:   article.SrcFileName,
 		ArticleSourceCodeURL:  filepath.ToSlash(article.SrcFileName),
+		ArticleDstFileName:    article.DstFileName,
 		ShowSourceLink:        article.ShowSourceLink,
 		WebsocketSupport:      article.LiveUpdates,
 		SpecialPage:           article.SpecialPage,
@@ -112,7 +114,6 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 	return buff.Bytes()
 }
 
-// FIXME ModificationDate, Tags, Titile, SpecialPage, prev.destfilename, next.destfilename, series, PrevArticleInSeries.destfilename, nextArticleInSeries.destfilename
 func GenerateNavTitleArticleSource(article db.Article, body string) string {
 	t, err := template.New("navTitleArticleSource.tmpl").
 		ParseFiles("templates/navTitleArticleSource.tmpl")
