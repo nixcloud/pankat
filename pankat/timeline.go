@@ -132,7 +132,7 @@ func RenderTimeline() {
 		</div>
 	`
 
-	pageContent += `<div id="FilterSelection"><p class="lead">select on tag or series element below:</p><div id="TagAndSeries">`
+	pageContent += `<div id="FilterSelection"><p class="lead">select a tag or series element below:</p><div id="TagAndSeries">`
 
 	pageContent += `<p id="tagCloud">`
 	for _, e := range tagsSlice {
