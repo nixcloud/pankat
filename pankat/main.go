@@ -73,6 +73,8 @@ func CreateArticleFromFilesystemMarkdown(SrcFileName string) (*db.Article, error
 	newArticle.ArticleMDWNSource = ProcessPlugins(rawMDWNSourceArticle, &newArticle)
 	newArticle.LiveUpdates = true
 	newArticle.ShowSourceLink = true
+	newArticle.Anchorjs = true
+	newArticle.Tocify = true
 	return &newArticle, nil
 }
 
