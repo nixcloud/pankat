@@ -7,6 +7,7 @@ import (
 	"os"
 	"pankat/db"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -90,7 +91,7 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 		ArticleSourceCodeFS   string // file location on disk (win/linux/...) where pankat-server runs
 		ArticleDstFileName    string // roadmap.html
 		ShowSourceLink        bool
-		WebsocketSupport      bool
+		LiveUpdates           bool
 		SpecialPage           bool
 	}{
 		Title:                 article.Title,
@@ -103,7 +104,7 @@ func GenerateStandalonePage(article db.Article, navTitleArticleSource string) []
 		ArticleSourceCodeURL:  filepath.ToSlash(article.SrcFileName),
 		ArticleDstFileName:    article.DstFileName,
 		ShowSourceLink:        article.ShowSourceLink,
-		WebsocketSupport:      article.LiveUpdates,
+		LiveUpdates:           article.LiveUpdates,
 		SpecialPage:           article.SpecialPage,
 	}
 	err = t.Execute(buff, noItems)
@@ -126,7 +127,8 @@ func GenerateNavTitleArticleSource(article db.Article, body string) string {
 	var timeT time.Time
 
 	if article.ModificationDate != timeT {
-		meta += `<div id="date"><p><span id="lastupdated">` + article.ModificationDate.Format("2 Jan 2006") + `</span></p></div>`
+		date := article.ModificationDate.Format("2 Jan 2006")
+		meta += `<div id="date"><p><span id="lastupdated">` + strings.ToLower(date) + `</span></p></div>`
 	}
 
 	if len(article.Tags) > 0 {
