@@ -148,9 +148,9 @@ func Init() {
 		panic(err)
 	}
 	//text will be: <h1 id="hello">hello</h1>
-	match, _ := regexp.MatchString(".*h1.*hello.*h1.*", text)
+	match, _ := regexp.MatchString(".*h2.*hello.*h2.*", text)
 	if match != true {
-		fmt.Println("An error occurred during pandoc pipeline run result match: ", err)
+		fmt.Println("An error occurred during pandoc pipeline run result 'match'")
 		panic(err)
 	}
 }

@@ -161,7 +161,7 @@ func GenerateNavTitleArticleSource(article db.Article, body string) string {
 
 func Render(a db.Article) string {
 	ac, err := db.Instance().GetCache(a)
-	if err != nil {
+	if err != nil || Config().Force == 1 {
 		if Config().Verbose > 1 {
 			fmt.Println(color.YellowString("pandoc run for article"), a.DstFileName)
 		}

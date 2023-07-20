@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 func PandocMarkdown2HTML(articleMarkdown []byte) (string, error) {
-	pandocProcess := exec.Command("pandoc", "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
+	luafile := filepath.Join(Config().DocumentsPath, "pandoc-lua", "shifted-numbered-headings.lua")
+	pandocProcess := exec.Command("pandoc", "--lua-filter", luafile, "-f", "markdown", "-t", "html5", "--highlight-style", "kate")
 	stdin, err := pandocProcess.StdinPipe()
 	if err != nil {
 		fmt.Println("An error occurred: ", err)
