@@ -58,6 +58,22 @@ if a file about.mdwn is
 * moved to a different folder, you need to restart pankat-server as watcher can't detect this on windows
 * renamed, you need to change to the new url in the browser manually 
 
+## markdown syntax
+
+pankat uses pandoc markdown syntax but uses various plugins to extend it:
+
+  * [[!specialpage]]
+  * [[!draft]]
+  * [[!meta]]
+  * [[!series]]
+  * [[!tag]]
+  * [[!img]]
+  * [[!summary]]
+  * [[!title]]
+  * ... more, see implementation & lastlog.de/blog source code for examples
+
+you can also use inline html/css/javascript in your markdown files.
+
 ### license
 
 see LICENSE file, AGPL v3
