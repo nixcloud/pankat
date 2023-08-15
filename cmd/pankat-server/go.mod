@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/Jeffail/leaps v0.9.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect

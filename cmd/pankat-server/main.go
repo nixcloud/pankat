@@ -6,10 +6,12 @@ import (
 	"github.com/gocraft/web"
 	"golang.org/x/net/websocket"
 	"net/http"
+	"os"
 	"pankat"
 	"pankat-server/ws"
 	"pankat/db"
 	"path/filepath"
+	"time"
 )
 
 type Context struct{}
@@ -18,6 +20,21 @@ func onArticleChange(registry *ws.Registry) func(string, string) {
 	return func(dstFileName string, RenderedArticle string) {
 		fmt.Println("onArticleChange: ", dstFileName)
 		registry.OnArticleChange(dstFileName, RenderedArticle)
+	}
+}
+
+// FIXME for debugging only
+func fsWriter() {
+	time.Sleep(1 * time.Second)
+	fPath := pankat.Config().DocumentsPath
+	os.WriteFile(filepath.Join(fPath, "fsWriter.mdwn"), []byte("fsWriter test"), 0644)
+
+	var i uint = 0
+	for true {
+		s := fmt.Sprintf("[[!draft]]\nfsWriter test\n %d", i)
+		os.WriteFile(filepath.Join(fPath, "fsWriter.mdwn"), []byte(s), 0644)
+		time.Sleep(10 * time.Minute)
+		i += 1
 	}
 }
 
@@ -33,6 +50,8 @@ func main() {
 	onArticleChangeFunction := onArticleChange(registry)
 	pankat.OnArticleChange(onArticleChangeFunction)
 	go fsNotifyWatchDocumentsDirectory(pankat.Config().DocumentsPath)
+
+	go fsWriter() // FIXME for debugging only
 
 	router := web.New(Context{})
 	router.Middleware(web.LoggerMiddleware)

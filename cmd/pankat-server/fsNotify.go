@@ -85,18 +85,17 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 				}
 				log.Fatalln(err)
 			case <-w.Closed:
+				fmt.Println("watcher closed")
+				panic("watcher closed") // FIXME for debugging
 				return
 			}
 		}
 	}()
-
 	walkFunc := watchDir(w)
 	if err := filepath.Walk(directory, walkFunc); err != nil {
 		log.Fatalln(err)
 	}
-
-	// Start the watching process - it'll check for changes every 100ms.
-	if err := w.Start(time.Millisecond * 100); err != nil {
+	if err := w.Start(time.Millisecond * 1000); err != nil {
 		log.Fatalln(err)
 	}
 }
