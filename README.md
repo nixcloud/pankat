@@ -33,6 +33,12 @@ Use program `pankat-server`:
 
     docker run -it --rm -p 8000:8000 -v ${PWD}/documents:/documents pankat-docker:latest pankat-server --documents /documents/blog.lastlog.de/
 
+# pankat external dependencies
+
+you need to install https://pandoc.org/installing.html
+
+on windows i've been using pandoc-3.x
+
 # license
 pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
 
