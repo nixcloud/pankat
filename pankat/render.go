@@ -123,30 +123,30 @@ func GenerateNavTitleArticleSource(article db.Article, body string) string {
 		panic(err)
 	}
 
-	var meta string
-	var timeT time.Time
+	var timeString string
+	var time time.Time
 
-	if article.ModificationDate != timeT {
+	if article.ModificationDate != time {
 		date := article.ModificationDate.Format("2 Jan 2006")
-		meta += `<div id="date"><p><span id="lastupdated">` + strings.ToLower(date) + `</span></p></div>`
+		timeString += `<div id="date"><p><span id="lastupdated">` + strings.ToLower(date) + `</span></p></div>`
 	}
 
 	if len(article.Tags) > 0 {
-		meta += `<div id="tags"><p>` + tagToLinkListInTimeline(&article) + `</p></div>`
+		timeString += `<div id="tags"><p>` + tagToLinkListInTimeline(&article) + `</p></div>`
 	}
 
 	noItems := struct {
 		Title       string
 		TitleNAV    string
 		SeriesNAV   string
-		Meta        string
+		TimeString  string
 		Body        string
 		SpecialPage bool
 	}{
 		Title:       article.Title,
 		TitleNAV:    GenerateArticleNavigation(&article),
 		SeriesNAV:   GenerateArticleSeriesNavigation(&article),
-		Meta:        meta,
+		TimeString:  timeString,
 		Body:        body,
 		SpecialPage: article.SpecialPage,
 	}
