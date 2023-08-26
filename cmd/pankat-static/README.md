@@ -6,9 +6,9 @@ pankat-static is a static blog/wiki generator inspired by joey hess's ikiwiki.
 
     git clone https://github.com/nixcloud/pankat
 
-afterwards use go to compile the binary
+compile the pankat-static binary:
 
-    cd  cmd/pankat-static
+    cd cmd/pankat-static
     go build pankat-static
 
 # how to use
@@ -22,4 +22,8 @@ run a local webserver in documents/blog.lastlog.de to review the static page gen
     cd documents/blog.lastlog.de
     python -m http.server
 
-then visit localhost:8000 in any browser.
+then visit <http://localhost:8000> in any browser.
+
+### license
+
+see [LICENSE](../../LICENSE)

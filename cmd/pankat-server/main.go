@@ -51,7 +51,7 @@ func main() {
 	pankat.OnArticleChange(onArticleChangeFunction)
 	go fsNotifyWatchDocumentsDirectory(pankat.Config().DocumentsPath)
 
-	go fsWriter() // FIXME for debugging only
+	//go fsWriter() // FIXME for debugging only
 
 	router := web.New(Context{})
 	router.Middleware(web.LoggerMiddleware)

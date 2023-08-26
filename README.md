@@ -1,29 +1,21 @@
 # what
-**pankat** is a **blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
-
-pankat-static and pankat-server both build are static blog builders.
+**pankat** is a **static blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
 
 ![A screenshot featuring pankat](https://raw.githubusercontent.com/nixcloud/pankat/master/screenshots/pankat.jpg)
 
-## example
-
-a pankat generated blog can be found here:
-
-* <https://lastlog.de/blog>
-
-but you can easily use pankat for your own blog!
+it is used at <https://lastlog.de/blog>.
 
 # pankat-static
 
-pankat-static can be used to render the articles.
+pankat-static can be used to render the articles into static html files.
 
-* [pankat-static](src/github.com/nixcloud/cmd/pankat-static/README.md)
+* [pankat-static](cmd/pankat-static/README.md)
 
 # pankat-server
 
-pankat-server can be executed on the client to provides a live preview of the generated static blog, later the result can be uploaded.
+pankat-server is used on the client to have life-preview during writing.
 
-* [pankat-server](src/github.com/nixcloud/cmd/pankat-server/README.md)
+* [pankat-server](cmd/pankat-server/README.md)
 
 it is a helpful tool to modify drafts before publishing them.
 
@@ -44,17 +36,9 @@ Use program `pankat-server`:
 # license
 pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
 
-# history
-
-the primary motivation for rewriting ikiwiki was:
-- no interest in ikiwiki's perl language choice
-- use pandoc as backend for rendering articles
-- mobile first by using bootstrap
-- more usability in navigation / posts overview
-
 # who
 
-pankat is written and maintained by joachim schiele <js@lastlog.de>
+pankat is written and maintained by joachim schiele [js@lastlog.de](mailto:js@lastlog.de)
 
 
 

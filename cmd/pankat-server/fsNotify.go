@@ -86,7 +86,7 @@ func fsNotifyWatchDocumentsDirectory(directory string) {
 				log.Fatalln(err)
 			case <-w.Closed:
 				fmt.Println("watcher closed")
-				panic("watcher closed") // FIXME for debugging
+				panic("watcher closed") // FIXME for debugging of the watcher stall (not during program shutdown but during operation)
 				return
 			}
 		}
