@@ -1,0 +1,3 @@
+[submodule "documents/blog.lastlog.de"]
+	path = documents/blog.lastlog.de
+	url = https://github.com/qknight/blog.lastlog.de/
