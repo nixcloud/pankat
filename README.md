@@ -5,6 +5,10 @@
 
 it is used at <https://lastlog.de/blog>.
 
+if you want to play with it, you can use my content in documents/blog.lastlog.de:
+
+     git submodule update --init --recursive
+
 # pankat-static
 
 pankat-static can be used to render the articles into static html files.
