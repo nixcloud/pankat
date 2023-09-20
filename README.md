@@ -41,7 +41,11 @@ Use program `pankat-server`:
 
 you need to install https://pandoc.org/installing.html
 
-on windows i've been using pandoc-3.x
+## windows
+
+* https://pandoc.org/installing.html - pandoc-3.x
+* https://jmeubank.github.io/tdm-gcc/
+* go 1.19 (using goland)
 
 # license
 pankat is licensed AGPL v3, see [LICENSE](LICENSE) for details.
