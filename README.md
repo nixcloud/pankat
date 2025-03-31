@@ -1,3 +1,7 @@
+# obsolescence notice
+
+this **go based implementation of pankat is obsoleted by the rust rewarite** at https://github.com/nixcloud/pankat-rs
+
 # what
 **pankat** is a **static blog generator** inspired by [joey hess's ikiwiki](https://ikiwiki.info/users/joey/).
 
